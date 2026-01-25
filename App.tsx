@@ -7,9 +7,7 @@ import DoctorConsultationForm from './components/DoctorConsultationForm';
 import ChatModal from './components/ChatModal';
 import { Icons } from './constants';
 
-const API_BASE = window.location.origin.includes('replit.app') 
-  ? '/api' 
-  : '/api';
+const API_BASE = '/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
 
 const App: React.FC = () => {
