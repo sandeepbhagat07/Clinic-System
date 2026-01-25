@@ -57,12 +57,15 @@ app.use(express.static(path.join(__dirname, 'dist'), {
 app.post('/api/patients', async (req, res) => {
     try {
         const p = req.body;
-        await pool.query(
+        console.log('Adding patient:', p.id);
+        const result = await pool.query(
             'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
             [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, p.createdAt, p.inTime, p.hasUnreadAlert]
         );
+        console.log('Insert result:', result.rowCount);
         res.status(201).json({ success: true });
     } catch (err) {
+        console.error('Insert error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });

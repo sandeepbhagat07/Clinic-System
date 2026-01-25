@@ -80,14 +80,20 @@ const App: React.FC = () => {
 
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients`, {
+        const res = await fetch(`${API_BASE}/patients`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newPatient)
         });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to save to database');
+        }
+        console.log("Successfully saved to database");
       }
     } catch (err) {
-      console.error("API call failed, saving locally.");
+      console.error("API call failed, saving locally only.", err);
+      // Optional: alert user that it's only saving locally
     } finally {
       const updated = [...patients, newPatient];
       setPatients(updated);
