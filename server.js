@@ -1,43 +1,36 @@
 
-const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
+import express from 'express';
+import pg from 'pg';
+import cors from 'cors';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MySQL Connection Configuration
-// UPDATE THESE VALUES FOR YOUR LOCAL ENVIRONMENT
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: 'your_password', 
-    database: 'clinic_flow'
-};
-
-let pool;
-
-async function initDb() {
-    try {
-        pool = await mysql.createPool(dbConfig);
-        console.log('Connected to MySQL Database');
-    } catch (err) {
-        console.error('Database connection failed:', err);
-    }
-}
+const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+});
 
 // Get all patients with their messages
 app.get('/api/patients', async (req, res) => {
     try {
-        const [patients] = await pool.query('SELECT * FROM patients');
-        const [messages] = await pool.query('SELECT * FROM messages ORDER BY timestamp ASC');
+        const patientsRes = await pool.query('SELECT * FROM patients');
+        const messagesRes = await pool.query('SELECT * FROM messages ORDER BY timestamp ASC');
         
-        // Map messages to their respective patients
+        const patients = patientsRes.rows;
+        const messages = messagesRes.rows;
+
         const data = patients.map(p => ({
             ...p,
-            hasUnreadAlert: !!p.hasUnreadAlert, // Convert 1/0 to boolean
-            messages: messages.filter(m => m.patientId === p.id)
+            queueId: p.queue_id,
+            createdAt: p.created_at,
+            inTime: p.in_time,
+            outTime: p.out_time,
+            hasUnreadAlert: !!p.has_unread_alert,
+            messages: messages.filter(m => m.patient_id === p.id).map(m => ({
+                ...m,
+                patientId: m.patient_id
+            }))
         }));
         
         res.json(data);
@@ -51,7 +44,7 @@ app.post('/api/patients', async (req, res) => {
     try {
         const p = req.body;
         await pool.query(
-            'INSERT INTO patients (id, queueId, name, age, gender, category, type, city, mobile, status, createdAt, inTime, hasUnreadAlert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
             [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, p.createdAt, p.inTime, p.hasUnreadAlert]
         );
         res.status(201).json({ success: true });
@@ -65,13 +58,28 @@ app.patch('/api/patients/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        const keys = Object.keys(updates);
-        const values = Object.values(updates);
+        
+        // Map camelCase to snake_case for PG
+        const pgUpdates = {};
+        if ('queueId' in updates) pgUpdates.queue_id = updates.queueId;
+        if ('createdAt' in updates) pgUpdates.created_at = updates.createdAt;
+        if ('inTime' in updates) pgUpdates.in_time = updates.inTime;
+        if ('outTime' in updates) pgUpdates.out_time = updates.outTime;
+        if ('hasUnreadAlert' in updates) pgUpdates.has_unread_alert = updates.hasUnreadAlert;
+        
+        Object.keys(updates).forEach(key => {
+            if (!['queueId', 'createdAt', 'inTime', 'outTime', 'hasUnreadAlert'].includes(key)) {
+                pgUpdates[key] = updates[key];
+            }
+        });
+
+        const keys = Object.keys(pgUpdates);
+        const values = Object.values(pgUpdates);
         
         if (keys.length === 0) return res.status(400).json({ error: 'No updates provided' });
 
-        const setClause = keys.map(k => `${k} = ?`).join(', ');
-        await pool.query(`UPDATE patients SET ${setClause} WHERE id = ?`, [...values, id]);
+        const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+        await pool.query(`UPDATE patients SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
         
         res.json({ success: true });
     } catch (err) {
@@ -82,7 +90,7 @@ app.patch('/api/patients/:id', async (req, res) => {
 // Delete patient
 app.delete('/api/patients/:id', async (req, res) => {
     try {
-        await pool.query('DELETE FROM patients WHERE id = ?', [req.params.id]);
+        await pool.query('DELETE FROM patients WHERE id = $1', [req.params.id]);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -95,19 +103,17 @@ app.post('/api/patients/:id/messages', async (req, res) => {
         const { id } = req.params;
         const m = req.body;
         await pool.query(
-            'INSERT INTO messages (id, patientId, text, sender, timestamp) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO messages (id, patient_id, text, sender, timestamp) VALUES ($1, $2, $3, $4, $5)',
             [m.id, id, m.text, m.sender, m.timestamp]
         );
-        // Also update the unread alert status on the patient
-        await pool.query('UPDATE patients SET hasUnreadAlert = TRUE WHERE id = ?', [id]);
+        await pool.query('UPDATE patients SET has_unread_alert = TRUE WHERE id = $1', [id]);
         res.status(201).json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    initDb();
-    console.log(`Server running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });

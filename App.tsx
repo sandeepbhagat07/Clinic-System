@@ -7,7 +7,9 @@ import DoctorConsultationForm from './components/DoctorConsultationForm';
 import ChatModal from './components/ChatModal';
 import { Icons } from './constants';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.origin.includes('replit.dev') 
+  ? `https://${window.location.host.replace('-5000-', '-3001-')}/api`
+  : 'http://localhost:3001/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
 
 const App: React.FC = () => {
