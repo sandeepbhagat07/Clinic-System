@@ -1,21 +1,47 @@
 
 import React from 'react';
-import { PatientCategory } from './types';
+import { PatientCategory, PatientType } from './types';
 
 export const CITIES = [
   'New York', 'London', 'Mumbai', 'Tokyo', 'Berlin', 
   'Paris', 'Sydney', 'Toronto', 'Singapore', 'Dubai'
 ];
 
-export const CATEGORIES = [
-  'General', 'Reference', 'Relative', 'MR'
+export const CATEGORY_OPTIONS = [
+  PatientCategory.PATIENT,
+  PatientCategory.VISITOR
 ];
 
-export const CATEGORY_COLORS: Record<PatientCategory, string> = {
-  [PatientCategory.GENERAL]: 'bg-emerald-50 border-emerald-200',
-  [PatientCategory.REFERENCE]: 'bg-sky-50 border-sky-200',
-  [PatientCategory.RELATIVE]: 'bg-orange-50 border-orange-200',
-  [PatientCategory.MR]: 'bg-purple-50 border-purple-200',
+export const PATIENT_TYPE_OPTIONS = [
+  PatientType.GEN_PATIENT,
+  PatientType.REF_PATIENT,
+  PatientType.REL_PATIENT
+];
+
+export const VISITOR_TYPE_OPTIONS = [
+  PatientType.VISITOR,
+  PatientType.RELATIVE,
+  PatientType.FAMILY,
+  PatientType.MR,
+  PatientType.DOCTOR,
+  PatientType.SOCIAL
+];
+
+export const TYPE_THEMES: Record<PatientType, string> = {
+  // Category: PATIENT -> Light Green (Emerald)
+  [PatientType.GEN_PATIENT]: 'bg-emerald-50 border-emerald-300',
+  [PatientType.REF_PATIENT]: 'bg-emerald-50 border-emerald-300',
+  [PatientType.REL_PATIENT]: 'bg-emerald-50 border-emerald-300',
+  
+  // Category: VISITOR -> Specific colors
+  [PatientType.VISITOR]: 'bg-emerald-50 border-emerald-300', // Light Green
+  
+  [PatientType.RELATIVE]: 'bg-rose-50 border-rose-400',       // Light Red (Rose)
+  [PatientType.FAMILY]: 'bg-rose-50 border-rose-400',         // Light Red (Rose)
+  
+  [PatientType.MR]: 'bg-violet-50 border-violet-400',         // Light Purple (Violet)
+  [PatientType.DOCTOR]: 'bg-violet-50 border-violet-400',     // Light Purple (Violet)
+  [PatientType.SOCIAL]: 'bg-violet-50 border-violet-400',     // Light Purple (Violet)
 };
 
 export const Icons = {
@@ -45,5 +71,8 @@ export const Icons = {
   ),
   Message: () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  ),
+  Phone: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
   )
 };

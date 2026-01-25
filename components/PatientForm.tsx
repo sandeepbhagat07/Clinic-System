@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { PatientFormData, PatientCategory, Patient } from '../types';
-import { CITIES, CATEGORIES, Icons } from '../constants';
+import { PatientFormData, PatientCategory, Patient, PatientType } from '../types';
+import { CITIES, CATEGORY_OPTIONS, PATIENT_TYPE_OPTIONS, VISITOR_TYPE_OPTIONS, Icons } from '../constants';
 
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
@@ -12,16 +12,16 @@ interface PatientFormProps {
 const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEditing }) => {
   const defaultData: PatientFormData = {
     name: '',
-    age: 0,
+    age: 25,
     gender: 'Male',
-    category: PatientCategory.GENERAL,
+    category: PatientCategory.PATIENT,
+    type: PatientType.GEN_PATIENT,
     city: CITIES[0],
-    isVisitor: false,
+    mobile: '',
   };
 
   const [formData, setFormData] = useState<PatientFormData>(defaultData);
 
-  // Update form if initialData changes (for editing)
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -29,105 +29,167 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
         age: initialData.age,
         gender: initialData.gender,
         category: initialData.category,
+        type: initialData.type,
         city: initialData.city,
-        isVisitor: initialData.isVisitor,
+        mobile: initialData.mobile || '',
       });
     } else {
       setFormData(defaultData);
     }
   }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || formData.age <= 0) {
-      alert('Please enter valid patient details.');
-      return;
-    }
-    onSubmit(formData);
-    if (!isEditing) setFormData(defaultData); // Only reset if not editing (edit reset handled by cancel/complete)
+  const handleCategoryChange = (cat: PatientCategory) => {
+    const defaultType = cat === PatientCategory.PATIENT 
+      ? PatientType.GEN_PATIENT 
+      : PatientType.VISITOR;
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      category: cat, 
+      type: defaultType 
+    }));
   };
 
-  const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-xl p-3 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-base";
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      alert('Please enter a name.');
+      return;
+    }
+    
+    onSubmit({
+      ...formData,
+      age: formData.age || 25,
+    });
+    
+    if (!isEditing) setFormData(defaultData);
+  };
+
+  const currentTypeOptions = formData.category === PatientCategory.PATIENT 
+    ? PATIENT_TYPE_OPTIONS 
+    : VISITOR_TYPE_OPTIONS;
+
+  const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-xl p-3 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-medium";
+  const labelClasses = "text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1";
+  const radioGroupClasses = "flex flex-wrap gap-2 p-1.5 bg-slate-100/50 border border-slate-200 rounded-xl";
+  const radioLabelClasses = "flex-1 min-w-[90px] flex items-center justify-center gap-2 cursor-pointer p-2 rounded-lg transition-all border-2 border-transparent has-[:checked]:border-indigo-600 has-[:checked]:bg-white has-[:checked]:shadow-sm";
+  const radioTextClasses = "text-slate-700 font-bold text-[10px] uppercase tracking-wider";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         
-        {/* Name */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">Full Name</label>
+        {/* Full Name */}
+        <div className="flex flex-col gap-2 sm:col-span-1">
+          <label className={labelClasses}>Full Name</label>
           <input
             type="text"
             className={inputClasses}
-            placeholder="e.g. Robert Smith"
+            placeholder="e.g. John Doe"
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
             required
           />
         </div>
 
+        {/* Mobile Number */}
+        <div className="flex flex-col gap-2">
+          <label className={labelClasses}>Mobile (Optional)</label>
+          <input
+            type="tel"
+            className={inputClasses}
+            placeholder="Contact number"
+            value={formData.mobile}
+            onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+          />
+        </div>
+
+        {/* Category Radio Group */}
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <label className={labelClasses}>Primary Category</label>
+          <div className={radioGroupClasses}>
+            {CATEGORY_OPTIONS.map(cat => (
+              <label key={cat} className={radioLabelClasses}>
+                <input
+                  type="radio"
+                  name="category"
+                  value={cat}
+                  checked={formData.category === cat}
+                  onChange={() => handleCategoryChange(cat)}
+                  className="sr-only"
+                />
+                <span className={radioTextClasses}>{cat}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Type Radio Group (Dynamic based on Category) */}
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <label className={labelClasses}>Entry Type</label>
+          <div className={radioGroupClasses}>
+            {currentTypeOptions.map(type => (
+              <label key={type} className={radioLabelClasses}>
+                <input
+                  type="radio"
+                  name="type"
+                  value={type}
+                  checked={formData.type === type}
+                  onChange={() => setFormData({ ...formData, type: type })}
+                  className="sr-only"
+                />
+                <span className={radioTextClasses}>{type}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Age */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">Age (Years)</label>
+          <label className={labelClasses}>Age</label>
           <input
             type="number"
             className={inputClasses}
             value={formData.age || ''}
+            placeholder="25"
             onChange={e => setFormData({ ...formData, age: parseInt(e.target.value) || 0 })}
-            required
-            min="1"
-            max="120"
           />
         </div>
 
         {/* Gender */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">Gender</label>
-          <div className="flex gap-4 p-2 bg-slate-50 border border-slate-200 rounded-xl">
-            <label className="flex-1 flex items-center justify-center gap-3 cursor-pointer p-2 rounded-lg transition-colors hover:bg-white border-2 border-transparent has-[:checked]:border-indigo-500 has-[:checked]:bg-white">
+          <label className={labelClasses}>Gender</label>
+          <div className={radioGroupClasses}>
+            <label className={radioLabelClasses}>
               <input
                 type="radio"
                 name="gender"
                 value="Male"
                 checked={formData.gender === 'Male'}
                 onChange={() => setFormData({ ...formData, gender: 'Male' })}
-                className="w-4 h-4 text-indigo-600"
+                className="sr-only"
               />
-              <span className="text-slate-900 font-semibold">Male</span>
+              <span className={radioTextClasses}>Male</span>
             </label>
-            <label className="flex-1 flex items-center justify-center gap-3 cursor-pointer p-2 rounded-lg transition-colors hover:bg-white border-2 border-transparent has-[:checked]:border-indigo-500 has-[:checked]:bg-white">
+            <label className={radioLabelClasses}>
               <input
                 type="radio"
                 name="gender"
                 value="Female"
                 checked={formData.gender === 'Female'}
                 onChange={() => setFormData({ ...formData, gender: 'Female' })}
-                className="w-4 h-4 text-indigo-600"
+                className="sr-only"
               />
-              <span className="text-slate-900 font-semibold">Female</span>
+              <span className={radioTextClasses}>Female</span>
             </label>
           </div>
         </div>
 
-        {/* Category */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">Category</label>
-          <select
-            className={inputClasses}
-            value={formData.category}
-            onChange={e => setFormData({ ...formData, category: e.target.value as PatientCategory })}
-          >
-            {CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
         {/* City */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-slate-700 uppercase tracking-tight">City / Location</label>
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <label className={labelClasses}>City / Location</label>
           <select
-            className={inputClasses}
+            className={`${inputClasses} cursor-pointer`}
             value={formData.city}
             onChange={e => setFormData({ ...formData, city: e.target.value })}
           >
@@ -137,29 +199,14 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
           </select>
         </div>
 
-        {/* Visitor Toggle */}
-        <div className="flex flex-col gap-2 justify-center">
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={formData.isVisitor}
-                onChange={e => setFormData({ ...formData, isVisitor: e.target.checked })}
-              />
-              <div className="w-12 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </div>
-            <span className="text-sm font-bold text-slate-700 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">Visitor</span>
-          </label>
-        </div>
       </div>
 
       <button
         type="submit"
-        className={`w-full ${isEditing ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-black py-4 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-3 text-lg uppercase tracking-wide`}
+        className={`w-full ${isEditing ? 'bg-amber-600' : 'bg-indigo-700'} text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 text-base uppercase tracking-widest`}
       >
         {isEditing ? <Icons.Edit /> : <Icons.Plus />} 
-        {isEditing ? 'Update Patient' : 'Register Patient'}
+        {isEditing ? 'Update Profile' : 'Complete Registration'}
       </button>
     </form>
   );

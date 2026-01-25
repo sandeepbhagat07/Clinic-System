@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Patient, PatientStatus } from '../types';
+import { Patient, PatientStatus, PatientCategory } from '../types';
 import PatientCard from './PatientCard';
 
 interface QueueColumnProps {
@@ -60,15 +60,15 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     if (sourceId && sourceId !== targetId && onReorder) {
       onReorder(sourceId, targetId);
     } else if (sourceId === targetId) {
-       // Optional: do nothing if dropped on self
-    } else if (sourceId && !onReorder) {
-       // Fallback to simple status update if reordering is not supported for this column
+       // do nothing
+    } else if (sourceId) {
        onUpdateStatus(sourceId, status);
     }
   };
 
   const patientCount = useMemo(() => {
-    return patients.filter(p => !p.isVisitor).length;
+    // Count only actual patients, exclude all VISITOR category entries
+    return patients.filter(p => p.category === PatientCategory.PATIENT).length;
   }, [patients]);
 
   return (
@@ -79,7 +79,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     >
       <div className={`${headerColor} text-white px-5 py-4 rounded-t-[14px] font-black flex items-center justify-between shadow-sm z-10`}>
         <span className="uppercase tracking-wider text-sm">{title}</span>
-        <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-mono border border-white/30" title={`${patientCount} Patients + ${patients.length - patientCount} Visitors`}>
+        <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-mono border border-white/30">
           {patientCount}
         </span>
       </div>
@@ -87,7 +87,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300">
         {patients.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 italic text-sm py-12 border-2 border-dashed border-slate-300 rounded-xl">
-            <p className="font-medium text-center px-4">No patients currently in {title}</p>
+            <p className="font-medium text-center px-4">Empty</p>
           </div>
         ) : (
           patients.map(p => (

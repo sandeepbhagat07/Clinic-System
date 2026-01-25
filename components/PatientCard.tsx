@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Patient, PatientStatus, PatientCategory } from '../types';
-import { Icons, CATEGORY_COLORS } from '../constants';
+import { Patient, PatientStatus, PatientCategory, PatientType } from '../types';
+import { Icons, TYPE_THEMES } from '../constants';
 
 interface PatientCardProps {
   patient: Patient;
@@ -35,12 +35,14 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${patient.id}&gender=${patient.gender === 'Male' ? 'male' : 'female'}`;
 
-  const activeClasses = isActive ? 'ring-4 ring-indigo-500 ring-offset-2 scale-[1.02] shadow-xl z-30' : '';
+  const activeClasses = isActive ? 'ring-4 ring-indigo-500 ring-offset-2 scale-[1.02] shadow-xl z-30' : 'hover:shadow-md';
   
-  // Theme logic based on Category and Visitor status
-  const categoryTheme = CATEGORY_COLORS[patient.category] || 'bg-slate-50 border-slate-200';
-  const visitorTheme = 'bg-red-50 border-red-400 animate-radium-glow';
-  const finalThemeClasses = patient.isVisitor ? visitorTheme : categoryTheme;
+  // Theme logic based on Category and Type
+  const isVisitorCategory = patient.category === PatientCategory.VISITOR;
+  const themeClasses = TYPE_THEMES[patient.type] || 'bg-slate-50 border-slate-200';
+  const animationClasses = isVisitorCategory ? 'animate-radium-glow' : '';
+  
+  const finalThemeClasses = `${themeClasses} ${animationClasses}`;
 
   const formatTime = (ts?: number) => {
     if (!ts) return null;
@@ -57,62 +59,63 @@ const PatientCard: React.FC<PatientCardProps> = ({
       draggable={!onClick}
       onDragStart={handleDragStart}
       onClick={() => onClick?.(patient.id)}
-      className={`${finalThemeClasses} border-2 rounded-xl shadow-sm transition-all duration-200 ${activeClasses} ${onClick ? 'cursor-pointer hover:border-indigo-400' : 'cursor-grab active:cursor-grabbing'} group relative overflow-hidden flex flex-col`}
+      className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} group relative overflow-hidden flex flex-col`}
     >
-      {/* Visitor Overlay Badge */}
-      {patient.isVisitor && (
-        <div className="absolute top-0 right-0 bg-red-600 text-white font-black px-3 py-0.5 rounded-bl-lg uppercase tracking-wider z-10 text-[9px]">
+      {/* Visitor Badge - High Visibility */}
+      {isVisitorCategory && (
+        <div className="absolute top-0 right-0 bg-red-600 text-white font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10 text-[8px] shadow-sm">
           Visitor
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className={`flex items-start gap-4 ${isLarge ? 'p-6' : 'p-3.5'}`}>
+      {/* Main Content */}
+      <div className={`flex items-start gap-4 ${isLarge ? 'p-8' : 'p-4'}`}>
         
-        {/* Left Column: Avatar & Category Badge */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
-          <div className={`rounded-full bg-white border border-slate-200 overflow-hidden shadow-inner transition-all ${isLarge ? 'w-24 h-24' : 'w-14 h-14'}`}>
-            <img src={avatarUrl} alt="Patient Avatar" className="w-full h-full object-cover" />
+        {/* Left Column: Avatar & Type Label */}
+        <div className="flex flex-col items-center gap-3 flex-shrink-0">
+          <div className={`rounded-full bg-white border-2 border-slate-100 overflow-hidden shadow-sm transition-all ${isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
+            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
           </div>
-          <div className="bg-white border border-slate-300 rounded-md px-1.5 py-1 text-[8px] font-black text-slate-500 uppercase tracking-tight min-w-[65px] text-center shadow-sm">
-            {patient.category}
+          <div className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest min-w-[75px] text-center shadow-sm">
+            {patient.type}
           </div>
         </div>
 
         {/* Info Column */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          {/* Row 1: Name and Queue ID - Fixed for long names */}
-          <div className="flex items-center gap-2 mb-0.5">
-            {!patient.isVisitor && (
-              <span className="bg-slate-800 text-white font-black px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
-                #{patient.queueId}
+        <div className="flex-1 min-w-0 flex flex-col pt-0.5">
+          {/* Row 1: Queue ID Badge (High Visibility) and Name */}
+          <div className="flex items-center gap-3 mb-1.5">
+            {!isVisitorCategory && (
+              <span className="bg-slate-900 text-white font-black px-3 py-1 rounded-lg text-[11px] flex-shrink-0 shadow-lg ring-2 ring-white/10 flex items-center gap-0.5">
+                <span className="text-[10px] opacity-60">#</span>
+                <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`font-black text-slate-900 truncate uppercase tracking-tight ${isLarge ? 'text-4xl' : 'text-lg'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge ? 'text-5xl font-extrabold' : 'text-[1.15rem] font-bold'}`}>
               {patient.name}
             </h4>
           </div>
           
-          {/* Row 2: Age/Gender + IN Time - Moved here to prevent collision with Name */}
-          <div className="flex items-center justify-between gap-2">
-            <div className={`font-bold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-[13px]'}`}>
-              {patient.age} yrs • {patient.gender}
+          {/* Row 2: Demographics + IN Time */}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
+              {patient.age} yrs <span className="mx-1 text-slate-300">•</span> {patient.gender}
             </div>
             {patient.inTime && (
-              <div className="flex items-center gap-1 text-slate-400 font-bold whitespace-nowrap text-[9px] uppercase flex-shrink-0">
+              <div className="flex items-center gap-1.5 text-slate-400 font-bold whitespace-nowrap text-[10px] uppercase flex-shrink-0">
                 <Icons.Clock />
-                <span className="hidden sm:inline">IN:</span> {formatTime(patient.inTime)}
+                <span>{formatTime(patient.inTime)}</span>
               </div>
             )}
           </div>
 
-          {/* Row 3: City + OUT Time */}
-          <div className="flex items-center justify-between gap-2 mt-1">
-            <div className={`font-black text-slate-900 truncate ${isLarge ? 'text-3xl' : 'text-[15px]'}`}>
+          {/* Row 3: Location + OUT Time Badge */}
+          <div className="flex items-center justify-between gap-2 mt-auto">
+            <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
               {patient.city}
             </div>
             {patient.outTime && (
-              <div className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black text-[9px] whitespace-nowrap uppercase border border-emerald-200 shadow-sm flex-shrink-0">
+              <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] whitespace-nowrap uppercase shadow-sm flex-shrink-0">
                 OUT: {formatTime(patient.outTime)}
               </div>
             )}
@@ -120,29 +123,25 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="border-t border-slate-200 bg-slate-100/30 flex items-center justify-between px-3 py-1.5 transition-all group-hover:bg-white min-h-[42px]">
+      {/* Action Bar - Refined for professional UI */}
+      <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
         
-        {/* Reorder Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {patient.status === PatientStatus.WAITING && onMove && (
             <>
-              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'up'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="Move Up"><Icons.ChevronUp /></button>
-              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'down'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="Move Down"><Icons.ChevronDown /></button>
+              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'up'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Move Up"><Icons.ChevronUp /></button>
+              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'down'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Move Down"><Icons.ChevronDown /></button>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="h-4 w-[1px] bg-slate-300"></div>
-
-          {/* Core Status Transitions */}
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {patient.status !== PatientStatus.OPD && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.OPD); }} 
-                className="text-amber-500 hover:text-amber-600 transition-colors p-1 hover:bg-amber-50 rounded" 
-                title="To OPD"
+                className="text-amber-600 hover:text-amber-700 transition-colors p-1.5 hover:bg-amber-50 rounded-lg flex items-center gap-1" 
+                title="Send to OPD"
               >
                 <Icons.Stethoscope />
               </button>
@@ -150,39 +149,35 @@ const PatientCard: React.FC<PatientCardProps> = ({
             {patient.status !== PatientStatus.COMPLETED && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
-                className="text-emerald-500 hover:text-emerald-600 transition-colors p-1 hover:bg-emerald-50 rounded" 
-                title="Mark Completed"
+                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg" 
+                title="Mark Done"
               >
                 <Icons.CheckCircle />
               </button>
             )}
           </div>
 
-          <div className="h-4 w-[1px] bg-slate-300"></div>
+          <div className="w-[1px] h-5 bg-slate-200"></div>
 
-          {/* Discussion */}
           <button 
             onClick={handleChatClick} 
-            className={`transition-all relative p-1 rounded hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600 scale-110' : 'text-indigo-500'}`} 
-            title="Open Discussion"
+            className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
+            title="Discussion"
           >
-            <div className={patient.hasUnreadAlert ? 'animate-bounce' : ''}>
-              <Icons.Message />
-            </div>
+            <Icons.Message />
             {patient.hasUnreadAlert && (
-              <span className="absolute top-0 right-0 flex h-2 w-2">
+              <span className="absolute top-1 right-1 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
               </span>
             )}
           </button>
 
-          <div className="h-4 w-[1px] bg-slate-300"></div>
+          <div className="w-[1px] h-5 bg-slate-200"></div>
 
-          {/* Management */}
-          <div className="flex items-center gap-1.5">
-            {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded" title="Edit"><Icons.Edit /></button>}
-            {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-500 transition-colors p-1 hover:bg-rose-50 rounded" title="Delete"><Icons.Trash /></button>}
+          <div className="flex items-center gap-1">
+            {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
+            {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
           </div>
         </div>
       </div>

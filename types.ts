@@ -6,10 +6,22 @@ export enum PatientStatus {
 }
 
 export enum PatientCategory {
-  GENERAL = 'General',
-  REFERENCE = 'Reference',
-  RELATIVE = 'Relative',
-  MR = 'MR'
+  PATIENT = 'PATIENT',
+  VISITOR = 'VISITOR'
+}
+
+export enum PatientType {
+  // Category: PATIENT
+  GEN_PATIENT = 'GEN PATIENT',
+  REF_PATIENT = 'REF PATIENT',
+  REL_PATIENT = 'REL PATIENT',
+  // Category: VISITOR
+  VISITOR = 'VISITOR',
+  RELATIVE = 'RELATIVE',
+  FAMILY = 'FAMILY',
+  MR = 'MR',
+  DOCTOR = 'DOCTOR',
+  SOCIAL = 'SOCIAL'
 }
 
 export interface ChatMessage {
@@ -26,10 +38,11 @@ export interface Patient {
   age: number;
   gender: 'Male' | 'Female';
   category: PatientCategory;
+  type: PatientType;
   city: string;
   status: PatientStatus;
   createdAt: number;
-  isVisitor: boolean;
+  mobile?: string;
   // Timestamps
   inTime?: number;
   outTime?: number;
