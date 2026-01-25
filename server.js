@@ -14,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 
 // Move API routes BEFORE static file serving
+const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+});
+
 // Get all patients with their messages
 app.get('/api/patients', async (req, res) => {
     try {
@@ -43,11 +47,11 @@ app.get('/api/patients', async (req, res) => {
 });
 
 // Serve static files from the frontend build
-app.use(express.static(path.join(__dirname, 'dist')));
-
-const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-});
+app.use(express.static(path.join(__dirname, 'dist'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    }
+}));
 
 // Add new patient
 app.post('/api/patients', async (req, res) => {
@@ -125,6 +129,7 @@ app.post('/api/patients/:id/messages', async (req, res) => {
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
