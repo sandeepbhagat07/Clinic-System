@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Patient, PatientStatus, PatientCategory, PatientType } from '../types';
+import { Patient, PatientStatus, PatientCategory, PatientType, AppView } from '../types';
 import { Icons, TYPE_THEMES } from '../constants';
 
 interface PatientCardProps {
@@ -13,6 +13,7 @@ interface PatientCardProps {
   onOpenChat?: (id: string) => void;
   isActive?: boolean;
   isLarge?: boolean;
+  activeView?: AppView;
 }
 
 const PatientCard: React.FC<PatientCardProps> = ({ 
@@ -24,7 +25,8 @@ const PatientCard: React.FC<PatientCardProps> = ({
   onClick,
   onOpenChat,
   isActive,
-  isLarge
+  isLarge,
+  activeView
 }) => {
   
   const handleDragStart = (e: React.DragEvent) => {
@@ -56,10 +58,10 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
   return (
     <div 
-      draggable={!onClick}
+      draggable={!onClick && activeView === 'OPERATOR'}
       onDragStart={handleDragStart}
       onClick={() => onClick?.(patient.id)}
-      className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} group relative overflow-hidden flex flex-col`}
+      className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : (activeView === 'OPERATOR' ? 'cursor-grab active:cursor-grabbing' : '')} group relative overflow-hidden flex flex-col`}
     >
       {/* Visitor Badge - High Visibility */}
       {isVisitorCategory && (

@@ -56,4 +56,4 @@ export interface Patient {
 
 export type PatientFormData = Omit<Patient, 'id' | 'queueId' | 'status' | 'createdAt' | 'notes' | 'medicines' | 'hasUnreadAlert' | 'messages' | 'inTime' | 'outTime'>;
 
-export type AppView = 'OPERATOR' | 'DOCTOR';
+export type AppView = 'OPERATOR' | 'DOCTOR' | 'LOGIN';

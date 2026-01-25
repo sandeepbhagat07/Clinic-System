@@ -5,6 +5,7 @@ import QueueColumn from './components/QueueColumn';
 import PatientForm from './components/PatientForm';
 import DoctorConsultationForm from './components/DoctorConsultationForm';
 import ChatModal from './components/ChatModal';
+import Login from './components/Login';
 import { Icons } from './constants';
 
 const API_BASE = '/api';
@@ -14,7 +15,8 @@ const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [nextQueueId, setNextQueueId] = useState(1);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [activeView, setActiveView] = useState<AppView>('OPERATOR');
+  const [activeView, setActiveView] = useState<AppView>('LOGIN');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeConsultationId, setActiveConsultationId] = useState<string | null>(null);
   const [activeChatPatientId, setActiveChatPatientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -298,6 +300,21 @@ const App: React.FC = () => {
     markChatRead(id);
   }, [markChatRead]);
 
+  const handleLogin = (role: AppView) => {
+    setActiveView(role);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setActiveView('LOGIN');
+    setActiveConsultationId(null);
+  };
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-indigo-700 text-white flex-col gap-4">
@@ -314,25 +331,20 @@ const App: React.FC = () => {
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Icons.Stethoscope /> ClinicFlow
           </h1>
-          <div className="flex bg-indigo-900/50 p-1 rounded-lg border border-indigo-400/30">
-            <button 
-              onClick={() => setActiveView('OPERATOR')}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeView === 'OPERATOR' ? 'bg-white text-indigo-700 shadow-md' : 'text-indigo-200 hover:text-white'}`}
-            >
-              Operator
-            </button>
-            <button 
-              onClick={() => setActiveView('DOCTOR')}
-              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeView === 'DOCTOR' ? 'bg-white text-indigo-700 shadow-md' : 'text-indigo-200 hover:text-white'}`}
-            >
-              Doctor
-            </button>
+          <div className="text-xs font-black bg-indigo-900/50 px-3 py-1.5 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
+            {activeView} PANEL
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-xs font-black bg-indigo-900/40 px-3 py-1.5 rounded-full border border-indigo-400/20 uppercase tracking-widest">
+          <div className="text-xs font-black bg-indigo-900/40 px-3 py-1.5 rounded-full border border-indigo-400/20 uppercase tracking-widest hidden sm:block">
             ACTIVE PATIENTS: {activePatientCount}
           </div>
+          <button 
+            onClick={handleLogout}
+            className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-md"
+          >
+            Logout
+          </button>
         </div>
       </header>
 

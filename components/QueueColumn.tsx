@@ -19,6 +19,7 @@ interface QueueColumnProps {
   headerColor: string;
   isSortable?: boolean;
   isLarge?: boolean;
+  activeView?: AppView;
 }
 
 const QueueColumn: React.FC<QueueColumnProps> = ({ 
@@ -36,7 +37,8 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
   colorClass,
   headerColor,
   isSortable,
-  isLarge
+  isLarge,
+  activeView
 }) => {
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
   
@@ -111,6 +113,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
                 onOpenChat={onOpenChat}
                 isActive={activeCardId === p.id}
                 isLarge={isLarge}
+                activeView={activeView}
               />
             </div>
           ))
