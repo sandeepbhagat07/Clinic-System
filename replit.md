@@ -24,20 +24,20 @@ ClinicFlow is a React-based outpatient department (OPD) management application. 
 - Vite for development and build
 - Tailwind CSS (via CDN)
 - localStorage for data persistence (works without backend)
-- Optional: Node.js/Express backend with MySQL
+- Optional: Node.js/Express backend with PostgreSQL (using Replit PostgreSQL)
 
 ## Running the Application
-The frontend runs on port 5000 using Vite dev server.
+The frontend runs on port 5000 using Vite dev server. The backend runs on port 3001.
 
 ## Features
 - Operator View: Patient/visitor registration
 - Doctor View: Consultation management
 - Queue Management: Waiting, OPD, and Completed columns
 - Real-time chat between operator and doctor
-- Offline-first design with localStorage fallback
+- Database-backed design with localStorage fallback
 
 ## Recent Changes
-- 2026-01-25: Initial Replit setup
-  - Configured Vite for port 5000 with allowedHosts: true
-  - Added Vite entry point script to index.html
-  - Removed import map (using Vite bundling instead)
+- 2026-01-25: Migrated from MySQL to Replit PostgreSQL
+  - Updated server.js to use `pg` pool
+  - Updated frontend to connect to port 3001 API
+  - Updated UI labels and documentation

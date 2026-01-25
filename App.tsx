@@ -8,7 +8,7 @@ import ChatModal from './components/ChatModal';
 import { Icons } from './constants';
 
 const API_BASE = window.location.origin.includes('replit.dev') 
-  ? `https://${window.location.host.replace('-5000-', '-3001-')}/api`
+  ? `https://${window.location.host.replace('-5000', '-3001')}/api`
   : 'http://localhost:3001/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
 
@@ -422,7 +422,7 @@ const App: React.FC = () => {
       <footer className="bg-slate-200 text-slate-500 text-[10px] px-4 py-1 flex justify-between border-t border-slate-300">
         <div className="flex gap-4">
           <span>Database: <strong className={isBackendOnline ? "text-emerald-600 uppercase" : "text-amber-600 uppercase"}>
-            {isBackendOnline ? 'MYSQL CONNECTED' : 'OFFLINE (LOCAL STORAGE)'}
+            {isBackendOnline ? 'POSTGRES CONNECTED' : 'OFFLINE (LOCAL STORAGE)'}
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
