@@ -13,13 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the frontend build
-app.use(express.static(path.join(__dirname, 'dist')));
-
-const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-});
-
+// Move API routes BEFORE static file serving
 // Get all patients with their messages
 app.get('/api/patients', async (req, res) => {
     try {
@@ -46,6 +40,13 @@ app.get('/api/patients', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// Serve static files from the frontend build
+app.use(express.static(path.join(__dirname, 'dist')));
+
+const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
 });
 
 // Add new patient

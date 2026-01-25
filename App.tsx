@@ -29,10 +29,14 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/patients`);
+        // Add cache-busting timestamp to prevent browser from serving cached 404/html
+        const res = await fetch(`${API_BASE}/patients?t=${Date.now()}`);
         if (!res.ok) throw new Error('Backend responded with error');
         
         const data = await res.json();
+        // If data is an array, it's valid API response
+        if (!Array.isArray(data)) throw new Error('Invalid data format');
+        
         setPatients(data);
         setIsBackendOnline(true);
         
