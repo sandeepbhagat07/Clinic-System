@@ -26,6 +26,19 @@ const App: React.FC = () => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
   };
 
+  // Fetch next queue ID from server (for today)
+  const fetchNextQueueId = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/next-queue-id`);
+      if (res.ok) {
+        const data = await res.json();
+        setNextQueueId(data.nextQueueId);
+      }
+    } catch (err) {
+      console.warn("Could not fetch next queue ID", err);
+    }
+  };
+
   // Initial Fetch: Try Backend -> Fallback to LocalStorage
   useEffect(() => {
     const fetchData = async () => {
@@ -39,9 +52,8 @@ const App: React.FC = () => {
         setPatients(data);
         setIsBackendOnline(true);
         
-        const patientEntries = data.filter((p: Patient) => p.category === PatientCategory.PATIENT);
-        const maxId = patientEntries.length > 0 ? Math.max(...patientEntries.map((p: Patient) => p.queueId)) : 0;
-        setNextQueueId(maxId + 1);
+        // Fetch next queue ID for today from server
+        await fetchNextQueueId();
       } catch (err) {
         console.warn("Backend unreachable. Falling back to local storage.", err);
         setIsBackendOnline(false);
@@ -49,8 +61,13 @@ const App: React.FC = () => {
         const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (localData) {
           const parsed = JSON.parse(localData);
-          setPatients(parsed);
-          const patientEntries = parsed.filter((p: Patient) => p.category === PatientCategory.PATIENT);
+          // Filter to today's patients only for local storage fallback
+          const today = new Date().toDateString();
+          const todayPatients = parsed.filter((p: Patient) => 
+            new Date(p.createdAt).toDateString() === today
+          );
+          setPatients(todayPatients);
+          const patientEntries = todayPatients.filter((p: Patient) => p.category === PatientCategory.PATIENT);
           const maxId = patientEntries.length > 0 ? Math.max(...patientEntries.map((p: Patient) => p.queueId)) : 0;
           setNextQueueId(maxId + 1);
         }
@@ -82,9 +99,13 @@ const App: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newPatient)
         });
+        const responseData = await res.json();
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to save to database');
+          throw new Error(responseData.error || 'Failed to save to database');
+        }
+        // Get the server-assigned queue ID
+        if (responseData.queueId) {
+          newPatient.queueId = responseData.queueId;
         }
       }
     } catch (err) {
@@ -93,7 +114,12 @@ const App: React.FC = () => {
       const updated = [...patients, newPatient];
       setPatients(updated);
       saveToLocalStorage(updated);
-      if (!isVisitor) setNextQueueId(prev => prev + 1);
+      // Fetch updated next queue ID from server
+      if (isBackendOnline && !isVisitor) {
+        fetchNextQueueId();
+      } else if (!isVisitor) {
+        setNextQueueId(prev => prev + 1);
+      }
     }
   }, [nextQueueId, patients, isBackendOnline]);
 

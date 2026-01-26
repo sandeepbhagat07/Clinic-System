@@ -27,10 +27,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// Get all patients with their messages
+// Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', async (req, res) => {
     try {
-        const patientsRes = await pool.query('SELECT * FROM patients');
+        // Filter patients where created_at is today
+        const patientsRes = await pool.query(
+            `SELECT * FROM patients WHERE DATE(created_at) = CURRENT_DATE ORDER BY created_at ASC`
+        );
         const messagesRes = await pool.query('SELECT * FROM messages ORDER BY timestamp ASC');
         
         const patients = patientsRes.rows;
@@ -70,22 +73,58 @@ const toISOSafe = (ts, fallbackToNow = false) => {
     return date.toISOString();
 };
 
-// Add new patient
+// Get next queue ID for today (only counts PATIENT category, not VISITOR)
+app.get('/api/next-queue-id', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT COALESCE(MAX(queue_id), 0) + 1 as next_id 
+             FROM patients 
+             WHERE DATE(created_at) = CURRENT_DATE AND category = 'PATIENT'`
+        );
+        res.json({ nextQueueId: result.rows[0].next_id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Add new patient (with atomic queue ID assignment using transaction)
 app.post('/api/patients', async (req, res) => {
+    const client = await pool.connect();
     try {
         const p = req.body;
         console.log('Adding patient:', p.id);
         const createdAt = toISOSafe(p.createdAt, true);
         const inTime = toISOSafe(p.inTime, true);
-        const result = await pool.query(
-            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-            [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert]
+        
+        await client.query('BEGIN');
+        
+        // For PATIENT category, calculate queue_id atomically within transaction
+        let queueId = 0;
+        if (p.category === 'PATIENT') {
+            // Lock the patients table for today's entries to prevent race conditions
+            const queueResult = await client.query(
+                `SELECT COALESCE(MAX(queue_id), 0) + 1 as next_id 
+                 FROM patients 
+                 WHERE DATE(created_at) = CURRENT_DATE AND category = 'PATIENT'
+                 FOR UPDATE`
+            );
+            queueId = queueResult.rows[0].next_id;
+        }
+        
+        const result = await client.query(
+            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING queue_id',
+            [p.id, queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert]
         );
+        
+        await client.query('COMMIT');
         console.log('Insert result:', result.rowCount);
-        res.status(201).json({ success: true });
+        res.status(201).json({ success: true, queueId: result.rows[0].queue_id });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('Insert error:', err.message);
         res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
     }
 });
 
