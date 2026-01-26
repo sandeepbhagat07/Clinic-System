@@ -37,6 +37,11 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Implemented proper timestamp handling
+  - Database now uses PostgreSQL TIMESTAMP type for created_at, in_time, out_time
+  - Server converts timestamps to ISO format with safe validation (toISOSafe helper)
+  - PatientCard displays times in 12-hour format (e.g., "10:30 AM")
+  - Handles both string and number timestamp formats
 - 2026-01-25: Migrated from MySQL to Replit PostgreSQL
   - Updated server.js to use `pg` pool
   - Updated frontend to connect to port 3001 API
