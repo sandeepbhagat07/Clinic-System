@@ -67,9 +67,11 @@ app.post('/api/patients', async (req, res) => {
     try {
         const p = req.body;
         console.log('Adding patient:', p.id);
+        const createdAt = p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString();
+        const inTime = p.inTime ? new Date(p.inTime).toISOString() : new Date().toISOString();
         const result = await pool.query(
             'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-            [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, p.createdAt, p.inTime, p.hasUnreadAlert]
+            [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert]
         );
         console.log('Insert result:', result.rowCount);
         res.status(201).json({ success: true });
@@ -85,12 +87,12 @@ app.patch('/api/patients/:id', async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
         
-        // Map camelCase to snake_case for PG
+        // Map camelCase to snake_case for PG and convert timestamps
         const pgUpdates = {};
         if ('queueId' in updates) pgUpdates.queue_id = updates.queueId;
-        if ('createdAt' in updates) pgUpdates.created_at = updates.createdAt;
-        if ('inTime' in updates) pgUpdates.in_time = updates.inTime;
-        if ('outTime' in updates) pgUpdates.out_time = updates.outTime;
+        if ('createdAt' in updates) pgUpdates.created_at = updates.createdAt ? new Date(updates.createdAt).toISOString() : null;
+        if ('inTime' in updates) pgUpdates.in_time = updates.inTime ? new Date(updates.inTime).toISOString() : null;
+        if ('outTime' in updates) pgUpdates.out_time = updates.outTime ? new Date(updates.outTime).toISOString() : null;
         if ('hasUnreadAlert' in updates) pgUpdates.has_unread_alert = updates.hasUnreadAlert;
         
         Object.keys(updates).forEach(key => {

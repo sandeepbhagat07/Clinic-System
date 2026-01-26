@@ -46,9 +46,11 @@ const PatientCard: React.FC<PatientCardProps> = ({
   
   const finalThemeClasses = `${themeClasses} ${animationClasses}`;
 
-  const formatTime = (ts?: number) => {
+  const formatTime = (ts?: number | string | null) => {
     if (!ts) return null;
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const date = typeof ts === 'string' ? new Date(ts) : new Date(ts);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const handleChatClick = (e: React.MouseEvent) => {
