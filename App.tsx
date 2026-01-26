@@ -355,7 +355,18 @@ const App: React.FC = () => {
             {activeView} PANEL
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Compact Stats Badge */}
+          <div className="flex items-center gap-3 bg-[#1e1b4b]/40 px-3 py-1.5 rounded-full border border-indigo-400/20">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span className="text-[11px] font-bold text-white uppercase tracking-wide">{patients.filter(p => p.category === PatientCategory.PATIENT).length} PATIENTS</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+              <span className="text-[11px] font-bold text-white uppercase tracking-wide">{patients.filter(p => p.category === PatientCategory.VISITOR).length} VISITOR</span>
+            </div>
+          </div>
           <button 
             onClick={handleLogout}
             className="bg-[#e11d48] hover:bg-[#be123c] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm"
@@ -364,22 +375,6 @@ const App: React.FC = () => {
           </button>
         </div>
       </header>
-
-      {/* Stats Bar - Floating Mini Dashboard */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-center gap-4 shadow-sm shrink-0">
-        <div className="flex items-center gap-2 bg-blue-500 text-white px-4 py-1.5 rounded-full shadow-sm">
-          <span className="font-black text-[11px] uppercase tracking-wide">Active</span>
-          <span className="bg-white text-blue-600 font-black text-sm px-2 py-0.5 rounded-full min-w-[24px] text-center">{waitingPatients.filter(p => p.category === PatientCategory.PATIENT).length}</span>
-        </div>
-        <div className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full shadow-sm">
-          <span className="font-black text-[11px] uppercase tracking-wide">Total</span>
-          <span className="bg-white text-emerald-600 font-black text-sm px-2 py-0.5 rounded-full min-w-[24px] text-center">{patients.filter(p => p.category === PatientCategory.PATIENT).length}</span>
-        </div>
-        <div className="flex items-center gap-2 bg-orange-500 text-white px-4 py-1.5 rounded-full shadow-sm">
-          <span className="font-black text-[11px] uppercase tracking-wide">Visitor</span>
-          <span className="bg-white text-orange-600 font-black text-sm px-2 py-0.5 rounded-full min-w-[24px] text-center">{patients.filter(p => p.category === PatientCategory.VISITOR).length}</span>
-        </div>
-      </div>
 
       <main className="flex flex-1 p-3 gap-3 overflow-hidden">
         {/* LEFT COLUMN: WAITING QUEUE */}
