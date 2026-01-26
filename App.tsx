@@ -5,10 +5,13 @@ import PatientForm from './components/PatientForm';
 import DoctorConsultationForm from './components/DoctorConsultationForm';
 import ChatModal from './components/ChatModal';
 import Login from './components/Login';
+import PatientReport from './components/PatientReport';
 import { Icons } from './constants';
 
 const API_BASE = '/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
+
+type PageView = 'DASHBOARD' | 'REPORT';
 
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -20,6 +23,7 @@ const App: React.FC = () => {
   const [activeChatPatientId, setActiveChatPatientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
+  const [currentPage, setCurrentPage] = useState<PageView>('DASHBOARD');
 
   // Persistence Helper
   const saveToLocalStorage = (data: Patient[]) => {
@@ -350,6 +354,29 @@ const App: React.FC = () => {
           <div className="text-[10px] font-black bg-[#1e1b4b]/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
             {activeView} PANEL
           </div>
+          {/* Navigation Menu */}
+          <nav className="flex items-center gap-1 bg-[#1e1b4b]/30 rounded-lg p-1 border border-indigo-400/20">
+            <button
+              onClick={() => setCurrentPage('DASHBOARD')}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+                currentPage === 'DASHBOARD' 
+                  ? 'bg-white text-indigo-700 shadow-sm' 
+                  : 'text-indigo-100 hover:bg-white/10'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setCurrentPage('REPORT')}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+                currentPage === 'REPORT' 
+                  ? 'bg-white text-indigo-700 shadow-sm' 
+                  : 'text-indigo-100 hover:bg-white/10'
+              }`}
+            >
+              Patient Report
+            </button>
+          </nav>
         </div>
         <div className="flex items-center gap-3">
           {/* Compact Stats Badge */}
@@ -373,98 +400,104 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex flex-1 p-3 gap-3 overflow-hidden">
-        {/* LEFT COLUMN: WAITING QUEUE */}
-        <section className="w-1/4 h-full">
-          <QueueColumn 
-            title="WAITING QUEUE" 
-            patients={waitingPatients}
-            onUpdateStatus={updatePatientStatus}
-            onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
-            onEdit={activeView === 'OPERATOR' ? handleEditPatient : undefined}
-            onMove={movePatient}
-            onReorder={handleReorder}
-            onOpenChat={openChat}
-            status={PatientStatus.WAITING}
-            colorClass="bg-[#f0f9ff] border-[#bae6fd]"
-            headerColor="bg-[#2563eb]"
-            isSortable
-            activeView={activeView}
-          />
-        </section>
+        {currentPage === 'DASHBOARD' ? (
+          <>
+            {/* LEFT COLUMN: WAITING QUEUE */}
+            <section className="w-1/4 h-full">
+              <QueueColumn 
+                title="WAITING QUEUE" 
+                patients={waitingPatients}
+                onUpdateStatus={updatePatientStatus}
+                onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
+                onEdit={activeView === 'OPERATOR' ? handleEditPatient : undefined}
+                onMove={movePatient}
+                onReorder={handleReorder}
+                onOpenChat={openChat}
+                status={PatientStatus.WAITING}
+                colorClass="bg-[#f0f9ff] border-[#bae6fd]"
+                headerColor="bg-[#2563eb]"
+                isSortable
+                activeView={activeView}
+              />
+            </section>
 
-        {/* CENTER COLUMN: OPD QUEUE + FORM */}
-        <section className="w-1/2 flex flex-col gap-3 h-full">
-          {/* TOP: OPD QUEUE */}
-          <div className="h-1/3 min-h-[180px]">
-            <QueueColumn 
-              title="OPD (CONSULTATION)" 
-              patients={opdPatients}
-              onUpdateStatus={updatePatientStatus}
-              onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
-              onEdit={activeView === 'OPERATOR' ? handleEditPatient : undefined}
-              onReorder={handleReorder}
-              onOpenChat={openChat}
-              status={PatientStatus.OPD}
-              colorClass="bg-[#fffbeb] border-[#fde68a]"
-              headerColor="bg-[#d97706]"
-              onCardClick={activeView === 'DOCTOR' ? handleDoctorClick : undefined}
-              activeCardId={activeConsultationId || undefined}
-              isLarge={activeView === 'DOCTOR'}
-              activeView={activeView}
-            />
-          </div>
-          
-          {/* BOTTOM: FORM */}
-          <div className="flex-1 bg-white rounded-lg shadow-sm border border-[#e2e8f0] overflow-hidden flex flex-col">
-            <div className="bg-[#334155] text-white p-2.5 px-4 font-bold flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 uppercase tracking-wide text-[11px]">
-                {activeView === 'OPERATOR' ? (
-                  <><Icons.Plus className="w-4 h-4" /> {editingPatient ? 'Edit Entry' : 'NEW REGISTRATION FORM'}</>
-                ) : (
-                  <><Icons.Stethoscope className="w-4 h-4" /> OPD (CONSULTATION) FORM</>
-                )}
-              </div>
-              {activeView === 'OPERATOR' && editingPatient && (
-                <button 
-                  onClick={() => setEditingPatient(null)} 
-                  className="text-[9px] bg-[#475569] hover:bg-[#64748b] px-2 py-0.5 rounded uppercase font-bold"
-                >
-                  Cancel Edit
-                </button>
-              )}
-            </div>
-            <div className="p-4 flex-1 overflow-y-auto">
-              {activeView === 'OPERATOR' ? (
-                <PatientForm 
-                  onSubmit={editingPatient ? (data) => updatePatient(editingPatient.id, data) : addPatient} 
-                  initialData={editingPatient || undefined}
-                  isEditing={!!editingPatient}
-                />
-              ) : (
-                <DoctorConsultationForm 
-                  patient={patients.find(p => p.id === activeConsultationId)}
-                  onSave={handleSaveConsultation}
+            {/* CENTER COLUMN: OPD QUEUE + FORM */}
+            <section className="w-1/2 flex flex-col gap-3 h-full">
+              {/* TOP: OPD QUEUE */}
+              <div className="h-1/3 min-h-[180px]">
+                <QueueColumn 
+                  title="OPD (CONSULTATION)" 
+                  patients={opdPatients}
+                  onUpdateStatus={updatePatientStatus}
+                  onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
+                  onEdit={activeView === 'OPERATOR' ? handleEditPatient : undefined}
+                  onReorder={handleReorder}
                   onOpenChat={openChat}
+                  status={PatientStatus.OPD}
+                  colorClass="bg-[#fffbeb] border-[#fde68a]"
+                  headerColor="bg-[#d97706]"
+                  onCardClick={activeView === 'DOCTOR' ? handleDoctorClick : undefined}
+                  activeCardId={activeConsultationId || undefined}
+                  isLarge={activeView === 'DOCTOR'}
+                  activeView={activeView}
                 />
-              )}
-            </div>
-          </div>
-        </section>
+              </div>
+              
+              {/* BOTTOM: FORM */}
+              <div className="flex-1 bg-white rounded-lg shadow-sm border border-[#e2e8f0] overflow-hidden flex flex-col">
+                <div className="bg-[#334155] text-white p-2.5 px-4 font-bold flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2 uppercase tracking-wide text-[11px]">
+                    {activeView === 'OPERATOR' ? (
+                      <><Icons.Plus className="w-4 h-4" /> {editingPatient ? 'Edit Entry' : 'NEW REGISTRATION FORM'}</>
+                    ) : (
+                      <><Icons.Stethoscope className="w-4 h-4" /> OPD (CONSULTATION) FORM</>
+                    )}
+                  </div>
+                  {activeView === 'OPERATOR' && editingPatient && (
+                    <button 
+                      onClick={() => setEditingPatient(null)} 
+                      className="text-[9px] bg-[#475569] hover:bg-[#64748b] px-2 py-0.5 rounded uppercase font-bold"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+                <div className="p-4 flex-1 overflow-y-auto">
+                  {activeView === 'OPERATOR' ? (
+                    <PatientForm 
+                      onSubmit={editingPatient ? (data) => updatePatient(editingPatient.id, data) : addPatient} 
+                      initialData={editingPatient || undefined}
+                      isEditing={!!editingPatient}
+                    />
+                  ) : (
+                    <DoctorConsultationForm 
+                      patient={patients.find(p => p.id === activeConsultationId)}
+                      onSave={handleSaveConsultation}
+                      onOpenChat={openChat}
+                    />
+                  )}
+                </div>
+              </div>
+            </section>
 
-        {/* RIGHT COLUMN: COMPLETED OPD */}
-        <section className="w-1/4 h-full">
-          <QueueColumn 
-            title="COMPLETED OPD" 
-            patients={completedPatients}
-            onUpdateStatus={updatePatientStatus}
-            onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
-            onOpenChat={openChat}
-            status={PatientStatus.COMPLETED}
-            colorClass="bg-[#f0fdf4] border-[#bbf7d0]"
-            headerColor="bg-[#059669]"
-            activeView={activeView}
-          />
-        </section>
+            {/* RIGHT COLUMN: COMPLETED OPD */}
+            <section className="w-1/4 h-full">
+              <QueueColumn 
+                title="COMPLETED OPD" 
+                patients={completedPatients}
+                onUpdateStatus={updatePatientStatus}
+                onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
+                onOpenChat={openChat}
+                status={PatientStatus.COMPLETED}
+                colorClass="bg-[#f0fdf4] border-[#bbf7d0]"
+                headerColor="bg-[#059669]"
+                activeView={activeView}
+              />
+            </section>
+          </>
+        ) : (
+          <PatientReport apiBase={API_BASE} />
+        )}
       </main>
 
       {activeChatPatientId && (

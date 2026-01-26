@@ -87,6 +87,64 @@ app.get('/api/next-queue-id', async (req, res) => {
     }
 });
 
+// Patient Report: Search with filters and date range (returns last 150 records by default)
+app.get('/api/patients/report', async (req, res) => {
+    try {
+        const { name, city, mobile, startDate, endDate } = req.query;
+        
+        let query = 'SELECT * FROM patients WHERE 1=1';
+        const params = [];
+        let paramIndex = 1;
+        
+        if (name) {
+            query += ` AND LOWER(name) LIKE LOWER($${paramIndex})`;
+            params.push(`%${name}%`);
+            paramIndex++;
+        }
+        
+        if (city) {
+            query += ` AND LOWER(city) LIKE LOWER($${paramIndex})`;
+            params.push(`%${city}%`);
+            paramIndex++;
+        }
+        
+        if (mobile) {
+            query += ` AND mobile LIKE $${paramIndex}`;
+            params.push(`%${mobile}%`);
+            paramIndex++;
+        }
+        
+        if (startDate) {
+            query += ` AND DATE(created_at) >= $${paramIndex}`;
+            params.push(startDate);
+            paramIndex++;
+        }
+        
+        if (endDate) {
+            query += ` AND DATE(created_at) <= $${paramIndex}`;
+            params.push(endDate);
+            paramIndex++;
+        }
+        
+        query += ' ORDER BY created_at DESC LIMIT 150';
+        
+        const result = await pool.query(query, params);
+        
+        const data = result.rows.map(p => ({
+            ...p,
+            queueId: p.queue_id,
+            createdAt: p.created_at,
+            inTime: p.in_time,
+            outTime: p.out_time,
+            hasUnreadAlert: !!p.has_unread_alert
+        }));
+        
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Add new patient (with atomic queue ID assignment using transaction)
 app.post('/api/patients', async (req, res) => {
     const client = await pool.connect();
