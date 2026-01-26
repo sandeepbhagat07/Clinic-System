@@ -62,13 +62,21 @@ app.use(express.static(path.join(__dirname, 'dist'), {
     }
 }));
 
+// Helper to safely convert timestamp to ISO string
+const toISOSafe = (ts, fallbackToNow = false) => {
+    if (!ts) return fallbackToNow ? new Date().toISOString() : null;
+    const date = new Date(ts);
+    if (isNaN(date.getTime())) return fallbackToNow ? new Date().toISOString() : null;
+    return date.toISOString();
+};
+
 // Add new patient
 app.post('/api/patients', async (req, res) => {
     try {
         const p = req.body;
         console.log('Adding patient:', p.id);
-        const createdAt = p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString();
-        const inTime = p.inTime ? new Date(p.inTime).toISOString() : new Date().toISOString();
+        const createdAt = toISOSafe(p.createdAt, true);
+        const inTime = toISOSafe(p.inTime, true);
         const result = await pool.query(
             'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
             [p.id, p.queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert]
@@ -87,12 +95,12 @@ app.patch('/api/patients/:id', async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
         
-        // Map camelCase to snake_case for PG and convert timestamps
+        // Map camelCase to snake_case for PG and convert timestamps safely
         const pgUpdates = {};
         if ('queueId' in updates) pgUpdates.queue_id = updates.queueId;
-        if ('createdAt' in updates) pgUpdates.created_at = updates.createdAt ? new Date(updates.createdAt).toISOString() : null;
-        if ('inTime' in updates) pgUpdates.in_time = updates.inTime ? new Date(updates.inTime).toISOString() : null;
-        if ('outTime' in updates) pgUpdates.out_time = updates.outTime ? new Date(updates.outTime).toISOString() : null;
+        if ('createdAt' in updates) pgUpdates.created_at = toISOSafe(updates.createdAt);
+        if ('inTime' in updates) pgUpdates.in_time = toISOSafe(updates.inTime);
+        if ('outTime' in updates) pgUpdates.out_time = toISOSafe(updates.outTime);
         if ('hasUnreadAlert' in updates) pgUpdates.has_unread_alert = updates.hasUnreadAlert;
         
         Object.keys(updates).forEach(key => {
