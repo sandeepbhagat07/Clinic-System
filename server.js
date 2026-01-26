@@ -2,6 +2,8 @@
 import express from 'express';
 import pg from 'pg';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,8 +12,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST", "PATCH", "DELETE"]
+    }
+});
+
 app.use(cors());
 app.use(express.json());
+
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
 
 // Move API routes BEFORE static file serving
 const pool = new pg.Pool({
@@ -178,6 +196,9 @@ app.post('/api/patients', async (req, res) => {
         
         await client.query('COMMIT');
         console.log('Insert result:', result.rowCount, 'Queue ID:', result.rows[0].queue_id);
+        
+        io.emit('patient:add', { patientId: p.id, queueId: result.rows[0].queue_id });
+        
         res.status(201).json({ success: true, queueId: result.rows[0].queue_id });
     } catch (err) {
         await client.query('ROLLBACK');
@@ -216,6 +237,8 @@ app.patch('/api/patients/:id', async (req, res) => {
         const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
         await pool.query(`UPDATE patients SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
         
+        io.emit('patient:update', { patientId: id, updates });
+        
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -226,6 +249,9 @@ app.patch('/api/patients/:id', async (req, res) => {
 app.delete('/api/patients/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM patients WHERE id = $1', [req.params.id]);
+        
+        io.emit('patient:delete', { patientId: req.params.id });
+        
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -242,6 +268,9 @@ app.post('/api/patients/:id/messages', async (req, res) => {
             [m.id, id, m.text, m.sender, m.timestamp]
         );
         await pool.query('UPDATE patients SET has_unread_alert = TRUE WHERE id = $1', [id]);
+        
+        io.emit('message:new', { patientId: id, message: m });
+        
         res.status(201).json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -255,6 +284,6 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} with Socket.IO`);
 });

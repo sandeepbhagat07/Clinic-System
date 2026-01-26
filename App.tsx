@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { Patient, PatientStatus, PatientFormData, AppView, ChatMessage, PatientCategory, PatientType } from './types';
 import QueueColumn from './components/QueueColumn';
 import PatientForm from './components/PatientForm';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageView>('DASHBOARD');
+  const socketRef = useRef<Socket | null>(null);
 
   // Persistence Helper
   const saveToLocalStorage = (data: Patient[]) => {
@@ -81,6 +83,68 @@ const App: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  // Socket.IO connection for real-time sync
+  useEffect(() => {
+    const socket = io(window.location.origin, {
+      transports: ['websocket', 'polling']
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('Socket connected:', socket.id);
+    });
+
+    socket.on('patient:add', () => {
+      console.log('Socket: patient added, refreshing...');
+      refreshPatients();
+    });
+
+    socket.on('patient:update', () => {
+      console.log('Socket: patient updated, refreshing...');
+      refreshPatients();
+    });
+
+    socket.on('patient:delete', () => {
+      console.log('Socket: patient deleted, refreshing...');
+      refreshPatients();
+    });
+
+    socket.on('message:new', ({ patientId, message }) => {
+      console.log('Socket: new message for patient', patientId);
+      setPatients(prev => prev.map(p => {
+        if (p.id !== patientId) return p;
+        const messageExists = p.messages.some(m => m.id === message.id);
+        if (messageExists) return p;
+        return { 
+          ...p, 
+          messages: [...p.messages, message],
+          hasUnreadAlert: true 
+        };
+      }));
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket disconnected');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // Refresh patients from server
+  const refreshPatients = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/patients?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.warn('Failed to refresh patients:', err);
+    }
+  };
 
   const addPatient = useCallback(async (formData: PatientFormData) => {
     const isVisitor = formData.category === PatientCategory.VISITOR;
