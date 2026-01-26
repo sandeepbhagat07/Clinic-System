@@ -100,30 +100,33 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </h4>
           </div>
           
-          {/* Row 2: Demographics + IN Time */}
-          <div className="flex items-center justify-between gap-2 mb-2">
+          {/* Row 2: Demographics */}
+          <div className="flex items-center gap-2 mb-2">
             <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
               {patient.age} yrs <span className="mx-1 text-slate-300">•</span> {patient.gender}
             </div>
-            {patient.inTime && (
-              <div className="flex items-center gap-1.5 text-slate-400 font-bold whitespace-nowrap text-[10px] uppercase flex-shrink-0">
-                <Icons.Clock />
-                <span>{formatTime(patient.inTime)}</span>
-              </div>
-            )}
           </div>
 
-          {/* Row 3: Location + OUT Time Badge */}
-          <div className="flex items-center justify-between gap-2 mt-auto">
+          {/* Row 3: Location */}
+          <div className="flex items-center gap-2 mt-auto">
             <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
               {patient.city}
             </div>
-            {patient.outTime && (
-              <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] whitespace-nowrap uppercase shadow-sm flex-shrink-0">
-                OUT: {formatTime(patient.outTime)}
-              </div>
-            )}
           </div>
+        </div>
+
+        {/* Time Badges Column - Right Side */}
+        <div className="flex flex-col gap-1.5 flex-shrink-0 ml-2">
+          {patient.inTime && (
+            <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+              IN : {formatTime(patient.inTime)}
+            </div>
+          )}
+          {patient.outTime && (
+            <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+              OUT: {formatTime(patient.outTime)}
+            </div>
+          )}
         </div>
       </div>
 
