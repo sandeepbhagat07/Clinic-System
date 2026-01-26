@@ -18,6 +18,14 @@ const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+});
+
 // Get all patients with their messages
 app.get('/api/patients', async (req, res) => {
     try {
