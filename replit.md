@@ -38,6 +38,11 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Version 1.09 - Added Socket.IO real-time synchronization
+  - Patient queue changes sync instantly between OPERATOR and DOCTOR browsers
+  - Messages sync in real-time with unread notification badges
+  - Events: patient:add, patient:update, patient:delete, message:new
+  - Message deduplication prevents duplicate display for sender
 - 2026-01-26: Added navigation menu with Dashboard and Patient Report views
   - Menu visible in header for both OPERATOR and DOCTOR users
   - Dashboard shows role-specific panel (OPERATOR = Registration, DOCTOR = Consultation)
