@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Patient, PatientStatus, PatientCategory } from '../types';
+import { Patient, PatientStatus, PatientCategory, AppView } from '../types';
 import PatientCard from './PatientCard';
 
 interface QueueColumnProps {

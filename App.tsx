@@ -348,8 +348,9 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex flex-col md:flex-row flex-1 p-4 gap-4 overflow-hidden">
-        <section className="w-full md:w-1/4 h-full">
+      <main className="flex flex-1 p-4 gap-4 overflow-hidden">
+        {/* WAITING QUEUE (LEFT) */}
+        <section className="w-1/4 h-full">
           <QueueColumn 
             title="Waiting Queue" 
             patients={waitingPatients}
@@ -363,11 +364,14 @@ const App: React.FC = () => {
             colorClass="border-blue-400 bg-blue-50/50"
             headerColor="bg-blue-600"
             isSortable
+            activeView={activeView}
           />
         </section>
 
-        <section className="w-full md:w-1/2 flex flex-col gap-4 h-full">
-          <div className="h-[30%] min-h-[200px]">
+        {/* CENTER COLUMN (OPD TOP + FORM BOTTOM) */}
+        <section className="w-1/2 flex flex-col gap-4 h-full">
+          {/* OPD QUEUE on CENTER TOP */}
+          <div className="h-1/3 min-h-[200px]">
             <QueueColumn 
               title="OPD (Consultation)" 
               patients={opdPatients}
@@ -382,16 +386,18 @@ const App: React.FC = () => {
               onCardClick={activeView === 'DOCTOR' ? handleDoctorClick : undefined}
               activeCardId={activeConsultationId || undefined}
               isLarge={activeView === 'DOCTOR'}
+              activeView={activeView}
             />
           </div>
           
-          <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-y-auto flex flex-col">
-            <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between">
+          {/* FORM on CENTER Under OPD QUEUE */}
+          <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
+            <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
                 {activeView === 'OPERATOR' ? (
-                  <><Icons.Plus /> {editingPatient ? 'Edit Entry' : 'New Registration'}</>
+                  <><Icons.Plus /> {editingPatient ? 'Edit Entry' : 'NEW REGISTRATION FORM'}</>
                 ) : (
-                  <><Icons.Stethoscope /> Consultation Desk</>
+                  <><Icons.Stethoscope /> OPD (Consultation) FORM</>
                 )}
               </div>
               {activeView === 'OPERATOR' && editingPatient && (
@@ -416,7 +422,8 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        <section className="w-full md:w-1/4 h-full">
+        {/* COMPLETED OPD Block on RIGHT SIDE */}
+        <section className="w-1/4 h-full">
           <QueueColumn 
             title="Completed OPD" 
             patients={completedPatients}
@@ -426,6 +433,7 @@ const App: React.FC = () => {
             status={PatientStatus.COMPLETED}
             colorClass="border-emerald-400 bg-emerald-50/50"
             headerColor="bg-emerald-600"
+            activeView={activeView}
           />
         </section>
       </main>
