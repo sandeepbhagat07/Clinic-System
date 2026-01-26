@@ -44,6 +44,7 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
   - Patient Report page with search filters (Name, City, Mobile) and date range
   - API endpoint /api/patients/report returns last 150 records ordered by created_at DESC
   - Compact stats badge in header showing patient/visitor counts with green/orange bullets
+  - CSV Export button exports filtered patient data with date-stamped filename
 - 2026-01-26: Implemented daily-based patient management
   - Patients are now filtered by today's date - only current day's patients appear in queues
   - Queue numbers (#1, #2, etc.) reset daily - first patient each day gets #1
