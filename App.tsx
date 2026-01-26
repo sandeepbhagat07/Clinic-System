@@ -110,6 +110,11 @@ const App: React.FC = () => {
       refreshPatients();
     });
 
+    socket.on('patient:reorder', () => {
+      console.log('Socket: patient reordered, refreshing...');
+      refreshPatients();
+    });
+
     socket.on('message:new', ({ patientId, message }) => {
       console.log('Socket: new message for patient', patientId);
       setPatients(prev => prev.map(p => {
@@ -268,10 +273,11 @@ const App: React.FC = () => {
 
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${id}`, {
-          method: 'PATCH',
+        // Use dedicated status endpoint for proper sort_order handling
+        await fetch(`${API_BASE}/patients/${id}/status`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates)
+          body: JSON.stringify({ status: newStatus, outTime: updates.outTime })
         });
       }
     } catch (err) {
@@ -285,6 +291,26 @@ const App: React.FC = () => {
       }
     }
   }, [patients, activeConsultationId, isBackendOnline]);
+
+  const reorderPatient = useCallback(async (id: string, direction: 'up' | 'down') => {
+    const patient = patients.find(p => p.id === id);
+    if (!patient) return;
+    
+    // Cannot reorder FAMILY/RELATIVE types
+    if (patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE) return;
+    
+    try {
+      if (isBackendOnline) {
+        await fetch(`${API_BASE}/patients/${id}/reorder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction })
+        });
+      }
+    } catch (err) {
+      console.error("Reorder failed:", err);
+    }
+  }, [patients, isBackendOnline]);
 
   const deletePatient = useCallback(async (id: string) => {
     if (!confirm("Are you sure you want to remove this record?")) return;
@@ -324,52 +350,103 @@ const App: React.FC = () => {
   }, [patients, isBackendOnline]);
 
   const movePatient = useCallback((id: string, direction: 'up' | 'down') => {
-    setPatients(prev => {
-      const patient = prev.find(p => p.id === id);
-      if (!patient || patient.status === PatientStatus.COMPLETED) return prev;
-      const statusPatients = prev.filter(p => p.status === patient.status);
-      const index = statusPatients.findIndex(p => p.id === id);
-      if (index === -1) return prev;
-      if (direction === 'up' && index === 0) return prev;
-      if (direction === 'down' && index === statusPatients.length - 1) return prev;
-      const targetPatient = statusPatients[direction === 'up' ? index - 1 : index + 1];
-      const masterIdx = prev.findIndex(p => p.id === id);
-      const targetMasterIdx = prev.findIndex(p => p.id === targetPatient.id);
-      const newPatients = [...prev];
-      [newPatients[masterIdx], newPatients[targetMasterIdx]] = [newPatients[targetMasterIdx], newPatients[masterIdx]];
-      saveToLocalStorage(newPatients);
-      return newPatients;
-    });
-  }, []);
+    if (isBackendOnline) {
+      // Call backend to update sort_order
+      reorderPatient(id, direction);
+    } else {
+      // Local fallback when backend is offline
+      setPatients(prev => {
+        const patient = prev.find(p => p.id === id);
+        if (!patient || patient.status !== PatientStatus.WAITING) return prev;
+        // Skip FAMILY/RELATIVE types
+        if (patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE) return prev;
+        
+        const reorderablePatients = prev
+          .filter(p => p.status === PatientStatus.WAITING && p.type !== PatientType.FAMILY && p.type !== PatientType.RELATIVE)
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        
+        const index = reorderablePatients.findIndex(p => p.id === id);
+        if (index === -1) return prev;
+        if (direction === 'up' && index === 0) return prev;
+        if (direction === 'down' && index === reorderablePatients.length - 1) return prev;
+        
+        // Swap sort orders
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        const targetPatient = reorderablePatients[targetIndex];
+        
+        const newPatients = prev.map(p => {
+          if (p.id === id) return { ...p, sortOrder: targetPatient.sortOrder };
+          if (p.id === targetPatient.id) return { ...p, sortOrder: patient.sortOrder };
+          return p;
+        });
+        
+        saveToLocalStorage(newPatients);
+        return newPatients;
+      });
+    }
+  }, [reorderPatient, isBackendOnline]);
 
-  const handleReorder = useCallback((sourceId: string, targetId: string) => {
-    setPatients(prev => {
-      const sourceIdx = prev.findIndex(p => p.id === sourceId);
-      const targetIdx = prev.findIndex(p => p.id === targetId);
-      if (sourceIdx === -1 || targetIdx === -1) return prev;
-      const sourcePatient = prev[sourceIdx];
-      if (sourcePatient.status === PatientStatus.COMPLETED) return prev;
-      const newPatients = [...prev];
-      const [removed] = newPatients.splice(sourceIdx, 1);
-      const newTargetIdx = newPatients.findIndex(p => p.id === targetId);
-      newPatients.splice(newTargetIdx, 0, removed);
-      saveToLocalStorage(newPatients);
-      return newPatients;
-    });
-  }, []);
+  const handleReorder = useCallback(async (sourceId: string, targetId: string) => {
+    if (isBackendOnline) {
+      try {
+        const res = await fetch(`${API_BASE}/api/patients/${sourceId}/move-to`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetId })
+        });
+        if (res.ok) {
+          await refreshPatients();
+        }
+      } catch (err) {
+        console.error('Drag-and-drop reorder failed:', err);
+      }
+    } else {
+      // Local fallback
+      setPatients(prev => {
+        const sourceIdx = prev.findIndex(p => p.id === sourceId);
+        const targetIdx = prev.findIndex(p => p.id === targetId);
+        if (sourceIdx === -1 || targetIdx === -1) return prev;
+        const sourcePatient = prev[sourceIdx];
+        const targetPatient = prev[targetIdx];
+        
+        if (sourcePatient.status !== PatientStatus.WAITING) return prev;
+        // Skip if source or target is FAMILY/RELATIVE
+        if (sourcePatient.type === PatientType.FAMILY || sourcePatient.type === PatientType.RELATIVE) return prev;
+        if (targetPatient.type === PatientType.FAMILY || targetPatient.type === PatientType.RELATIVE) return prev;
+        
+        // Swap sort orders for local reordering
+        const newPatients = prev.map(p => {
+          if (p.id === sourceId) return { ...p, sortOrder: targetPatient.sortOrder };
+          if (p.id === targetId) return { ...p, sortOrder: sourcePatient.sortOrder };
+          return p;
+        });
+        saveToLocalStorage(newPatients);
+        return newPatients;
+      });
+    }
+  }, [isBackendOnline, refreshPatients]);
 
   const waitingPatients = useMemo(() => {
     const filtered = patients.filter(p => p.status === PatientStatus.WAITING);
     return [...filtered].sort((a, b) => {
       const aPinned = a.type === PatientType.FAMILY || a.type === PatientType.RELATIVE;
       const bPinned = b.type === PatientType.FAMILY || b.type === PatientType.RELATIVE;
+      // Pinned types (FAMILY/RELATIVE) always at top, sorted by creation time
       if (aPinned && !bPinned) return -1;
       if (!aPinned && bPinned) return 1;
-      return 0;
+      if (aPinned && bPinned) return (a.createdAt || 0) - (b.createdAt || 0);
+      // Non-pinned types sorted by sortOrder (lower = higher priority)
+      return (a.sortOrder || 0) - (b.sortOrder || 0);
     });
   }, [patients]);
 
-  const opdPatients = useMemo(() => patients.filter(p => p.status === PatientStatus.OPD), [patients]);
+  // OPD queue: latest moved to OPD at top (by inTime or createdAt DESC)
+  const opdPatients = useMemo(() => 
+    patients
+      .filter(p => p.status === PatientStatus.OPD)
+      .sort((a, b) => (b.inTime || b.createdAt || 0) - (a.inTime || a.createdAt || 0)), 
+    [patients]
+  );
   const completedPatients = useMemo(() => 
     patients
       .filter(p => p.status === PatientStatus.COMPLETED)

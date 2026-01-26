@@ -130,12 +130,32 @@ const PatientCard: React.FC<PatientCardProps> = ({
       <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
         
         <div className="flex items-center gap-1">
-          {patient.status === PatientStatus.WAITING && onMove && (
-            <>
-              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'up'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Move Up"><Icons.ChevronUp /></button>
-              <button onClick={(e) => { e.stopPropagation(); onMove(patient.id, 'down'); }} className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Move Down"><Icons.ChevronDown /></button>
-            </>
-          )}
+          {patient.status === PatientStatus.WAITING && onMove && (() => {
+            const isPinned = patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE;
+            const btnClass = isPinned 
+              ? "text-slate-200 cursor-not-allowed p-1.5 rounded-md" 
+              : "text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100";
+            return (
+              <>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'up'); }} 
+                  className={btnClass} 
+                  title={isPinned ? "Cannot move pinned type" : "Move Up"}
+                  disabled={isPinned}
+                >
+                  <Icons.ChevronUp />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'down'); }} 
+                  className={btnClass} 
+                  title={isPinned ? "Cannot move pinned type" : "Move Down"}
+                  disabled={isPinned}
+                >
+                  <Icons.ChevronDown />
+                </button>
+              </>
+            );
+          })()}
         </div>
 
         <div className="flex items-center gap-4">

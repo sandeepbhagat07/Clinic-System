@@ -64,6 +64,7 @@ app.get('/api/patients', async (req, res) => {
             inTime: p.in_time,
             outTime: p.out_time,
             hasUnreadAlert: !!p.has_unread_alert,
+            sortOrder: p.sort_order || 0,
             messages: messages.filter(m => m.patient_id === p.id).map(m => ({
                 ...m,
                 patientId: m.patient_id
@@ -259,6 +260,227 @@ app.patch('/api/patients/:id', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// Change patient status (handles sort_order logic)
+app.post('/api/patients/:id/status', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { id } = req.params;
+        const { status, outTime } = req.body;
+        
+        await client.query('BEGIN');
+        
+        // Get current patient
+        const patientRes = await client.query(
+            'SELECT status, sort_order, type FROM patients WHERE id = $1', [id]
+        );
+        if (patientRes.rows.length === 0) {
+            throw new Error('Patient not found');
+        }
+        
+        const patient = patientRes.rows[0];
+        const oldStatus = patient.status;
+        const isPinned = patient.type === 'FAMILY' || patient.type === 'RELATIVE';
+        
+        // If moving FROM WAITING to OPD/COMPLETED, renumber remaining waiting cards
+        if (oldStatus === 'WAITING' && status !== 'WAITING' && !isPinned && patient.sort_order > 0) {
+            await client.query(
+                `UPDATE patients SET sort_order = sort_order - 1 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order > $1`,
+                [patient.sort_order]
+            );
+        }
+        
+        // If moving TO WAITING (from OPD), assign sort_order = 1 and shift others
+        let newSortOrder = 0;
+        if (status === 'WAITING' && oldStatus !== 'WAITING' && !isPinned) {
+            await client.query(
+                `UPDATE patients SET sort_order = sort_order + 1 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order > 0`
+            );
+            newSortOrder = 1;
+        }
+        
+        // Update patient status
+        const updateFields = { status };
+        if (outTime) updateFields.out_time = toISOSafe(outTime);
+        if (status === 'WAITING' && !isPinned) updateFields.sort_order = newSortOrder;
+        if (status !== 'WAITING') updateFields.sort_order = 0;
+        
+        const keys = Object.keys(updateFields);
+        const values = Object.values(updateFields);
+        const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+        
+        await client.query(`UPDATE patients SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
+        
+        await client.query('COMMIT');
+        
+        io.emit('patient:update', { patientId: id, updates: { status } });
+        
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// Reorder patient in waiting queue (move up or down)
+app.post('/api/patients/:id/reorder', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { id } = req.params;
+        const { direction } = req.body; // 'up' or 'down'
+        
+        await client.query('BEGIN');
+        
+        // Get current patient
+        const patientRes = await client.query(
+            'SELECT sort_order, type FROM patients WHERE id = $1', [id]
+        );
+        if (patientRes.rows.length === 0) {
+            throw new Error('Patient not found');
+        }
+        
+        const patient = patientRes.rows[0];
+        const currentOrder = patient.sort_order;
+        
+        // Cannot reorder pinned types
+        if (patient.type === 'FAMILY' || patient.type === 'RELATIVE') {
+            return res.json({ success: false, message: 'Cannot reorder FAMILY/RELATIVE patients' });
+        }
+        
+        // Find adjacent patient to swap with
+        const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+        
+        if (targetOrder < 1) {
+            return res.json({ success: false, message: 'Already at top' });
+        }
+        
+        // Find patient with target order (non-pinned, waiting, today)
+        const adjacentRes = await client.query(
+            `SELECT id FROM patients 
+             WHERE DATE(created_at) = CURRENT_DATE 
+             AND status = 'WAITING' 
+             AND type NOT IN ('FAMILY', 'RELATIVE')
+             AND sort_order = $1`,
+            [targetOrder]
+        );
+        
+        if (adjacentRes.rows.length === 0) {
+            return res.json({ success: false, message: 'No patient to swap with' });
+        }
+        
+        const adjacentId = adjacentRes.rows[0].id;
+        
+        // Swap sort orders
+        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
+        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [currentOrder, adjacentId]);
+        
+        await client.query('COMMIT');
+        
+        io.emit('patient:reorder', { patientId: id, direction });
+        
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// Drag-and-drop reorder endpoint
+app.post('/api/patients/:id/move-to', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { id } = req.params;
+        const { targetId } = req.body;
+        
+        await client.query('BEGIN');
+        
+        // Get source patient
+        const sourceRes = await client.query(
+            'SELECT sort_order, type, status FROM patients WHERE id = $1', [id]
+        );
+        if (sourceRes.rows.length === 0) {
+            throw new Error('Source patient not found');
+        }
+        const source = sourceRes.rows[0];
+        
+        // Cannot reorder pinned types or non-waiting
+        if (source.type === 'FAMILY' || source.type === 'RELATIVE') {
+            return res.json({ success: false, message: 'Cannot reorder FAMILY/RELATIVE patients' });
+        }
+        if (source.status !== 'WAITING') {
+            return res.json({ success: false, message: 'Can only reorder waiting patients' });
+        }
+        
+        // Get target patient
+        const targetRes = await client.query(
+            'SELECT sort_order, type FROM patients WHERE id = $1', [targetId]
+        );
+        if (targetRes.rows.length === 0) {
+            throw new Error('Target patient not found');
+        }
+        const target = targetRes.rows[0];
+        
+        // Cannot drop on pinned types
+        if (target.type === 'FAMILY' || target.type === 'RELATIVE') {
+            return res.json({ success: false, message: 'Cannot drop on FAMILY/RELATIVE patients' });
+        }
+        
+        const sourceOrder = source.sort_order;
+        const targetOrder = target.sort_order;
+        
+        if (sourceOrder === targetOrder) {
+            return res.json({ success: true }); // No change needed
+        }
+        
+        if (sourceOrder < targetOrder) {
+            // Moving down: shift items between source+1 and target up by 1
+            await client.query(
+                `UPDATE patients SET sort_order = sort_order - 1 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order > $1 AND sort_order <= $2`,
+                [sourceOrder, targetOrder]
+            );
+        } else {
+            // Moving up: shift items between target and source-1 down by 1
+            await client.query(
+                `UPDATE patients SET sort_order = sort_order + 1 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order >= $1 AND sort_order < $2`,
+                [targetOrder, sourceOrder]
+            );
+        }
+        
+        // Set source to target position
+        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
+        
+        await client.query('COMMIT');
+        
+        io.emit('patient:reorder', { patientId: id });
+        
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
     }
 });
 

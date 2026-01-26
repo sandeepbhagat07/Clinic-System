@@ -38,6 +38,16 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Version 1.10 - Card ordering in Waiting Queue
+  - Added sort_order column to patients table for ordering cards
+  - FAMILY/RELATIVE patient types pinned at top (cannot be reordered)
+  - Other patient types can be reordered using Up/Down arrow buttons
+  - Up/Down arrows visible on all cards, but disabled (grayed) for FAMILY/RELATIVE
+  - Moving patient from OPD back to Waiting places them at position #1 (top of reorderable section)
+  - New patients get sort_order = 1, existing cards shift down
+  - API endpoints: /api/patients/:id/reorder (Up/Down), /api/patients/:id/status (with sort_order)
+  - Socket event: patient:reorder syncs ordering across browsers in real-time
+  - OPD and Completed queues sort by time DESC (latest at top)
 - 2026-01-26: Version 1.09 - Added Socket.IO real-time synchronization
   - Patient queue changes sync instantly between OPERATOR and DOCTOR browsers
   - Messages sync in real-time with unread notification badges

@@ -46,6 +46,8 @@ export interface Patient {
   // Timestamps
   inTime?: number;
   outTime?: number;
+  // Sort order for waiting queue
+  sortOrder?: number;
   // Chat Alert System
   messages: ChatMessage[];
   hasUnreadAlert: boolean;
