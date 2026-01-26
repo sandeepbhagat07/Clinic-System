@@ -14,6 +14,7 @@ ClinicFlow is a React-based outpatient department (OPD) management application. 
   - `PatientForm.tsx` - Patient registration form
   - `DoctorConsultationForm.tsx` - Doctor consultation form
   - `ChatModal.tsx` - Chat modal for patient communication
+  - `PatientReport.tsx` - Patient report with search and date range filters
 - `types.ts` - TypeScript type definitions
 - `constants.tsx` - Application constants and icons
 - `server.js` - Optional Express backend with MySQL (not required for basic operation)
@@ -37,6 +38,12 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Added navigation menu with Dashboard and Patient Report views
+  - Menu visible in header for both OPERATOR and DOCTOR users
+  - Dashboard shows role-specific panel (OPERATOR = Registration, DOCTOR = Consultation)
+  - Patient Report page with search filters (Name, City, Mobile) and date range
+  - API endpoint /api/patients/report returns last 150 records ordered by created_at DESC
+  - Compact stats badge in header showing patient/visitor counts with green/orange bullets
 - 2026-01-26: Implemented daily-based patient management
   - Patients are now filtered by today's date - only current day's patients appear in queues
   - Queue numbers (#1, #2, etc.) reset daily - first patient each day gets #1
