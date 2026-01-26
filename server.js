@@ -101,14 +101,16 @@ app.post('/api/patients', async (req, res) => {
         // For PATIENT category, calculate queue_id atomically within transaction
         let queueId = 0;
         if (p.category === 'PATIENT') {
-            // Lock the patients table for today's entries to prevent race conditions
-            const queueResult = await client.query(
-                `SELECT COALESCE(MAX(queue_id), 0) + 1 as next_id 
-                 FROM patients 
+            // Lock today's patient rows to prevent race conditions, then calculate max
+            const lockResult = await client.query(
+                `SELECT queue_id FROM patients 
                  WHERE DATE(created_at) = CURRENT_DATE AND category = 'PATIENT'
                  FOR UPDATE`
             );
-            queueId = queueResult.rows[0].next_id;
+            const maxQueueId = lockResult.rows.length > 0 
+                ? Math.max(...lockResult.rows.map(r => r.queue_id)) 
+                : 0;
+            queueId = maxQueueId + 1;
         }
         
         const result = await client.query(
@@ -117,7 +119,7 @@ app.post('/api/patients', async (req, res) => {
         );
         
         await client.query('COMMIT');
-        console.log('Insert result:', result.rowCount);
+        console.log('Insert result:', result.rowCount, 'Queue ID:', result.rows[0].queue_id);
         res.status(201).json({ success: true, queueId: result.rows[0].queue_id });
     } catch (err) {
         await client.query('ROLLBACK');
