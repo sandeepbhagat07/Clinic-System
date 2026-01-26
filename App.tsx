@@ -309,10 +309,6 @@ const App: React.FC = () => {
     [patients]
   );
 
-  const activePatientCount = useMemo(() => {
-    return patients.filter(p => p.category === PatientCategory.PATIENT && p.status !== PatientStatus.COMPLETED).length;
-  }, [patients]);
-
   const handleEditPatient = (p: Patient) => setEditingPatient(p);
   const handleDoctorClick = (id: string) => setActiveConsultationId(id);
   const openChat = useCallback((id: string) => {
