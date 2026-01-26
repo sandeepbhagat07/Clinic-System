@@ -189,9 +189,26 @@ app.post('/api/patients', async (req, res) => {
             queueId = maxQueueId + 1;
         }
         
+        // For FAMILY/RELATIVE types, sort_order = 0 (pinned at top)
+        // For other types, sort_order = 1 (new at top of reorderable section), shift others down
+        const isPinned = p.type === 'FAMILY' || p.type === 'RELATIVE';
+        let sortOrder = 0;
+        
+        if (!isPinned) {
+            // Shift existing non-pinned waiting patients down by 1
+            await client.query(
+                `UPDATE patients SET sort_order = sort_order + 1 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order > 0`
+            );
+            sortOrder = 1;
+        }
+        
         const result = await client.query(
-            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING queue_id',
-            [p.id, queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert]
+            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING queue_id',
+            [p.id, queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert, sortOrder]
         );
         
         await client.query('COMMIT');
