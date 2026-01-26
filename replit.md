@@ -38,6 +38,14 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Version 1.11 - Global Search in Dashboard
+  - Added search box in header (only visible on Dashboard, hidden on Patient Report)
+  - Live instant filtering as you type - no page refresh needed
+  - Searches across Name, Mobile, and City fields (case-insensitive)
+  - Filters all queues simultaneously: Waiting, OPD, and Completed
+  - Clear (X) button to reset search
+  - Search is local to each user - doesn't affect other browsers
+  - Added gender-specific avatar icons (blue for male, pink for female)
 - 2026-01-26: Version 1.10 - Card ordering in Waiting Queue
   - Added sort_order column to patients table for ordering cards
   - FAMILY/RELATIVE patient types pinned at top (cannot be reordered)
