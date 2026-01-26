@@ -89,6 +89,38 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
       : <span className="px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded-full uppercase">Visitor</span>;
   };
 
+  const exportToCSV = () => {
+    if (patients.length === 0) return;
+    
+    const headers = ['Queue#', 'Name', 'Age', 'Gender', 'City', 'Mobile', 'Category', 'Date', 'In Time'];
+    const rows = patients.map(p => [
+      p.queueId || '',
+      p.name || '',
+      p.age || '',
+      p.gender || '',
+      p.city || '',
+      p.mobile || '',
+      p.category || '',
+      formatDate(p.createdAt),
+      formatTime(p.inTime)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `patient_report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-md overflow-hidden">
       {/* Search Filters */}
@@ -155,6 +187,14 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
               className="px-4 py-2 bg-slate-200 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-300 transition-colors"
             >
               Clear
+            </button>
+            <button
+              type="button"
+              onClick={exportToCSV}
+              disabled={patients.length === 0}
+              className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Icons.Download className="w-4 h-4" /> Export CSV
             </button>
           </div>
         </form>
