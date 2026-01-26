@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Patient, PatientCategory, PatientStatus } from '../types';
+import { Patient, PatientCategory } from '../types';
 import { Icons } from '../constants';
 
 interface PatientReportProps {
@@ -89,15 +89,6 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
       : <span className="px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded-full uppercase">Visitor</span>;
   };
 
-  const getStatusBadge = (status: PatientStatus) => {
-    const styles: Record<PatientStatus, string> = {
-      [PatientStatus.WAITING]: 'bg-blue-100 text-blue-700',
-      [PatientStatus.OPD]: 'bg-purple-100 text-purple-700',
-      [PatientStatus.COMPLETED]: 'bg-green-100 text-green-700',
-    };
-    return <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${styles[status]}`}>{status}</span>;
-  };
-
   return (
     <div className="h-full flex flex-col bg-white rounded-xl shadow-md overflow-hidden">
       {/* Search Filters */}
@@ -169,6 +160,28 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
         </form>
       </div>
 
+      {/* Stats Badges Row */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-4">
+        <div className="flex items-center gap-3 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">{patients.filter(p => p.category === PatientCategory.PATIENT).length} PATIENTS</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">{patients.filter(p => p.category === PatientCategory.VISITOR).length} VISITORS</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">{patients.filter(p => p.gender === 'Male').length} MALE</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">{patients.filter(p => p.gender === 'Female').length} FEMALE</span>
+          </div>
+        </div>
+      </div>
+
       {/* Results Table */}
       <div className="flex-1 overflow-auto">
         {loading ? (
@@ -191,7 +204,6 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">City</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Mobile</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Category</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Date</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">In Time</th>
               </tr>
@@ -206,7 +218,6 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
                   <td className="px-4 py-3 text-sm text-slate-600">{patient.city}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{patient.mobile || '-'}</td>
                   <td className="px-4 py-3">{getCategoryBadge(patient.category)}</td>
-                  <td className="px-4 py-3">{getStatusBadge(patient.status)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{formatDate(patient.createdAt)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{formatTime(patient.inTime)}</td>
                 </tr>
