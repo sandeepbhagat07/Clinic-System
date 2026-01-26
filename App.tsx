@@ -370,7 +370,7 @@ const App: React.FC = () => {
             </section>
 
             <section className="w-full md:w-1/2 flex flex-col gap-4 h-full">
-              <div className="h-1/3 min-h-[180px]">
+              <div className="h-1/4 min-h-[140px]">
                 <QueueColumn 
                   title="OPD (Consultation)" 
                   patients={opdPatients}
@@ -387,12 +387,12 @@ const App: React.FC = () => {
               </div>
 
               <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-y-auto flex flex-col">
-                <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between">
-                  <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
+                <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between uppercase tracking-wide text-xs">
+                  <div className="flex items-center gap-2">
                     <Icons.Plus /> {editingPatient ? 'Edit Entry' : 'New Registration'}
                   </div>
                   {editingPatient && (
-                    <button onClick={() => setEditingPatient(null)} className="text-[10px] bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded">Cancel Edit</button>
+                    <button onClick={() => setEditingPatient(null)} className="text-[10px] bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded normal-case">Cancel Edit</button>
                   )}
                 </div>
                 <div className="p-5 flex-1 overflow-y-auto">
@@ -435,7 +435,7 @@ const App: React.FC = () => {
             </section>
 
             <section className="w-full md:w-1/2 flex flex-col gap-4 h-full">
-              <div className="h-1/3 min-h-[180px]">
+              <div className="h-1/4 min-h-[140px]">
                 <QueueColumn 
                   title="OPD (Consultation)" 
                   patients={opdPatients}
@@ -453,8 +453,8 @@ const App: React.FC = () => {
               </div>
 
               <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-y-auto flex flex-col">
-                <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between">
-                  <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
+                <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between uppercase tracking-wide text-xs">
+                  <div className="flex items-center gap-2">
                     <Icons.Stethoscope /> Consultation Desk
                   </div>
                 </div>
