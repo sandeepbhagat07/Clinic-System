@@ -44,7 +44,8 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
   - Other patient types can be reordered using Up/Down arrow buttons
   - Up/Down arrows visible on all cards, but disabled (grayed) for FAMILY/RELATIVE
   - Moving patient from OPD back to Waiting places them at position #1 (top of reorderable section)
-  - New patients get sort_order = 1, existing cards shift down
+  - New patients get added at the bottom of the queue (max sort_order + 1)
+  - Startup normalization ensures sequential sort_order values on server restart
   - API endpoints: /api/patients/:id/reorder (Up/Down), /api/patients/:id/status (with sort_order)
   - Socket event: patient:reorder syncs ordering across browsers in real-time
   - OPD and Completed queues sort by time DESC (latest at top)
