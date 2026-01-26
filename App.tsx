@@ -30,12 +30,10 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Add cache-busting timestamp to prevent browser from serving cached 404/html
         const res = await fetch(`${API_BASE}/patients?t=${Date.now()}`);
         if (!res.ok) throw new Error('Backend responded with error');
         
         const data = await res.json();
-        // If data is an array, it's valid API response
         if (!Array.isArray(data)) throw new Error('Invalid data format');
         
         setPatients(data);
@@ -88,11 +86,9 @@ const App: React.FC = () => {
           const errData = await res.json();
           throw new Error(errData.error || 'Failed to save to database');
         }
-        console.log("Successfully saved to database");
       }
     } catch (err) {
       console.error("API call failed, saving locally only.", err);
-      // Optional: alert user that it's only saving locally
     } finally {
       const updated = [...patients, newPatient];
       setPatients(updated);
@@ -161,7 +157,6 @@ const App: React.FC = () => {
         });
       }
     } catch (err) {
-      // Fail silently
     } finally {
       const updated = patients.map(p => p.id === patientId ? { ...p, hasUnreadAlert: false } : p);
       setPatients(updated);
@@ -324,34 +319,34 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-slate-100 font-sans overflow-hidden">
-      <header className="bg-indigo-700 text-white p-4 shadow-lg flex items-center justify-between z-10">
+    <div className="flex flex-col h-screen w-full bg-[#f8fafc] font-sans overflow-hidden">
+      <header className="bg-[#4338ca] text-white p-3 px-4 shadow-md flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Icons.Stethoscope /> ClinicFlow
+          <h1 className="text-lg font-bold flex items-center gap-2">
+            <Icons.Stethoscope className="w-5 h-5" /> ClinicFlow
           </h1>
-          <div className="text-xs font-black bg-indigo-900/50 px-3 py-1.5 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
+          <div className="text-[10px] font-black bg-[#1e1b4b]/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
             {activeView} PANEL
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-xs font-black bg-indigo-900/40 px-3 py-1.5 rounded-full border border-indigo-400/20 uppercase tracking-widest hidden sm:block">
+          <div className="text-[10px] font-black bg-[#1e1b4b]/40 px-2.5 py-1 rounded-full border border-indigo-400/20 uppercase tracking-widest hidden sm:block">
             ACTIVE PATIENTS: {activePatientCount}
           </div>
           <button 
             onClick={handleLogout}
-            className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-md"
+            className="bg-[#e11d48] hover:bg-[#be123c] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm"
           >
             Logout
           </button>
         </div>
       </header>
 
-      <main className="flex flex-1 p-4 gap-4 overflow-hidden">
-        {/* WAITING QUEUE (LEFT) */}
+      <main className="flex flex-1 p-3 gap-3 overflow-hidden">
+        {/* LEFT COLUMN: WAITING QUEUE */}
         <section className="w-1/4 h-full">
           <QueueColumn 
-            title="Waiting Queue" 
+            title="WAITING QUEUE" 
             patients={waitingPatients}
             onUpdateStatus={updatePatientStatus}
             onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
@@ -360,19 +355,19 @@ const App: React.FC = () => {
             onReorder={handleReorder}
             onOpenChat={openChat}
             status={PatientStatus.WAITING}
-            colorClass="border-blue-400 bg-blue-50/50"
-            headerColor="bg-blue-600"
+            colorClass="bg-[#f0f9ff] border-[#bae6fd]"
+            headerColor="bg-[#2563eb]"
             isSortable
             activeView={activeView}
           />
         </section>
 
-        {/* CENTER COLUMN (OPD TOP + FORM BOTTOM) */}
-        <section className="w-1/2 flex flex-col gap-4 h-full">
-          {/* OPD QUEUE on CENTER TOP */}
-          <div className="h-1/3 min-h-[200px]">
+        {/* CENTER COLUMN: OPD QUEUE + FORM */}
+        <section className="w-1/2 flex flex-col gap-3 h-full">
+          {/* TOP: OPD QUEUE */}
+          <div className="h-1/3 min-h-[180px]">
             <QueueColumn 
-              title="OPD (Consultation)" 
+              title="OPD (CONSULTATION)" 
               patients={opdPatients}
               onUpdateStatus={updatePatientStatus}
               onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
@@ -380,8 +375,8 @@ const App: React.FC = () => {
               onReorder={handleReorder}
               onOpenChat={openChat}
               status={PatientStatus.OPD}
-              colorClass="border-amber-400 bg-amber-50/50"
-              headerColor="bg-amber-600"
+              colorClass="bg-[#fffbeb] border-[#fde68a]"
+              headerColor="bg-[#d97706]"
               onCardClick={activeView === 'DOCTOR' ? handleDoctorClick : undefined}
               activeCardId={activeConsultationId || undefined}
               isLarge={activeView === 'DOCTOR'}
@@ -389,21 +384,26 @@ const App: React.FC = () => {
             />
           </div>
           
-          {/* FORM on CENTER Under OPD QUEUE */}
-          <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
-            <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
+          {/* BOTTOM: FORM */}
+          <div className="flex-1 bg-white rounded-lg shadow-sm border border-[#e2e8f0] overflow-hidden flex flex-col">
+            <div className="bg-[#334155] text-white p-2.5 px-4 font-bold flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2 uppercase tracking-wide text-[11px]">
                 {activeView === 'OPERATOR' ? (
-                  <><Icons.Plus /> {editingPatient ? 'Edit Entry' : 'NEW REGISTRATION FORM'}</>
+                  <><Icons.Plus className="w-4 h-4" /> {editingPatient ? 'Edit Entry' : 'NEW REGISTRATION FORM'}</>
                 ) : (
-                  <><Icons.Stethoscope /> OPD (Consultation) FORM</>
+                  <><Icons.Stethoscope className="w-4 h-4" /> OPD (CONSULTATION) FORM</>
                 )}
               </div>
               {activeView === 'OPERATOR' && editingPatient && (
-                <button onClick={() => setEditingPatient(null)} className="text-[10px] bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded">Cancel Edit</button>
+                <button 
+                  onClick={() => setEditingPatient(null)} 
+                  className="text-[9px] bg-[#475569] hover:bg-[#64748b] px-2 py-0.5 rounded uppercase font-bold"
+                >
+                  Cancel Edit
+                </button>
               )}
             </div>
-            <div className="p-5 flex-1 overflow-y-auto">
+            <div className="p-4 flex-1 overflow-y-auto">
               {activeView === 'OPERATOR' ? (
                 <PatientForm 
                   onSubmit={editingPatient ? (data) => updatePatient(editingPatient.id, data) : addPatient} 
@@ -421,17 +421,17 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* COMPLETED OPD Block on RIGHT SIDE */}
+        {/* RIGHT COLUMN: COMPLETED OPD */}
         <section className="w-1/4 h-full">
           <QueueColumn 
-            title="Completed OPD" 
+            title="COMPLETED OPD" 
             patients={completedPatients}
             onUpdateStatus={updatePatientStatus}
             onDelete={activeView === 'OPERATOR' ? deletePatient : undefined}
             onOpenChat={openChat}
             status={PatientStatus.COMPLETED}
-            colorClass="border-emerald-400 bg-emerald-50/50"
-            headerColor="bg-emerald-600"
+            colorClass="bg-[#f0fdf4] border-[#bbf7d0]"
+            headerColor="bg-[#059669]"
             activeView={activeView}
           />
         </section>
@@ -446,14 +446,14 @@ const App: React.FC = () => {
         />
       )}
 
-      <footer className="bg-slate-200 text-slate-500 text-[10px] px-4 py-1 flex justify-between border-t border-slate-300">
+      <footer className="bg-[#f1f5f9] text-[#64748b] text-[9px] px-4 py-1 flex justify-between border-t border-[#e2e8f0] shrink-0">
         <div className="flex gap-4">
-          <span>Database: <strong className={isBackendOnline ? "text-emerald-600 uppercase" : "text-amber-600 uppercase"}>
+          <span>Database: <strong className={isBackendOnline ? "text-[#059669] uppercase" : "text-[#d97706] uppercase"}>
             {isBackendOnline ? 'POSTGRES CONNECTED' : 'OFFLINE (LOCAL STORAGE)'}
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
-        <span>ClinicFlow Full-Stack Edition</span>
+        <span className="font-medium">ClinicFlow Management v2.0</span>
       </footer>
     </div>
   );
