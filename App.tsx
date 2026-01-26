@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageView>('DASHBOARD');
+  const [searchTerm, setSearchTerm] = useState('');
   const socketRef = useRef<Socket | null>(null);
 
   // Persistence Helper
@@ -426,8 +427,19 @@ const App: React.FC = () => {
     }
   }, [isBackendOnline, refreshPatients]);
 
+  // Helper function to check if patient matches search term
+  const matchesSearch = useCallback((p: Patient, term: string) => {
+    if (!term.trim()) return true;
+    const search = term.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(search) ||
+      (p.mobile && p.mobile.toLowerCase().includes(search)) ||
+      (p.city && p.city.toLowerCase().includes(search))
+    );
+  }, []);
+
   const waitingPatients = useMemo(() => {
-    const filtered = patients.filter(p => p.status === PatientStatus.WAITING);
+    const filtered = patients.filter(p => p.status === PatientStatus.WAITING && matchesSearch(p, searchTerm));
     return [...filtered].sort((a, b) => {
       const aPinned = a.type === PatientType.FAMILY || a.type === PatientType.RELATIVE;
       const bPinned = b.type === PatientType.FAMILY || b.type === PatientType.RELATIVE;
@@ -438,20 +450,20 @@ const App: React.FC = () => {
       // Non-pinned types sorted by sortOrder (lower = higher priority)
       return (a.sortOrder || 0) - (b.sortOrder || 0);
     });
-  }, [patients]);
+  }, [patients, searchTerm, matchesSearch]);
 
   // OPD queue: latest moved to OPD at top (by inTime or createdAt DESC)
   const opdPatients = useMemo(() => 
     patients
-      .filter(p => p.status === PatientStatus.OPD)
+      .filter(p => p.status === PatientStatus.OPD && matchesSearch(p, searchTerm))
       .sort((a, b) => (b.inTime || b.createdAt || 0) - (a.inTime || a.createdAt || 0)), 
-    [patients]
+    [patients, searchTerm, matchesSearch]
   );
   const completedPatients = useMemo(() => 
     patients
-      .filter(p => p.status === PatientStatus.COMPLETED)
+      .filter(p => p.status === PatientStatus.COMPLETED && matchesSearch(p, searchTerm))
       .sort((a, b) => (b.outTime || 0) - (a.outTime || 0)), 
-    [patients]
+    [patients, searchTerm, matchesSearch]
   );
 
   const handleEditPatient = (p: Patient) => setEditingPatient(p);
@@ -518,6 +530,27 @@ const App: React.FC = () => {
               Patient Report
             </button>
           </nav>
+          {/* Global Search - Only on Dashboard */}
+          {currentPage === 'DASHBOARD' && (
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search name, mobile, city..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-white/10 border border-indigo-400/30 rounded-lg px-3 py-1.5 pl-8 text-[11px] text-white placeholder-indigo-200/70 focus:outline-none focus:ring-2 focus:ring-white/30 w-48"
+              />
+              <Icons.Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-200/70" />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-200/70 hover:text-white"
+                >
+                  <Icons.X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {/* Compact Stats Badge */}
