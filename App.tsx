@@ -369,23 +369,23 @@ const App: React.FC = () => {
               />
             </section>
 
-            <section className="w-full md:w-1/4 h-full">
-              <QueueColumn 
-                title="OPD (Consultation)" 
-                patients={opdPatients}
-                onUpdateStatus={updatePatientStatus}
-                onDelete={deletePatient}
-                onEdit={handleEditPatient}
-                onReorder={handleReorder}
-                onOpenChat={openChat}
-                status={PatientStatus.OPD}
-                colorClass="border-amber-400 bg-amber-50/50"
-                headerColor="bg-amber-600"
-                activeView={activeView}
-              />
-            </section>
+            <section className="w-full md:w-1/2 flex flex-col gap-4 h-full">
+              <div className="h-1/3 min-h-[180px]">
+                <QueueColumn 
+                  title="OPD (Consultation)" 
+                  patients={opdPatients}
+                  onUpdateStatus={updatePatientStatus}
+                  onDelete={deletePatient}
+                  onEdit={handleEditPatient}
+                  onReorder={handleReorder}
+                  onOpenChat={openChat}
+                  status={PatientStatus.OPD}
+                  colorClass="border-amber-400 bg-amber-50/50"
+                  headerColor="bg-amber-600"
+                  activeView={activeView}
+                />
+              </div>
 
-            <section className="w-full md:w-1/4 flex flex-col gap-4 h-full">
               <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-y-auto flex flex-col">
                 <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between">
                   <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
@@ -407,7 +407,7 @@ const App: React.FC = () => {
 
             <section className="w-full md:w-1/4 h-full">
               <QueueColumn 
-                title="Completed OPD" 
+                title="Completed Cases" 
                 patients={completedPatients}
                 onUpdateStatus={updatePatientStatus}
                 onDelete={deletePatient}
@@ -423,22 +423,35 @@ const App: React.FC = () => {
           <>
             <section className="w-full md:w-1/4 h-full">
               <QueueColumn 
-                title="OPD (Consultation)" 
-                patients={opdPatients}
+                title="Waiting Queue" 
+                patients={waitingPatients}
                 onUpdateStatus={updatePatientStatus}
-                onReorder={handleReorder}
                 onOpenChat={openChat}
-                status={PatientStatus.OPD}
-                colorClass="border-amber-400 bg-amber-50/50"
-                headerColor="bg-amber-600"
-                onCardClick={handleDoctorClick}
-                activeCardId={activeConsultationId || undefined}
-                isLarge
+                status={PatientStatus.WAITING}
+                colorClass="border-blue-400 bg-blue-50/50"
+                headerColor="bg-blue-600"
                 activeView={activeView}
               />
             </section>
 
             <section className="w-full md:w-1/2 flex flex-col gap-4 h-full">
+              <div className="h-1/3 min-h-[180px]">
+                <QueueColumn 
+                  title="OPD (Consultation)" 
+                  patients={opdPatients}
+                  onUpdateStatus={updatePatientStatus}
+                  onReorder={handleReorder}
+                  onOpenChat={openChat}
+                  status={PatientStatus.OPD}
+                  colorClass="border-amber-400 bg-amber-50/50"
+                  headerColor="bg-amber-600"
+                  onCardClick={handleDoctorClick}
+                  activeCardId={activeConsultationId || undefined}
+                  isLarge
+                  activeView={activeView}
+                />
+              </div>
+
               <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-y-auto flex flex-col">
                 <div className="bg-slate-700 text-white p-3 rounded-t-xl font-bold flex items-center justify-between">
                   <div className="flex items-center gap-2 uppercase tracking-wide text-xs">
