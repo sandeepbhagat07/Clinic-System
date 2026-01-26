@@ -36,6 +36,36 @@ const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+// Normalize sort_order on startup - ensures sequential values for waiting patients
+async function normalizeSortOrder() {
+    try {
+        // Ensure FAMILY/RELATIVE types have sort_order = 0
+        await pool.query(`UPDATE patients SET sort_order = 0 WHERE type IN ('FAMILY', 'RELATIVE')`);
+        
+        // Renumber non-pinned waiting patients for today with sequential sort_order
+        await pool.query(`
+            WITH ranked AS (
+                SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as new_order
+                FROM patients 
+                WHERE DATE(created_at) = CURRENT_DATE 
+                AND status = 'WAITING' 
+                AND type NOT IN ('FAMILY', 'RELATIVE')
+                AND (sort_order IS NULL OR sort_order = 0)
+            )
+            UPDATE patients 
+            SET sort_order = ranked.new_order 
+            FROM ranked 
+            WHERE patients.id = ranked.id
+        `);
+        console.log('Sort order normalization completed');
+    } catch (err) {
+        console.error('Sort order normalization error:', err.message);
+    }
+}
+
+// Run normalization on startup
+normalizeSortOrder();
+
 // Aggressive Cache-Control for Development
 app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
