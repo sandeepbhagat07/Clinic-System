@@ -18,6 +18,7 @@ const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+// Aggressive Cache-Control for Development
 app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -54,7 +55,7 @@ app.get('/api/patients', async (req, res) => {
     }
 });
 
-// Serve static files from the frontend build
+// Serve static files with headers to prevent caching
 app.use(express.static(path.join(__dirname, 'dist'), {
     setHeaders: (res, path) => {
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
