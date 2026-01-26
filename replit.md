@@ -37,6 +37,11 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-26: Implemented daily-based patient management
+  - Patients are now filtered by today's date - only current day's patients appear in queues
+  - Queue numbers (#1, #2, etc.) reset daily - first patient each day gets #1
+  - Server calculates queue ID atomically using database transaction to prevent duplicates
+  - Added /api/next-queue-id endpoint for fetching next queue number
 - 2026-01-26: Implemented proper timestamp handling
   - Database now uses PostgreSQL TIMESTAMP type for created_at, in_time, out_time
   - Server converts timestamps to ISO format with safe validation (toISOSafe helper)
