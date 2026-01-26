@@ -35,7 +35,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${patient.id}&gender=${patient.gender === 'Male' ? 'male' : 'female'}`;
+  const AvatarIcon = patient.gender === 'Male' ? Icons.MaleAvatar : Icons.FemaleAvatar;
 
   const activeClasses = isActive ? 'ring-4 ring-indigo-500 ring-offset-2 scale-[1.02] shadow-xl z-30' : 'hover:shadow-md';
   
@@ -77,8 +77,8 @@ const PatientCard: React.FC<PatientCardProps> = ({
         
         {/* Left Column: Avatar & Type Label */}
         <div className="flex flex-col items-center gap-3 flex-shrink-0">
-          <div className={`rounded-full bg-white border-2 border-slate-100 overflow-hidden shadow-sm transition-all ${isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
+            <AvatarIcon className="w-full h-full" />
           </div>
           <div className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest min-w-[75px] text-center shadow-sm">
             {patient.type}
