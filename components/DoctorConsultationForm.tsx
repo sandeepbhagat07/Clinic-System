@@ -7,9 +7,10 @@ interface DoctorConsultationFormProps {
   patient?: Patient;
   onSave: (id: string, notes: string, medicines: string) => void;
   onOpenChat: (id: string) => void;
+  onCallOperator: () => void;
 }
 
-const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat }) => {
+const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat, onCallOperator }) => {
   const [notes, setNotes] = useState('');
   const [medicines, setMedicines] = useState('');
 
@@ -108,13 +109,23 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
-      >
-        <Icons.CheckCircle />
-        Finalize Consultation
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onCallOperator}
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
+        >
+          <Icons.Phone />
+          Call Operator
+        </button>
+        <button
+          type="submit"
+          className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
+        >
+          <Icons.CheckCircle />
+          Finalize Consultation
+        </button>
+      </div>
     </form>
   );
 };

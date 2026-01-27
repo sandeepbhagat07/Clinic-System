@@ -545,6 +545,13 @@ app.post('/api/patients/:id/messages', async (req, res) => {
     }
 });
 
+// Doctor calls operator - broadcasts to all connected clients
+app.post('/api/call-operator', (req, res) => {
+    console.log('Doctor calling operator...');
+    io.emit('doctor:call-operator', { timestamp: Date.now() });
+    res.json({ success: true });
+});
+
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
