@@ -17,8 +17,11 @@ ClinicFlow is a React-based outpatient department (OPD) management application. 
   - `PatientReport.tsx` - Patient report with search and date range filters
 - `types.ts` - TypeScript type definitions
 - `constants.tsx` - Application constants and icons
-- `server.js` - Optional Express backend with MySQL (not required for basic operation)
-- `database.sql` - MySQL schema (for optional backend)
+- `server.js` - Express backend with PostgreSQL (required for full functionality)
+- `database.sql` - PostgreSQL schema (legacy reference)
+- `database_backup.sql` - Complete database backup with schema and sample data
+- `LOCAL_SETUP_GUIDE.md` - Step-by-step guide to run locally on Windows/Mac/Linux
+- `.env.example` - Environment variable template for local setup
 
 ## Technology Stack
 - React 19 with TypeScript
@@ -38,6 +41,10 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-27: Added local setup documentation
+  - LOCAL_SETUP_GUIDE.md - Complete instructions for Windows/Mac/Linux
+  - database_backup.sql - Full database schema and sample data export
+  - .env.example - Environment variable template
 - 2026-01-27: Version 1.14 - Completed Queue Sorting Fix
   - Most recently completed patients now appear at TOP of Completed Queue
   - Sorting uses outTime DESC with createdAt as fallback
