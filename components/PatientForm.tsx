@@ -201,13 +201,23 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
 
       </div>
 
-      <button
-        type="submit"
-        className={`w-full ${isEditing ? 'bg-amber-600' : 'bg-indigo-700'} text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 text-base uppercase tracking-widest`}
-      >
-        {isEditing ? <Icons.Edit /> : <Icons.Plus />} 
-        {isEditing ? 'Update Profile' : 'Complete Registration'}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => setFormData(defaultData)}
+          className="flex-1 bg-slate-500 hover:bg-slate-600 text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 text-base uppercase tracking-widest"
+        >
+          <Icons.X />
+          Clear
+        </button>
+        <button
+          type="submit"
+          className={`flex-[2] ${isEditing ? 'bg-amber-600' : 'bg-indigo-700'} text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 text-base uppercase tracking-widest`}
+        >
+          {isEditing ? <Icons.Edit /> : <Icons.CheckCircle />} 
+          {isEditing ? 'Update Profile' : 'Save'}
+        </button>
+      </div>
     </form>
   );
 };
