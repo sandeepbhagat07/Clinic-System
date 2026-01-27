@@ -39,11 +39,14 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 
 ## Recent Changes
 - 2026-01-27: Version 1.12 - Doctor Call Operator Feature
-  - Doctor panel has new "Call Operator" button (amber color)
-  - When clicked, sends real-time alert to all Operator browsers via Socket.IO
+  - Handy "Call Operator" button in header (36x36px amber square with phone icon)
+  - Positioned before Logout button, visible only for DOCTOR users
+  - Click sends real-time alert to all Operator browsers via Socket.IO
+  - 2-second cooldown prevents accidental double-press
+  - Green success flash confirms alert was sent
+  - Tooltip shows "Call Operator" (or "Calling..." during cooldown)
   - Operator sees full-screen popup notification with sound
   - Popup stays visible until Operator clicks "Acknowledge" button
-  - Only OPERATOR users see the alert (DOCTOR users don't see it)
   - API endpoint: POST /api/call-operator
   - Socket event: doctor:call-operator
 - 2026-01-26: Version 1.11 - Global Search in Dashboard

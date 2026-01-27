@@ -27,6 +27,8 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('DASHBOARD');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDoctorCallAlert, setShowDoctorCallAlert] = useState(false);
+  const [isCallingOperator, setIsCallingOperator] = useState(false);
+  const [callOperatorSuccess, setCallOperatorSuccess] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -366,13 +368,23 @@ const App: React.FC = () => {
 
   // Doctor calls operator - sends alert via socket
   const callOperator = useCallback(async () => {
+    if (isCallingOperator) return; // Prevent double-press during cooldown
+    
+    setIsCallingOperator(true);
     try {
       await fetch(`${API_BASE}/call-operator`, { method: 'POST' });
       console.log('Called operator successfully');
+      
+      // Show success flash
+      setCallOperatorSuccess(true);
+      setTimeout(() => setCallOperatorSuccess(false), 500);
     } catch (err) {
       console.error('Failed to call operator:', err);
     }
-  }, []);
+    
+    // 2-second cooldown
+    setTimeout(() => setIsCallingOperator(false), 2000);
+  }, [isCallingOperator]);
 
   const movePatient = useCallback((id: string, direction: 'up' | 'down') => {
     if (isBackendOnline) {
@@ -588,6 +600,32 @@ const App: React.FC = () => {
               <span className="text-[11px] font-bold text-white uppercase tracking-wide">{patients.filter(p => p.category === PatientCategory.VISITOR).length} VISITOR</span>
             </div>
           </div>
+          {/* Call Operator Button - Only for DOCTOR */}
+          {activeView === 'DOCTOR' && (
+            <div className="relative group">
+              <button
+                onClick={callOperator}
+                disabled={isCallingOperator}
+                className={`
+                  w-9 h-9 rounded-lg flex items-center justify-center
+                  transition-all duration-200 shadow-lg
+                  ${callOperatorSuccess 
+                    ? 'bg-emerald-500 scale-110' 
+                    : isCallingOperator 
+                      ? 'bg-amber-400 cursor-not-allowed opacity-70' 
+                      : 'bg-amber-500 hover:bg-amber-400 hover:scale-105 active:scale-95'
+                  }
+                `}
+                style={{ animation: callOperatorSuccess ? 'pulse 0.3s ease-out' : 'none' }}
+              >
+                <Icons.Phone className="w-5 h-5 text-white" />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                {isCallingOperator ? 'Calling...' : 'Call Operator'}
+              </div>
+            </div>
+          )}
           <button 
             onClick={handleLogout}
             className="bg-[#e11d48] hover:bg-[#be123c] text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm"
@@ -672,7 +710,6 @@ const App: React.FC = () => {
                       patient={patients.find(p => p.id === activeConsultationId)}
                       onSave={handleSaveConsultation}
                       onOpenChat={openChat}
-                      onCallOperator={callOperator}
                     />
                   )}
                 </div>
