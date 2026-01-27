@@ -495,16 +495,21 @@ const App: React.FC = () => {
       .sort((a, b) => (b.inTime || b.createdAt || 0) - (a.inTime || a.createdAt || 0)), 
     [patients, searchTerm, matchesSearch]
   );
-  const completedPatients = useMemo(() => 
-    patients
+  const completedPatients = useMemo(() => {
+    const toTimestamp = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') return new Date(val).getTime() || 0;
+      return 0;
+    };
+    return patients
       .filter(p => p.status === PatientStatus.COMPLETED && matchesSearch(p, searchTerm))
       .sort((a, b) => {
-        const aTime = a.outTime || a.createdAt || 0;
-        const bTime = b.outTime || b.createdAt || 0;
+        const aTime = toTimestamp(a.outTime) || toTimestamp(a.createdAt);
+        const bTime = toTimestamp(b.outTime) || toTimestamp(b.createdAt);
         return bTime - aTime;
-      }), 
-    [patients, searchTerm, matchesSearch]
-  );
+      });
+  }, [patients, searchTerm, matchesSearch]);
 
   const handleEditPatient = (p: Patient) => setEditingPatient(p);
   const handleDoctorClick = (id: string) => setActiveConsultationId(id);
