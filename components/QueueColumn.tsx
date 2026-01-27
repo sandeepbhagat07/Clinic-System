@@ -89,7 +89,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300">
         {patients.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 italic text-sm py-12 border-2 border-dashed border-slate-300 rounded-xl">
-            <p className="font-medium text-center px-4">Empty</p>
+            <p className="font-medium text-center px-4">Empty Che aa</p>
           </div>
         ) : (
           patients.map(p => (
