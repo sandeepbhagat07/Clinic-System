@@ -38,6 +38,10 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-27: Version 1.13 - Patient Form Button Updates
+  - Renamed "Complete Registration" button to "SAVE"
+  - Added "CLEAR" button (gray) to reset all form fields to defaults
+  - Two-button layout: CLEAR (1/3 width) + SAVE (2/3 width)
 - 2026-01-27: Version 1.12 - Doctor Call Operator Feature
   - Handy "Call Operator" button in header (36x36px amber square with phone icon)
   - Positioned before Logout button, visible only for DOCTOR users
