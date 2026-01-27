@@ -340,7 +340,12 @@ app.post('/api/patients/:id/status', async (req, res) => {
         
         // Update patient status
         const updateFields = { status };
-        if (outTime) updateFields.out_time = toISOSafe(outTime);
+        // Always set out_time when completing, clear when moving back
+        if (status === 'COMPLETED') {
+            updateFields.out_time = outTime ? toISOSafe(outTime) : new Date().toISOString();
+        } else if (status === 'WAITING' || status === 'OPD') {
+            updateFields.out_time = null;
+        }
         if (status === 'WAITING' && !isPinned) updateFields.sort_order = newSortOrder;
         if (status !== 'WAITING') updateFields.sort_order = 0;
         

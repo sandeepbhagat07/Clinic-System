@@ -498,7 +498,11 @@ const App: React.FC = () => {
   const completedPatients = useMemo(() => 
     patients
       .filter(p => p.status === PatientStatus.COMPLETED && matchesSearch(p, searchTerm))
-      .sort((a, b) => (b.outTime || 0) - (a.outTime || 0)), 
+      .sort((a, b) => {
+        const aTime = a.outTime || a.createdAt || 0;
+        const bTime = b.outTime || b.createdAt || 0;
+        return bTime - aTime;
+      }), 
     [patients, searchTerm, matchesSearch]
   );
 

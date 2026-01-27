@@ -38,6 +38,11 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-27: Version 1.14 - Completed Queue Sorting Fix
+  - Most recently completed patients now appear at TOP of Completed Queue
+  - Sorting uses outTime DESC with createdAt as fallback
+  - Backend automatically sets out_time when status becomes COMPLETED
+  - Backend clears out_time when patient moves back to WAITING or OPD
 - 2026-01-27: Version 1.13 - Patient Form Button Updates
   - Renamed "Complete Registration" button to "SAVE"
   - Added "CLEAR" button (gray) to reset all form fields to defaults
