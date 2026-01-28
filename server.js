@@ -7,9 +7,12 @@ import { Server } from 'socket.io';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, 'dist');
+const isProduction = fs.existsSync(distPath);
 
 const app = express();
 const httpServer = createServer(app);
@@ -107,12 +110,14 @@ app.get('/api/patients', async (req, res) => {
     }
 });
 
-// Serve static files with headers to prevent caching
-app.use(express.static(path.join(__dirname, 'dist'), {
-    setHeaders: (res, path) => {
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    }
-}));
+// Serve static files with headers to prevent caching (only in production)
+if (isProduction) {
+    app.use(express.static(distPath, {
+        setHeaders: (res, path) => {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        }
+    }));
+}
 
 // Helper to safely convert timestamp to ISO string
 const toISOSafe = (ts, fallbackToNow = false) => {
@@ -557,11 +562,13 @@ app.post('/api/call-operator', (req, res) => {
     res.json({ success: true });
 });
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+// Handle React routing, return all requests to React app (only in production)
+if (isProduction) {
+    app.get('*', (req, res) => {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+}
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, '0.0.0.0', () => {
