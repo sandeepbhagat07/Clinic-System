@@ -31,6 +31,64 @@ const App: React.FC = () => {
   const [callOperatorSuccess, setCallOperatorSuccess] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Play alert sound using Web Audio API
+  const playAlertSound = useCallback(() => {
+    try {
+      // Create AudioContext if not exists
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+      
+      // Resume context if suspended (required by browsers)
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+      
+      // Create oscillator for a pleasant two-tone alert
+      const playTone = (freq: number, startTime: number, duration: number) => {
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        oscillator.frequency.value = freq;
+        oscillator.type = 'sine';
+        
+        // Smooth envelope
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + duration - 0.05);
+        gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      // Play a pleasant chime pattern (3 ascending tones)
+      playTone(523.25, now, 0.15);        // C5
+      playTone(659.25, now + 0.15, 0.15); // E5
+      playTone(783.99, now + 0.30, 0.25); // G5
+      
+      // Repeat the pattern after a short pause
+      playTone(523.25, now + 0.7, 0.15);  // C5
+      playTone(659.25, now + 0.85, 0.15); // E5
+      playTone(783.99, now + 1.0, 0.25);  // G5
+
+    } catch (e) {
+      console.log('Web Audio API not supported, trying fallback audio');
+      // Fallback to HTML audio element
+      if (alertSoundRef.current) {
+        alertSoundRef.current.currentTime = 0;
+        alertSoundRef.current.play().catch(err => console.log('Audio play failed:', err));
+      }
+    }
+  }, []);
 
   // Persistence Helper
   const saveToLocalStorage = (data: Patient[]) => {
@@ -143,11 +201,8 @@ const App: React.FC = () => {
       console.log('Socket: Doctor is calling operator!');
       // Only show alert if user is logged in as OPERATOR
       setShowDoctorCallAlert(true);
-      // Play notification sound
-      if (alertSoundRef.current) {
-        alertSoundRef.current.currentTime = 0;
-        alertSoundRef.current.play().catch(e => console.log('Audio play failed:', e));
-      }
+      // Play notification sound using Web Audio API
+      playAlertSound();
     });
 
     return () => {
@@ -521,6 +576,19 @@ const App: React.FC = () => {
   const handleLogin = (role: AppView) => {
     setActiveView(role);
     setIsLoggedIn(true);
+    
+    // Unlock AudioContext on user gesture (login click)
+    // This ensures alert sounds can play later
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+    } catch (e) {
+      console.log('AudioContext initialization failed:', e);
+    }
   };
 
   const handleLogout = () => {

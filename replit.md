@@ -41,6 +41,11 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Database-backed design with localStorage fallback
 
 ## Recent Changes
+- 2026-01-28: Version 1.15 - Call Operator Alert Sound
+  - Added pleasant chime sound when Doctor calls Operator
+  - Uses Web Audio API (no external sound files needed)
+  - Plays 3-tone ascending chime pattern (C5-E5-G5) twice
+  - AudioContext unlocked on login for cross-browser compatibility
 - 2026-01-27: Added local setup documentation
   - LOCAL_SETUP_GUIDE.md - Complete instructions for Windows/Mac/Linux
   - database_backup.sql - Full database schema and sample data export
