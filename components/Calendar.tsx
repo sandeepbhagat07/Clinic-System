@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { CalendarEvent, EventType } from '../types';
 
 interface CalendarProps {
@@ -24,6 +25,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const socketRef = useRef<Socket | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -57,6 +59,33 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
       setLoading(false);
     }
   }, [isBackendOnline, fetchEvents]);
+
+  useEffect(() => {
+    const socket = io({ path: '/socket.io' });
+    socketRef.current = socket;
+
+    socket.on('event:add', (event: CalendarEvent) => {
+      console.log('Socket: event added, refreshing...');
+      setEvents(prev => {
+        if (prev.some(e => e.id === event.id)) return prev;
+        return [...prev, event];
+      });
+    });
+
+    socket.on('event:update', (event: CalendarEvent) => {
+      console.log('Socket: event updated, refreshing...');
+      setEvents(prev => prev.map(e => e.id === event.id ? event : e));
+    });
+
+    socket.on('event:delete', ({ eventId }: { eventId: number }) => {
+      console.log('Socket: event deleted, refreshing...');
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();

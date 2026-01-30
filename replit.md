@@ -59,6 +59,18 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-01-30: Version 1.19 - Event Calendar System
+  - New Calendar page accessible from navigation (Dashboard, Patient Report, Calendar)
+  - Monthly View: Calendar grid showing all days with event indicators
+  - Daily View: Click any day to see detailed list of events for that day
+  - Add/Edit/Delete events with modal form
+  - Event fields: Title, Date, Time, Description, Event Type, Remind Me checkbox
+  - Event Types: NORMAL (default), OPERATION, VISIT, HOSPITAL RELATED, SOCIAL
+  - Color-coded event types on calendar
+  - Events stored in PostgreSQL 'events' table
+  - API endpoints: GET/POST/PUT/DELETE /api/events
+  - Socket.IO real-time sync for events between Doctor and Operator
+  - Both Doctor and Operator users can access the calendar
 - 2026-01-30: Version 1.18 - OPD Card Compact Layout
   - Reduced OPD large card padding from 2rem to 1rem
   - Reduced patient name font from 3rem to 2.5rem
