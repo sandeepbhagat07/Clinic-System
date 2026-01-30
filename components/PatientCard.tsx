@@ -108,7 +108,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
             {patient.inTime && (
               <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[10px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
-                IN : {formatTime(patient.inTime)}
+                IN : &nbsp; {formatTime(patient.inTime)}
               </div>
             )}
           </div>

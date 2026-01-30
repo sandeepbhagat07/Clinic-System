@@ -4,7 +4,7 @@ import { PatientCategory, PatientType } from './types';
 
 export const CITIES = [
   'New York', 'London', 'Mumbai', 'Tokyo', 'Berlin', 
-  'Paris', 'Sydney', 'Toronto', 'Singapore', 'Dubai'
+  'Paris', 'Sydney', 'Toronto', 'Dhavda', 'Singapore', 'Dubai'
 ];
 
 export const CATEGORY_OPTIONS = [
