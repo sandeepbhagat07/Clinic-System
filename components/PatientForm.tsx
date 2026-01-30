@@ -130,10 +130,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     : VISITOR_TYPE_OPTIONS;
 
   const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-xl p-3 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-medium";
-  const labelClasses = "text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1";
+  const labelClasses = "text-[12px] font-bold text-slate-500 uppercase tracking-widest ml-1";
   const radioGroupClasses = "flex flex-wrap gap-2 p-1.5 bg-slate-100/50 border border-slate-200 rounded-xl";
   const radioLabelClasses = "flex-1 min-w-[90px] flex items-center justify-center gap-2 cursor-pointer p-2 rounded-lg transition-all border-2 border-transparent has-[:checked]:border-indigo-600 has-[:checked]:bg-white has-[:checked]:shadow-sm";
-  const radioTextClasses = "text-slate-700 font-bold text-[10px] uppercase tracking-wider";
+  const radioTextClasses = "text-slate-700 font-bold text-[11px] uppercase tracking-wider";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
