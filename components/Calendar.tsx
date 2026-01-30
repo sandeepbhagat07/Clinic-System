@@ -274,17 +274,17 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
         </div>
 
         {viewMode === 'monthly' ? (
-          <div className="p-4">
-            <div className="grid grid-cols-7 gap-1 mb-2">
+          <div className="p-4 w-full">
+            <div className="grid grid-cols-7 gap-1 mb-2 w-full">
               {dayNames.map(day => (
-                <div key={day} className="text-center text-sm font-semibold text-slate-500 py-2">
+                <div key={day} className="text-center text-sm font-semibold text-slate-500 py-2 min-w-[80px]">
                   {day}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-1 w-full">
               {Array.from({ length: startingDayOfWeek }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-24 bg-slate-50 rounded-lg"></div>
+                <div key={`empty-${i}`} className="h-24 min-w-[80px] bg-slate-50 rounded-lg"></div>
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
@@ -294,7 +294,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
                   <div
                     key={day}
                     onClick={() => handleDateClick(day)}
-                    className={`h-24 p-1 rounded-lg border cursor-pointer transition-all hover:border-indigo-300 hover:shadow-md ${
+                    className={`h-24 min-w-[80px] p-1 rounded-lg border cursor-pointer transition-all hover:border-indigo-300 hover:shadow-md ${
                       isToday(day) ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'
                     }`}
                   >
