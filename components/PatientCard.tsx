@@ -74,14 +74,14 @@ const PatientCard: React.FC<PatientCardProps> = ({
       )}
 
       {/* Main Content */}
-      <div className={`flex items-start ${isLarge ? 'gap-4 p-8' : isOPD ? 'gap-3 p-3' : 'gap-4 p-4'}`}>
+      <div className={`flex items-start ${isLarge && isOPD ? 'gap-4 p-4' : isLarge ? 'gap-4 p-8' : 'gap-4 p-4'}`}>
         
         {/* Left Column: Avatar & Type Label */}
-        <div className={`flex flex-col items-center flex-shrink-0 ${isOPD ? 'gap-2' : 'gap-3'}`}>
-          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge ? 'w-28 h-28' : isOPD ? 'w-12 h-12' : 'w-16 h-16'}`}>
+        <div className="flex flex-col items-center gap-3 flex-shrink-0">
+          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
             <AvatarIcon className="w-full h-full" />
           </div>
-          <div className={`bg-white border border-slate-200 rounded-lg font-bold text-slate-500 uppercase tracking-widest text-center shadow-sm ${isOPD ? 'px-1.5 py-0.5 text-[8px] min-w-[65px]' : 'px-2 py-1 text-[9px] min-w-[75px]'}`}>
+          <div className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest min-w-[75px] text-center shadow-sm">
             {patient.type}
           </div>
         </div>
@@ -89,23 +89,22 @@ const PatientCard: React.FC<PatientCardProps> = ({
         {/* Info Column */}
         <div className="flex-1 min-w-0 flex flex-col pt-0.5">
           {/* Row 1: Queue ID Badge (High Visibility) and Name */}
-          <div className={`flex items-center gap-3 ${isOPD ? 'mb-1' : 'mb-1.5'}`}>
+          <div className="flex items-center gap-3 mb-1.5">
             {!isVisitorCategory && (
-              <span className={`bg-slate-900 text-white font-black rounded-lg flex-shrink-0 shadow-lg ring-2 ring-white/10 flex items-center gap-0.5 ${isOPD ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-[11px]'}`}>
-                <span className={`opacity-60 ${isOPD ? 'text-[9px]' : 'text-[10px]'}`}>#</span>
+              <span className="bg-slate-900 text-white font-black px-3 py-1 rounded-lg text-[11px] flex-shrink-0 shadow-lg ring-2 ring-white/10 flex items-center gap-0.5">
+                <span className="text-[10px] opacity-60">#</span>
                 <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge ? 'text-5xl font-extrabold' : isOPD ? 'text-[1rem] font-bold' : 'text-[1.15rem] font-bold'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.5rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.15rem] font-bold'}`}>
               {patient.name}
             </h4>
           </div>
           
-          {/* Row 2: Demographics + City + IN Time (combined for OPD) */}
-          <div className={`flex items-center justify-between gap-2 ${isOPD ? 'mb-0' : 'mb-2'}`}>
-            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : isOPD ? 'text-xs' : 'text-sm'}`}>
+          {/* Row 2: Demographics + IN Time */}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
               {patient.age} yrs <span className="mx-1 text-slate-300">•</span> {patient.gender}
-              {isOPD && <><span className="mx-1 text-slate-300">•</span> <span className="font-bold text-slate-800">{patient.city}</span></>}
             </div>
             {patient.inTime && (
               <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[10px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
@@ -114,24 +113,22 @@ const PatientCard: React.FC<PatientCardProps> = ({
             )}
           </div>
 
-          {/* Row 3: Location + OUT Time (hidden city for OPD since it's on row 2) */}
-          {!isOPD && (
-            <div className="flex items-center justify-between gap-2 mt-auto">
-              <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
-                {patient.city}
-              </div>
-              {patient.outTime && (
-                <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
-                  OUT: {formatTime(patient.outTime)}
-                </div>
-              )}
+          {/* Row 3: Location + OUT Time */}
+          <div className="flex items-center justify-between gap-2 mt-auto">
+            <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
+              {patient.city}
             </div>
-          )}
+            {patient.outTime && (
+              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
+                OUT: {formatTime(patient.outTime)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Action Bar - Refined for professional UI */}
-      <div className={`border-t border-slate-100 bg-slate-50/50 flex items-center justify-between transition-all group-hover:bg-white ${isOPD ? 'px-3 py-1.5 min-h-[40px]' : 'px-4 py-2 min-h-[48px]'}`}>
+      <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
         
         <div className="flex items-center gap-1">
           {patient.status === PatientStatus.WAITING && onMove && (() => {

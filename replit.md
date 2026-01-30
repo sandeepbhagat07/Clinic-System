@@ -58,6 +58,12 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-01-30: Version 1.18 - OPD Card Compact Layout
+  - Reduced OPD large card padding from 2rem to 1rem
+  - Reduced patient name font from 3rem to 2.5rem
+  - Reduced avatar size from 7rem to 6rem
+  - OPD queue cards show Age/Gender/City on one line
+  - Waiting and Completed queue cards remain unchanged
 - 2026-01-30: Version 1.17 - Mobile Number Lookup Feature
   - Added search button next to Mobile field in Patient Registration form
   - Enter mobile number (min 3 digits) and click search to find existing patients
