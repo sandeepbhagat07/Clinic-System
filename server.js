@@ -141,6 +141,24 @@ app.get('/api/next-queue-id', async (req, res) => {
     }
 });
 
+// Patient Lookup by Mobile Number - returns patients from patient table matching the mobile
+app.get('/api/patients/lookup/:mobile', async (req, res) => {
+    try {
+        const { mobile } = req.params;
+        if (!mobile || mobile.length < 3) {
+            return res.json([]);
+        }
+        const result = await pool.query(
+            'SELECT id, name, age, gender, city, mobile FROM patient WHERE mobile LIKE $1 ORDER BY name ASC LIMIT 10',
+            [`%${mobile}%`]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Patient lookup error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Patient Report: Search with filters and date range (returns last 150 records by default)
 app.get('/api/patients/report', async (req, res) => {
     try {

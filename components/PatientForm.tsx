@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PatientFormData, PatientCategory, Patient, PatientType } from '../types';
 import { CITIES, CATEGORY_OPTIONS, PATIENT_TYPE_OPTIONS, VISITOR_TYPE_OPTIONS, Icons } from '../constants';
 
@@ -7,6 +7,15 @@ interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   initialData?: Patient;
   isEditing?: boolean;
+}
+
+interface LookupPatient {
+  id: number;
+  name: string;
+  age: number;
+  gender: string;
+  city: string;
+  mobile: string;
 }
 
 const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEditing }) => {
@@ -21,6 +30,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   };
 
   const [formData, setFormData] = useState<PatientFormData>(defaultData);
+  const [lookupResults, setLookupResults] = useState<LookupPatient[]>([]);
+  const [showLookup, setShowLookup] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const lookupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -37,6 +50,49 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
       setFormData(defaultData);
     }
   }, [initialData]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (lookupRef.current && !lookupRef.current.contains(event.target as Node)) {
+        setShowLookup(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMobileLookup = async () => {
+    const mobile = formData.mobile.trim();
+    if (mobile.length < 3) {
+      alert('Please enter at least 3 digits to search');
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/patients/lookup/${encodeURIComponent(mobile)}`);
+      const patients = await response.json();
+      setLookupResults(patients);
+      setShowLookup(true);
+    } catch (err) {
+      console.error('Lookup error:', err);
+      setLookupResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectPatient = (patient: LookupPatient) => {
+    setFormData(prev => ({
+      ...prev,
+      name: patient.name,
+      age: patient.age,
+      gender: patient.gender as 'Male' | 'Female',
+      city: patient.city,
+      mobile: patient.mobile,
+    }));
+    setShowLookup(false);
+    setLookupResults([]);
+  };
 
   const handleCategoryChange = (cat: PatientCategory) => {
     const defaultType = cat === PatientCategory.PATIENT 
@@ -92,16 +148,62 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
           />
         </div>
 
-        {/* Mobile Number */}
-        <div className="flex flex-col gap-2">
+        {/* Mobile Number with Lookup */}
+        <div className="flex flex-col gap-2 relative" ref={lookupRef}>
           <label className={labelClasses}>Mobile (Optional)</label>
-          <input
-            type="tel"
-            className={inputClasses}
-            placeholder="Contact number"
-            value={formData.mobile}
-            onChange={e => setFormData({ ...formData, mobile: e.target.value })}
-          />
+          <div className="flex gap-2">
+            <input
+              type="tel"
+              className={`${inputClasses} flex-1`}
+              placeholder="Contact number"
+              value={formData.mobile}
+              onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleMobileLookup(); } }}
+            />
+            <button
+              type="button"
+              onClick={handleMobileLookup}
+              disabled={isSearching}
+              className="px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 flex items-center gap-1"
+              title="Search patient by mobile"
+            >
+              {isSearching ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <Icons.Search />
+              )}
+            </button>
+          </div>
+          {showLookup && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+              {lookupResults.length === 0 ? (
+                <div className="p-4 text-center text-slate-500 text-sm">
+                  No patients found with this mobile number
+                </div>
+              ) : (
+                <>
+                  <div className="p-2 bg-indigo-50 text-xs font-bold text-indigo-700 uppercase tracking-wider border-b">
+                    Select Patient ({lookupResults.length} found)
+                  </div>
+                  {lookupResults.map(patient => (
+                    <div
+                      key={patient.id}
+                      onClick={() => handleSelectPatient(patient)}
+                      className="p-3 hover:bg-indigo-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                    >
+                      <div className="font-bold text-slate-800">{patient.name}</div>
+                      <div className="text-xs text-slate-500 flex gap-3 mt-1">
+                        <span>{patient.age} yrs</span>
+                        <span>{patient.gender}</span>
+                        <span>{patient.city}</span>
+                        <span className="text-indigo-600">{patient.mobile}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Category Radio Group */}
