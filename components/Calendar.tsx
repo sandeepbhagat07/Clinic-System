@@ -226,8 +226,8 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="p-4 w-full max-w-6xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full">
         <div className="bg-indigo-600 text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
@@ -274,7 +274,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
         </div>
 
         {viewMode === 'monthly' ? (
-          <div className="p-4 w-full" style={{ minWidth: '600px' }}>
+          <div className="p-4 w-full">
             <div className="grid grid-cols-7 gap-1 mb-2 w-full">
               {dayNames.map(day => (
                 <div key={day} className="text-center text-sm font-semibold text-slate-500 py-2">
@@ -284,7 +284,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
             </div>
             <div className="grid grid-cols-7 gap-1 w-full">
               {Array.from({ length: startingDayOfWeek }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-24 bg-slate-50 rounded-lg"></div>
+                <div key={`empty-${i}`} className="h-24 bg-slate-50 rounded-lg min-w-0"></div>
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
@@ -294,7 +294,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
                   <div
                     key={day}
                     onClick={() => handleDateClick(day)}
-                    className={`h-24 p-1 rounded-lg border cursor-pointer transition-all hover:border-indigo-300 hover:shadow-md ${
+                    className={`h-24 p-1 rounded-lg border cursor-pointer transition-all hover:border-indigo-300 hover:shadow-md min-w-0 ${
                       isToday(day) ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'
                     }`}
                   >
