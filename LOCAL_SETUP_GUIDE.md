@@ -134,23 +134,27 @@ GRANT ALL PRIVILEGES ON DATABASE clinicflow_db TO clinicflow;
 \q
 ```
 
-### Step 2: Import the Database Schema and Data
+### Step 2: Import the Database Schema
 
 Navigate to your ClinicFlow project folder and run:
 
 #### Windows
 
 ```cmd
-psql -U clinicflow -d clinicflow_db -f database_backup.sql
+psql -U clinicflow -d clinicflow_db -f database_schema.sql
 ```
 
 #### macOS / Linux
 
 ```bash
-psql -U clinicflow -d clinicflow_db -f database_backup.sql
+psql -U clinicflow -d clinicflow_db -f database_schema.sql
 ```
 
 Enter the password when prompted.
+
+**Note:** 
+- Use `database_schema.sql` for a fresh installation (creates empty tables)
+- Use `database_backup.sql` if you want to restore existing data from a previous backup
 
 ---
 
@@ -308,11 +312,11 @@ npm install
 
 ### Issue: Database tables don't exist
 
-**Cause:** Database backup was not imported.
+**Cause:** Database schema was not imported.
 
 **Solution:**
 ```bash
-psql -U clinicflow -d clinicflow_db -f database_backup.sql
+psql -U clinicflow -d clinicflow_db -f database_schema.sql
 ```
 
 ### Issue: "FATAL: password authentication failed"
@@ -366,4 +370,4 @@ If you encounter issues not covered in this guide, check:
 
 ---
 
-**ClinicFlow v1.14** | Last Updated: January 2026
+**ClinicFlow v1.21** | Last Updated: January 2026
