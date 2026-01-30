@@ -40,6 +40,13 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - Real-time chat between operator and doctor
 - Database-backed design with localStorage fallback
 
+## Stable Milestones (For Rollback Reference)
+- **2026-01-30: "Q ClinicFlow Complete Version"**
+  - Fully working OPD management system before Patient Lookup feature
+  - All features from Version 1.00 to 1.15 are complete and tested
+  - Use this checkpoint to restore if new development causes issues
+  - To restore: Tell the assistant "Restore to Q ClinicFlow Complete Version"
+
 ## Recent Changes
 - 2026-01-28: Version 1.15 - Call Operator Alert Sound
   - Added pleasant chime sound when Doctor calls Operator
