@@ -59,3 +59,23 @@ export interface Patient {
 export type PatientFormData = Omit<Patient, 'id' | 'queueId' | 'status' | 'createdAt' | 'notes' | 'medicines' | 'hasUnreadAlert' | 'messages' | 'inTime' | 'outTime'>;
 
 export type AppView = 'OPERATOR' | 'DOCTOR' | 'LOGIN';
+
+export enum EventType {
+  NORMAL = 'NORMAL',
+  OPERATION = 'OPERATION',
+  VISIT = 'VISIT',
+  HOSPITAL_RELATED = 'HOSPITAL RELATED',
+  SOCIAL = 'SOCIAL'
+}
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  eventDate: string;
+  eventTime: string | null;
+  description: string;
+  eventType: EventType;
+  remindMe: boolean;
+  createdBy: string;
+  createdAt: string;
+}

@@ -7,12 +7,13 @@ import DoctorConsultationForm from './components/DoctorConsultationForm';
 import ChatModal from './components/ChatModal';
 import Login from './components/Login';
 import PatientReport from './components/PatientReport';
+import Calendar from './components/Calendar';
 import { Icons } from './constants';
 
 const API_BASE = '/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
 
-type PageView = 'DASHBOARD' | 'REPORT';
+type PageView = 'DASHBOARD' | 'REPORT' | 'CALENDAR';
 
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -642,6 +643,16 @@ const App: React.FC = () => {
             >
               Patient Report
             </button>
+            <button
+              onClick={() => setCurrentPage('CALENDAR')}
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+                currentPage === 'CALENDAR' 
+                  ? 'bg-white text-indigo-700 shadow-sm' 
+                  : 'text-indigo-100 hover:bg-white/10'
+              }`}
+            >
+              Calendar
+            </button>
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -808,8 +819,10 @@ const App: React.FC = () => {
               />
             </section>
           </>
-        ) : (
+        ) : currentPage === 'REPORT' ? (
           <PatientReport apiBase={API_BASE} />
+        ) : (
+          <Calendar currentUser={activeView as 'OPERATOR' | 'DOCTOR'} isBackendOnline={isBackendOnline} />
         )}
       </main>
 

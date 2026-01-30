@@ -607,6 +607,115 @@ app.post('/api/call-operator', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== EVENT CALENDAR API ====================
+
+// Get events for a month (or all if no filter)
+app.get('/api/events', async (req, res) => {
+    try {
+        const { year, month } = req.query;
+        let query = 'SELECT * FROM events';
+        let params = [];
+        
+        if (year && month) {
+            query += ' WHERE EXTRACT(YEAR FROM event_date) = $1 AND EXTRACT(MONTH FROM event_date) = $2';
+            params = [year, month];
+        }
+        query += ' ORDER BY event_date ASC, event_time ASC';
+        
+        const result = await pool.query(query, params);
+        const events = result.rows.map(e => ({
+            id: e.id,
+            title: e.title,
+            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventTime: e.event_time,
+            description: e.description,
+            eventType: e.event_type,
+            remindMe: e.remind_me,
+            createdBy: e.created_by,
+            createdAt: e.created_at
+        }));
+        res.json(events);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create new event
+app.post('/api/events', async (req, res) => {
+    try {
+        const { title, eventDate, eventTime, description, eventType, remindMe, createdBy } = req.body;
+        const result = await pool.query(
+            `INSERT INTO events (title, event_date, event_time, description, event_type, remind_me, created_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [title, eventDate, eventTime || null, description || '', eventType || 'NORMAL', remindMe || false, createdBy]
+        );
+        const e = result.rows[0];
+        const event = {
+            id: e.id,
+            title: e.title,
+            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventTime: e.event_time,
+            description: e.description,
+            eventType: e.event_type,
+            remindMe: e.remind_me,
+            createdBy: e.created_by,
+            createdAt: e.created_at
+        };
+        
+        io.emit('event:add', event);
+        res.status(201).json(event);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update event
+app.put('/api/events/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, eventDate, eventTime, description, eventType, remindMe } = req.body;
+        const result = await pool.query(
+            `UPDATE events SET title = $1, event_date = $2, event_time = $3, description = $4, 
+             event_type = $5, remind_me = $6, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $7 RETURNING *`,
+            [title, eventDate, eventTime || null, description || '', eventType || 'NORMAL', remindMe || false, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+        const e = result.rows[0];
+        const event = {
+            id: e.id,
+            title: e.title,
+            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventTime: e.event_time,
+            description: e.description,
+            eventType: e.event_type,
+            remindMe: e.remind_me,
+            createdBy: e.created_by,
+            createdAt: e.created_at
+        };
+        
+        io.emit('event:update', event);
+        res.json(event);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete event
+app.delete('/api/events/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM events WHERE id = $1', [id]);
+        
+        io.emit('event:delete', { eventId: parseInt(id) });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Handle React routing, return all requests to React app (only in production)
 if (isProduction) {
     app.get('*', (req, res) => {
