@@ -58,6 +58,14 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-01-30: Version 1.17 - Mobile Number Lookup Feature
+  - Added search button next to Mobile field in Patient Registration form
+  - Enter mobile number (min 3 digits) and click search to find existing patients
+  - Shows dropdown list of matching patients from patient master table
+  - Click on a patient to auto-fill: Name, Age, Gender, City, Mobile
+  - Category and Entry Type remain unchanged (operator can still modify)
+  - API endpoint: GET /api/patients/lookup/:mobile
+  - Click outside dropdown to close it
 - 2026-01-30: Version 1.16 - Database Restructuring for Patient Lookup
   - Split single 'patients' table into two tables: 'patient' (master data) and 'visits' (each visit)
   - Added patient_id column to visits table linking to patient master record

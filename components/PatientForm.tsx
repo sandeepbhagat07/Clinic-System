@@ -70,12 +70,16 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     setIsSearching(true);
     try {
       const response = await fetch(`/api/patients/lookup/${encodeURIComponent(mobile)}`);
+      if (!response.ok) {
+        throw new Error('Server error');
+      }
       const patients = await response.json();
       setLookupResults(patients);
       setShowLookup(true);
     } catch (err) {
       console.error('Lookup error:', err);
       setLookupResults([]);
+      setShowLookup(true);
     } finally {
       setIsSearching(false);
     }
