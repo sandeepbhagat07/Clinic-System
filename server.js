@@ -127,6 +127,17 @@ const toISOSafe = (ts, fallbackToNow = false) => {
     return date.toISOString();
 };
 
+// Helper to format date to YYYY-MM-DD without timezone shift
+const formatDateLocal = (date) => {
+    if (!date) return null;
+    if (typeof date === 'string') return date.split('T')[0];
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // Get next queue ID for today (only counts PATIENT category, not VISITOR)
 app.get('/api/next-queue-id', async (req, res) => {
     try {
@@ -626,7 +637,7 @@ app.get('/api/events', async (req, res) => {
         const events = result.rows.map(e => ({
             id: e.id,
             title: e.title,
-            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventDate: formatDateLocal(e.event_date),
             eventTime: e.event_time,
             description: e.description,
             eventType: e.event_type,
@@ -653,7 +664,7 @@ app.post('/api/events', async (req, res) => {
         const event = {
             id: e.id,
             title: e.title,
-            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventDate: formatDateLocal(e.event_date),
             eventTime: e.event_time,
             description: e.description,
             eventType: e.event_type,
@@ -687,7 +698,7 @@ app.put('/api/events/:id', async (req, res) => {
         const event = {
             id: e.id,
             title: e.title,
-            eventDate: e.event_date ? e.event_date.toISOString().split('T')[0] : null,
+            eventDate: formatDateLocal(e.event_date),
             eventTime: e.event_time,
             description: e.description,
             eventType: e.event_type,
