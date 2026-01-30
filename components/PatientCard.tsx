@@ -91,8 +91,8 @@ const PatientCard: React.FC<PatientCardProps> = ({
           {/* Row 1: Queue ID Badge (High Visibility) and Name */}
           <div className="flex items-center gap-3 mb-1.5">
             {!isVisitorCategory && (
-              <span className="bg-slate-900 text-white font-black px-3 py-1 rounded-lg text-[11px] flex-shrink-0 shadow-lg ring-2 ring-white/10 flex items-center gap-0.5">
-                <span className="text-[10px] opacity-60">#</span>
+              <span className="bg-gray-200 text-gray-900 font-black px-3 py-1 rounded-full text-[12px] flex-shrink-0 shadow-md flex items-center gap-0.5">
+                <span className="text-[11px] text-gray-600">#</span>
                 <span>{patient.queueId}</span>
               </span>
             )}
