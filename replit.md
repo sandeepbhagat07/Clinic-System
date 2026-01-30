@@ -59,6 +59,11 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-01-30: Version 1.21 - Patient ID Badge Styling
+  - Improved visibility of Patient ID/Queue Number badge
+  - Changed from dark background to light grey badge (bg-gray-200)
+  - Dark text (gray-900) for better contrast
+  - Rounded pill shape for modern look
 - 2026-01-30: Version 1.20 - Today's Events Notification
   - Red notification dot appears next to Calendar menu when there are events for today
   - Dot automatically updates in real-time when events are added/updated/deleted
