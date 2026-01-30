@@ -661,7 +661,7 @@ const App: React.FC = () => {
           <nav className="flex items-center gap-1 bg-[#1e1b4b]/30 rounded-lg p-1 border border-indigo-400/20">
             <button
               onClick={() => setCurrentPage('DASHBOARD')}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+              className={`px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all ${
                 currentPage === 'DASHBOARD' 
                   ? 'bg-white text-indigo-700 shadow-sm' 
                   : 'text-indigo-100 hover:bg-white/10'
@@ -671,7 +671,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setCurrentPage('REPORT')}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+              className={`px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all ${
                 currentPage === 'REPORT' 
                   ? 'bg-white text-indigo-700 shadow-sm' 
                   : 'text-indigo-100 hover:bg-white/10'
@@ -681,7 +681,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setCurrentPage('CALENDAR')}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all relative ${
+              className={`px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all relative ${
                 currentPage === 'CALENDAR' 
                   ? 'bg-white text-indigo-700 shadow-sm' 
                   : 'text-indigo-100 hover:bg-white/10'
