@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const [showDoctorCallAlert, setShowDoctorCallAlert] = useState(false);
   const [isCallingOperator, setIsCallingOperator] = useState(false);
   const [callOperatorSuccess, setCallOperatorSuccess] = useState(false);
+  const [hasEventsToday, setHasEventsToday] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -106,6 +107,24 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.warn("Could not fetch next queue ID", err);
+    }
+  };
+
+  // Check if there are any events for today
+  const checkTodayEvents = async () => {
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const res = await fetch(`${API_BASE}/events?year=${year}&month=${month}`);
+      if (res.ok) {
+        const events = await res.json();
+        const todayStr = `${year}-${String(month).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const todayEvents = events.filter((e: any) => e.eventDate === todayStr);
+        setHasEventsToday(todayEvents.length > 0);
+      }
+    } catch (err) {
+      console.warn("Could not check today's events", err);
     }
   };
 
@@ -204,6 +223,20 @@ const App: React.FC = () => {
       setShowDoctorCallAlert(true);
       // Play notification sound using Web Audio API
       playAlertSound();
+    });
+
+    // Event calendar updates - refresh today's events indicator
+    socket.on('event:add', () => {
+      console.log('Socket: event added, checking today events...');
+      checkTodayEvents();
+    });
+    socket.on('event:update', () => {
+      console.log('Socket: event updated, checking today events...');
+      checkTodayEvents();
+    });
+    socket.on('event:delete', () => {
+      console.log('Socket: event deleted, checking today events...');
+      checkTodayEvents();
     });
 
     return () => {
@@ -578,6 +611,9 @@ const App: React.FC = () => {
     setActiveView(role);
     setIsLoggedIn(true);
     
+    // Check for today's events to show notification dot on Calendar menu
+    checkTodayEvents();
+    
     // Unlock AudioContext on user gesture (login click)
     // This ensures alert sounds can play later
     try {
@@ -645,13 +681,16 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setCurrentPage('CALENDAR')}
-              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+              className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all relative ${
                 currentPage === 'CALENDAR' 
                   ? 'bg-white text-indigo-700 shadow-sm' 
                   : 'text-indigo-100 hover:bg-white/10'
               }`}
             >
               Calendar
+              {hasEventsToday && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-indigo-600"></span>
+              )}
             </button>
           </nav>
         </div>
