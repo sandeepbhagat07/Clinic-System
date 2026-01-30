@@ -43,22 +43,22 @@ const pool = new pg.Pool({
 async function normalizeSortOrder() {
     try {
         // Ensure FAMILY/RELATIVE types have sort_order = 0
-        await pool.query(`UPDATE patients SET sort_order = 0 WHERE type IN ('FAMILY', 'RELATIVE')`);
+        await pool.query(`UPDATE visits SET sort_order = 0 WHERE type IN ('FAMILY', 'RELATIVE')`);
         
         // Renumber non-pinned waiting patients for today with sequential sort_order
         await pool.query(`
             WITH ranked AS (
                 SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as new_order
-                FROM patients 
+                FROM visits 
                 WHERE DATE(created_at) = CURRENT_DATE 
                 AND status = 'WAITING' 
                 AND type NOT IN ('FAMILY', 'RELATIVE')
                 AND (sort_order IS NULL OR sort_order = 0)
             )
-            UPDATE patients 
+            UPDATE visits 
             SET sort_order = ranked.new_order 
             FROM ranked 
-            WHERE patients.id = ranked.id
+            WHERE visits.id = ranked.id
         `);
         console.log('Sort order normalization completed');
     } catch (err) {
@@ -81,9 +81,9 @@ app.use((req, res, next) => {
 // Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', async (req, res) => {
     try {
-        // Filter patients where created_at is today
+        // Filter visits where created_at is today
         const patientsRes = await pool.query(
-            `SELECT * FROM patients WHERE DATE(created_at) = CURRENT_DATE ORDER BY created_at ASC`
+            `SELECT * FROM visits WHERE DATE(created_at) = CURRENT_DATE ORDER BY created_at ASC`
         );
         const messagesRes = await pool.query('SELECT * FROM messages ORDER BY timestamp ASC');
         
@@ -132,7 +132,7 @@ app.get('/api/next-queue-id', async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT COALESCE(MAX(queue_id), 0) + 1 as next_id 
-             FROM patients 
+             FROM visits 
              WHERE DATE(created_at) = CURRENT_DATE AND category = 'PATIENT'`
         );
         res.json({ nextQueueId: result.rows[0].next_id });
@@ -146,7 +146,7 @@ app.get('/api/patients/report', async (req, res) => {
     try {
         const { name, city, mobile, startDate, endDate } = req.query;
         
-        let query = 'SELECT * FROM patients WHERE 1=1';
+        let query = 'SELECT * FROM visits WHERE 1=1';
         const params = [];
         let paramIndex = 1;
         
@@ -215,7 +215,7 @@ app.post('/api/patients', async (req, res) => {
         if (p.category === 'PATIENT') {
             // Lock today's patient rows to prevent race conditions, then calculate max
             const lockResult = await client.query(
-                `SELECT queue_id FROM patients 
+                `SELECT queue_id FROM visits 
                  WHERE DATE(created_at) = CURRENT_DATE AND category = 'PATIENT'
                  FOR UPDATE`
             );
@@ -233,7 +233,7 @@ app.post('/api/patients', async (req, res) => {
         if (!isPinned) {
             // Get max sort_order for non-pinned waiting patients today
             const maxResult = await client.query(
-                `SELECT COALESCE(MAX(sort_order), 0) as max_order FROM patients 
+                `SELECT COALESCE(MAX(sort_order), 0) as max_order FROM visits 
                  WHERE DATE(created_at) = CURRENT_DATE 
                  AND status = 'WAITING' 
                  AND type NOT IN ('FAMILY', 'RELATIVE')`
@@ -241,13 +241,40 @@ app.post('/api/patients', async (req, res) => {
             sortOrder = (maxResult.rows[0].max_order || 0) + 1;
         }
         
+        // First, check if patient exists in patient table or create new
+        let patientId = null;
+        if (p.mobile && p.mobile.trim() !== '') {
+            // Check if this patient (name + mobile) already exists
+            const existingPatient = await client.query(
+                'SELECT id FROM patient WHERE name = $1 AND mobile = $2',
+                [p.name, p.mobile]
+            );
+            if (existingPatient.rows.length > 0) {
+                patientId = existingPatient.rows[0].id;
+            } else {
+                // Create new patient record
+                const newPatient = await client.query(
+                    'INSERT INTO patient (name, age, gender, city, mobile, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+                    [p.name, p.age, p.gender, p.city, p.mobile, createdAt]
+                );
+                patientId = newPatient.rows[0].id;
+            }
+        } else {
+            // No mobile number, create new patient record anyway
+            const newPatient = await client.query(
+                'INSERT INTO patient (name, age, gender, city, mobile, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+                [p.name, p.age, p.gender, p.city, p.mobile || null, createdAt]
+            );
+            patientId = newPatient.rows[0].id;
+        }
+        
         const result = await client.query(
-            'INSERT INTO patients (id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING queue_id',
-            [p.id, queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert, sortOrder]
+            'INSERT INTO visits (id, patient_id, queue_id, name, age, gender, category, type, city, mobile, status, created_at, in_time, has_unread_alert, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING queue_id',
+            [p.id, patientId, queueId, p.name, p.age, p.gender, p.category, p.type, p.city, p.mobile, p.status, createdAt, inTime, p.hasUnreadAlert, sortOrder]
         );
         
         await client.query('COMMIT');
-        console.log('Insert result:', result.rowCount, 'Queue ID:', result.rows[0].queue_id);
+        console.log('Insert result:', result.rowCount, 'Queue ID:', result.rows[0].queue_id, 'Patient ID:', patientId);
         
         io.emit('patient:add', { patientId: p.id, queueId: result.rows[0].queue_id });
         
@@ -287,7 +314,7 @@ app.patch('/api/patients/:id', async (req, res) => {
         if (keys.length === 0) return res.status(400).json({ error: 'No updates provided' });
 
         const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-        await pool.query(`UPDATE patients SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
+        await pool.query(`UPDATE visits SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
         
         io.emit('patient:update', { patientId: id, updates });
         
@@ -308,7 +335,7 @@ app.post('/api/patients/:id/status', async (req, res) => {
         
         // Get current patient
         const patientRes = await client.query(
-            'SELECT status, sort_order, type FROM patients WHERE id = $1', [id]
+            'SELECT status, sort_order, type FROM visits WHERE id = $1', [id]
         );
         if (patientRes.rows.length === 0) {
             throw new Error('Patient not found');
@@ -321,7 +348,7 @@ app.post('/api/patients/:id/status', async (req, res) => {
         // If moving FROM WAITING to OPD/COMPLETED, renumber remaining waiting cards
         if (oldStatus === 'WAITING' && status !== 'WAITING' && !isPinned && patient.sort_order > 0) {
             await client.query(
-                `UPDATE patients SET sort_order = sort_order - 1 
+                `UPDATE visits SET sort_order = sort_order - 1 
                  WHERE DATE(created_at) = CURRENT_DATE 
                  AND status = 'WAITING' 
                  AND type NOT IN ('FAMILY', 'RELATIVE')
@@ -334,7 +361,7 @@ app.post('/api/patients/:id/status', async (req, res) => {
         let newSortOrder = 0;
         if (status === 'WAITING' && oldStatus !== 'WAITING' && !isPinned) {
             await client.query(
-                `UPDATE patients SET sort_order = sort_order + 1 
+                `UPDATE visits SET sort_order = sort_order + 1 
                  WHERE DATE(created_at) = CURRENT_DATE 
                  AND status = 'WAITING' 
                  AND type NOT IN ('FAMILY', 'RELATIVE')
@@ -358,7 +385,7 @@ app.post('/api/patients/:id/status', async (req, res) => {
         const values = Object.values(updateFields);
         const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
         
-        await client.query(`UPDATE patients SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
+        await client.query(`UPDATE visits SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
         
         await client.query('COMMIT');
         
@@ -384,7 +411,7 @@ app.post('/api/patients/:id/reorder', async (req, res) => {
         
         // Get current patient
         const patientRes = await client.query(
-            'SELECT sort_order, type FROM patients WHERE id = $1', [id]
+            'SELECT sort_order, type FROM visits WHERE id = $1', [id]
         );
         if (patientRes.rows.length === 0) {
             throw new Error('Patient not found');
@@ -407,7 +434,7 @@ app.post('/api/patients/:id/reorder', async (req, res) => {
         
         // Find patient with target order (non-pinned, waiting, today)
         const adjacentRes = await client.query(
-            `SELECT id FROM patients 
+            `SELECT id FROM visits 
              WHERE DATE(created_at) = CURRENT_DATE 
              AND status = 'WAITING' 
              AND type NOT IN ('FAMILY', 'RELATIVE')
@@ -422,8 +449,8 @@ app.post('/api/patients/:id/reorder', async (req, res) => {
         const adjacentId = adjacentRes.rows[0].id;
         
         // Swap sort orders
-        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
-        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [currentOrder, adjacentId]);
+        await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
+        await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [currentOrder, adjacentId]);
         
         await client.query('COMMIT');
         
@@ -449,7 +476,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
         
         // Get source patient
         const sourceRes = await client.query(
-            'SELECT sort_order, type, status FROM patients WHERE id = $1', [id]
+            'SELECT sort_order, type, status FROM visits WHERE id = $1', [id]
         );
         if (sourceRes.rows.length === 0) {
             throw new Error('Source patient not found');
@@ -466,7 +493,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
         
         // Get target patient
         const targetRes = await client.query(
-            'SELECT sort_order, type FROM patients WHERE id = $1', [targetId]
+            'SELECT sort_order, type FROM visits WHERE id = $1', [targetId]
         );
         if (targetRes.rows.length === 0) {
             throw new Error('Target patient not found');
@@ -488,7 +515,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
         if (sourceOrder < targetOrder) {
             // Moving down: shift items between source+1 and target up by 1
             await client.query(
-                `UPDATE patients SET sort_order = sort_order - 1 
+                `UPDATE visits SET sort_order = sort_order - 1 
                  WHERE DATE(created_at) = CURRENT_DATE 
                  AND status = 'WAITING' 
                  AND type NOT IN ('FAMILY', 'RELATIVE')
@@ -498,7 +525,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
         } else {
             // Moving up: shift items between target and source-1 down by 1
             await client.query(
-                `UPDATE patients SET sort_order = sort_order + 1 
+                `UPDATE visits SET sort_order = sort_order + 1 
                  WHERE DATE(created_at) = CURRENT_DATE 
                  AND status = 'WAITING' 
                  AND type NOT IN ('FAMILY', 'RELATIVE')
@@ -508,7 +535,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
         }
         
         // Set source to target position
-        await client.query('UPDATE patients SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
+        await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
         
         await client.query('COMMIT');
         
@@ -526,7 +553,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
 // Delete patient
 app.delete('/api/patients/:id', async (req, res) => {
     try {
-        await pool.query('DELETE FROM patients WHERE id = $1', [req.params.id]);
+        await pool.query('DELETE FROM visits WHERE id = $1', [req.params.id]);
         
         io.emit('patient:delete', { patientId: req.params.id });
         
@@ -545,7 +572,7 @@ app.post('/api/patients/:id/messages', async (req, res) => {
             'INSERT INTO messages (id, patient_id, text, sender, timestamp) VALUES ($1, $2, $3, $4, $5)',
             [m.id, id, m.text, m.sender, m.timestamp]
         );
-        await pool.query('UPDATE patients SET has_unread_alert = TRUE WHERE id = $1', [id]);
+        await pool.query('UPDATE visits SET has_unread_alert = TRUE WHERE id = $1', [id]);
         
         io.emit('message:new', { patientId: id, message: m });
         

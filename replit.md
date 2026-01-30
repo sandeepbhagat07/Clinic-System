@@ -47,7 +47,24 @@ The frontend runs on port 5000 using Vite dev server. The backend runs on port 3
   - Use this checkpoint to restore if new development causes issues
   - To restore: Tell the assistant "Restore to Q ClinicFlow Complete Version"
 
+## Database Structure
+- **patient** table: Master patient data (id, name, age, gender, city, mobile, created_at)
+  - Stores unique patient information for lookup by mobile number
+  - Same mobile can have multiple patients (family members)
+- **visits** table: Each clinic visit record
+  - Contains patient_id (links to patient table)
+  - Stores queue_id, name, age, gender, category, type, city, mobile, status, timestamps, notes, medicines
+  - Each visit is a separate record even for returning patients
+- **messages** table: Chat messages for patient communication
+
 ## Recent Changes
+- 2026-01-30: Version 1.16 - Database Restructuring for Patient Lookup
+  - Split single 'patients' table into two tables: 'patient' (master data) and 'visits' (each visit)
+  - Added patient_id column to visits table linking to patient master record
+  - New patient registration now creates entry in both patient and visits tables
+  - Returning patients (same name + mobile) reuse existing patient record
+  - All queue functionality preserved: Waiting, OPD, Completed
+  - Preparation for mobile number lookup feature (auto-fill patient details)
 - 2026-01-28: Version 1.15 - Call Operator Alert Sound
   - Added pleasant chime sound when Doctor calls Operator
   - Uses Web Audio API (no external sound files needed)
