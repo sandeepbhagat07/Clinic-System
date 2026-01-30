@@ -32,6 +32,7 @@ ClinicFlow is a React-based outpatient department (OPD) management application. 
 
 ## Running the Application
 The frontend runs on port 5000 using Vite dev server. The backend runs on port 3001.
+Uses `concurrently --kill-others` to manage both servers - ensures clean process termination on restart.
 
 ## Features
 - Operator View: Patient/visitor registration
