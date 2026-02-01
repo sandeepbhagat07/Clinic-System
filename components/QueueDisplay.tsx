@@ -49,9 +49,6 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ patient, size, position }) =>
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-4 mb-2">
-            <span className={`${isLarge ? 'text-3xl' : 'text-2xl'} font-bold text-indigo-600`}>#{patient.queueId}</span>
-          </div>
           <h2 className={`${isLarge ? 'text-4xl' : 'text-2xl'} font-bold text-slate-800 uppercase mb-3 leading-tight`}>
             {patient.name}
           </h2>
