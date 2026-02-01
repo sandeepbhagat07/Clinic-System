@@ -204,6 +204,9 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
 
       {/* Stats Badges Row */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-4">
+        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+          <span className="text-[12px] font-bold text-slate-800">Total Patient : {patients.length}</span>
+        </div>
         <div className="flex items-center gap-3 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
