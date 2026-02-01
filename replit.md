@@ -59,6 +59,12 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-01: Version 1.25 - Queue Display Screen Improvements
+  - OPD single patient card made wider (max-w-4xl) so names display on one line
+  - Removed patient queue ID (#3, #4) from display - not needed
+  - Removed IN TIME badge from OPD cards on display screen
+  - Next Queue cards redesigned with position number (1, 2, 3) as circular badge centered on top border
+  - Cleaner, more visually appealing layout for TV display
 - 2026-02-01: Version 1.24 - Queue Display Screen for Waiting Room
   - New public display at /display URL (no login required)
   - Shows patients currently in OPD (up to 2 cards side by side)
