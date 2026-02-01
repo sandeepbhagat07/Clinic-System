@@ -170,6 +170,61 @@ app.get('/api/patients/lookup/:mobile', async (req, res) => {
     }
 });
 
+// Patient History - Get all visits for a specific patient by patient_id
+app.get('/api/patients/:patientId/history', async (req, res) => {
+    try {
+        const { patientId } = req.params;
+        
+        // First get patient details from patient table
+        const patientResult = await pool.query(
+            'SELECT id, name, age, gender, city, mobile, created_at FROM patient WHERE id = $1',
+            [patientId]
+        );
+        
+        if (patientResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Patient not found' });
+        }
+        
+        const patient = patientResult.rows[0];
+        
+        // Get all visits for this patient, ordered by date (newest first)
+        const visitsResult = await pool.query(
+            `SELECT id, queue_id, name, age, gender, category, type, city, mobile, status, 
+                    created_at, in_time, out_time, notes, medicines
+             FROM visits 
+             WHERE patient_id = $1 
+             ORDER BY created_at DESC`,
+            [patientId]
+        );
+        
+        // Format dates for frontend
+        const visits = visitsResult.rows.map(v => ({
+            ...v,
+            createdAt: v.created_at ? new Date(v.created_at).toISOString() : null,
+            inTime: v.in_time ? new Date(v.in_time).toISOString() : null,
+            outTime: v.out_time ? new Date(v.out_time).toISOString() : null,
+            queueId: v.queue_id
+        }));
+        
+        res.json({
+            patient: {
+                id: patient.id,
+                name: patient.name,
+                age: patient.age,
+                gender: patient.gender,
+                city: patient.city,
+                mobile: patient.mobile,
+                createdAt: patient.created_at ? new Date(patient.created_at).toISOString() : null
+            },
+            visits: visits,
+            totalVisits: visits.length
+        });
+    } catch (err) {
+        console.error('Patient history error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Patient Report: Search with filters and date range (returns last 150 records by default)
 app.get('/api/patients/report', async (req, res) => {
     try {
@@ -216,6 +271,7 @@ app.get('/api/patients/report', async (req, res) => {
         const data = result.rows.map(p => ({
             ...p,
             queueId: p.queue_id,
+            patientId: p.patient_id,
             createdAt: p.created_at,
             inTime: p.in_time,
             outTime: p.out_time,

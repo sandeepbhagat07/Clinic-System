@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Patient, PatientCategory } from '../types';
 import { Icons } from '../constants';
+import PatientHistoryModal from './PatientHistoryModal';
 
 interface PatientReportProps {
   apiBase: string;
@@ -14,6 +15,7 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
   const [searchMobile, setSearchMobile] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
 
   const fetchReport = async () => {
     setLoading(true);
@@ -246,6 +248,7 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Category</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">Date</th>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-600 uppercase tracking-wide">In Time</th>
+                <th className="px-4 py-3 text-center text-[10px] font-bold text-slate-600 uppercase tracking-wide">History</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -260,6 +263,25 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
                   <td className="px-4 py-3">{getCategoryBadge(patient.category)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{formatDate(patient.createdAt)}</td>
                   <td className="px-4 py-3 text-sm text-slate-600">{formatTime(patient.inTime)}</td>
+                  <td className="px-4 py-3 text-center">
+                    {patient.patientId ? (
+                      <button
+                        onClick={() => setSelectedPatientId(patient.patientId!)}
+                        className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors"
+                        title="View Patient History"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                          <polyline points="14 2 14 8 20 8"></polyline>
+                          <line x1="16" y1="13" x2="8" y2="13"></line>
+                          <line x1="16" y1="17" x2="8" y2="17"></line>
+                          <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                      </button>
+                    ) : (
+                      <span className="text-slate-300">-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -271,6 +293,15 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
       <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center justify-between">
         <span className="text-xs text-slate-500">Showing {patients.length} records</span>
       </div>
+
+      {/* Patient History Modal */}
+      {selectedPatientId && (
+        <PatientHistoryModal
+          patientId={selectedPatientId}
+          apiBase={apiBase}
+          onClose={() => setSelectedPatientId(null)}
+        />
+      )}
     </div>
   );
 };

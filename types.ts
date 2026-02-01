@@ -43,6 +43,8 @@ export interface Patient {
   status: PatientStatus;
   createdAt: number;
   mobile?: string;
+  // Link to patient master record
+  patientId?: number;
   // Timestamps
   inTime?: number;
   outTime?: number;
