@@ -59,6 +59,16 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-01: Version 1.24 - Queue Display Screen for Waiting Room
+  - New public display at /display URL (no login required)
+  - Shows patients currently in OPD (up to 2 cards side by side)
+  - Shows next 3 patients waiting in queue
+  - Large TV-friendly fonts and layout
+  - Real-time updates via Socket.IO
+  - Live clock showing current date and time
+  - Orange header for OPD section, teal for Next Queue section
+  - "Display" button added to navigation menu (opens in new tab)
+  - Gender-colored avatars (blue for male, pink for female)
 - 2026-02-01: Version 1.23 - Total Patient Count in Report Stats
   - Added "Total Patient : XX" count to statistics block in Patient Report
   - Shows total number of records found based on current filters

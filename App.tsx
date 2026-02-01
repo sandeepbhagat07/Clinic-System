@@ -692,6 +692,14 @@ const App: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-indigo-600"></span>
               )}
             </button>
+            <button
+              onClick={() => window.open('/display', '_blank')}
+              className="px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all text-indigo-100 hover:bg-white/10 flex items-center gap-1"
+              title="Open Queue Display for waiting room TV"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Display
+            </button>
           </nav>
         </div>
         <div className="flex items-center gap-3">
