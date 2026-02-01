@@ -33,44 +33,35 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ patient, size, position }) =>
   };
 
   return (
-    <div className={`${theme} border-3 rounded-2xl ${isLarge ? 'p-8' : 'p-5'} flex flex-col shadow-lg`}>
-      <div className="flex items-start gap-5">
-        {position && (
-          <div className={`flex-shrink-0 ${isLarge ? 'w-16 h-16 text-3xl' : 'w-12 h-12 text-xl'} bg-slate-700 text-white rounded-full flex items-center justify-center font-bold`}>
-            {position}
-          </div>
-        )}
-        
-        <div className="flex-shrink-0">
-          {patient.gender === 'Male' 
-            ? <Icons.MaleAvatar className={isLarge ? "w-28 h-28" : "w-20 h-20"} />
-            : <Icons.FemaleAvatar className={isLarge ? "w-28 h-28" : "w-20 h-20"} />
-          }
+    <div className="relative">
+      {position && (
+        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-slate-700 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg z-10">
+          {position}
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <h2 className={`${isLarge ? 'text-4xl' : 'text-2xl'} font-bold text-slate-800 uppercase mb-3 leading-tight`}>
-            {patient.name}
-          </h2>
-          
-          <div className={`${isLarge ? 'text-2xl' : 'text-lg'} text-slate-600 mb-4`}>
-            {patient.age} yrs  |  {patient.gender}  |  {patient.city}
+      )}
+      <div className={`${theme} border-3 rounded-2xl ${isLarge ? 'p-8' : 'p-5 pt-8'} flex flex-col shadow-lg`}>
+        <div className="flex items-start gap-5">
+          <div className="flex-shrink-0">
+            {patient.gender === 'Male' 
+              ? <Icons.MaleAvatar className={isLarge ? "w-28 h-28" : "w-20 h-20"} />
+              : <Icons.FemaleAvatar className={isLarge ? "w-28 h-28" : "w-20 h-20"} />
+            }
           </div>
           
-          <div className="flex items-center gap-4 flex-wrap">
-            {getCategoryBadge()}
+          <div className="flex-1 min-w-0">
+            <h2 className={`${isLarge ? 'text-4xl' : 'text-2xl'} font-bold text-slate-800 uppercase mb-3 leading-tight`}>
+              {patient.name}
+            </h2>
+            
+            <div className={`${isLarge ? 'text-2xl' : 'text-lg'} text-slate-600 mb-4`}>
+              {patient.age} yrs  |  {patient.gender}  |  {patient.city}
+            </div>
+            
+            <div className="flex items-center gap-4 flex-wrap">
+              {getCategoryBadge()}
+            </div>
           </div>
         </div>
-        
-        {isLarge && (
-          <div className="flex flex-col gap-3 flex-shrink-0">
-            {patient.inTime && (
-              <div className="px-5 py-2.5 text-xl bg-green-500 text-white font-bold rounded-lg whitespace-nowrap">
-                IN : {formatTime(patient.inTime)}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -174,7 +165,7 @@ const QueueDisplay: React.FC = () => {
                 <p className="text-2xl text-orange-600 font-semibold">No patients currently in OPD</p>
               </div>
             ) : (
-              <div className={`grid gap-6 ${opdPatients.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-2'}`}>
+              <div className={`grid gap-6 ${opdPatients.length === 1 ? 'grid-cols-1 max-w-4xl mx-auto' : 'grid-cols-2'}`}>
                 {opdPatients.map((patient) => (
                   <DisplayCard key={patient.id} patient={patient} size="large" />
                 ))}
