@@ -1,5 +1,6 @@
 {
   "name": "ClinicFlow OPD Management",
   "description": "A responsive OPD (Outpatient Department) management system featuring a drag-and-drop workflow, patient registration, and real-time status tracking across Waiting, OPD, and Completed queues.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "hospitalName": "Jivandeep Hospital"
 }
