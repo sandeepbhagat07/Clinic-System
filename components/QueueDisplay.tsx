@@ -192,32 +192,35 @@ const QueueDisplay: React.FC = () => {
 
         {hospitalName && (
           <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl shadow-lg overflow-hidden py-4">
-            <div className="animate-marquee whitespace-nowrap">
-              <span className="text-3xl font-bold text-white tracking-wider mx-8">
-                {hospitalName}
-              </span>
-              <span className="text-3xl text-white mx-4">★</span>
-              <span className="text-3xl font-bold text-white tracking-wider mx-8">
-                {hospitalName}
-              </span>
-              <span className="text-3xl text-white mx-4">★</span>
-              <span className="text-3xl font-bold text-white tracking-wider mx-8">
-                {hospitalName}
-              </span>
-              <span className="text-3xl text-white mx-4">★</span>
-              <span className="text-3xl font-bold text-white tracking-wider mx-8">
-                {hospitalName}
-              </span>
-              <span className="text-3xl text-white mx-4">★</span>
+            <div className="marquee-container flex">
+              <div className="marquee-content flex shrink-0">
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+              </div>
+              <div className="marquee-content flex shrink-0">
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+                <span className="text-3xl font-bold text-white tracking-wider mx-8">{hospitalName}</span>
+                <span className="text-3xl text-white mx-4">★</span>
+              </div>
             </div>
             <style>{`
-              @keyframes marquee {
-                0% { transform: translateX(0%); }
-                100% { transform: translateX(-50%); }
+              .marquee-container {
+                animation: scroll 20s linear infinite;
               }
-              .animate-marquee {
-                display: inline-block;
-                animation: marquee 15s linear infinite;
+              @keyframes scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
               }
             `}</style>
           </div>
