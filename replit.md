@@ -59,6 +59,10 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-01: Version 1.23 - Total Patient Count in Report Stats
+  - Added "Total Patient : XX" count to statistics block in Patient Report
+  - Shows total number of records found based on current filters
+  - Displayed in separate bordered box before category/gender stats
 - 2026-02-01: Version 1.22 - Patient History Feature
   - New History column in Patient Report table with clickable icon
   - PatientHistoryModal shows complete visit history for a patient
