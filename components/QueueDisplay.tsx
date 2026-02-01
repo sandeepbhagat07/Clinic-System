@@ -71,6 +71,7 @@ const QueueDisplay: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [hospitalName, setHospitalName] = useState<string>('');
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -104,6 +105,21 @@ const QueueDisplay: React.FC = () => {
       clearInterval(timeInterval);
     };
   }, [fetchPatients]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const response = await fetch('/metadata.json');
+        if (response.ok) {
+          const data = await response.json();
+          setHospitalName(data.hospitalName || '');
+        }
+      } catch (error) {
+        console.error('Error fetching metadata:', error);
+      }
+    };
+    fetchMetadata();
+  }, []);
 
   const opdPatients = patients
     .filter(p => p.status === PatientStatus.OPD)
@@ -173,6 +189,39 @@ const QueueDisplay: React.FC = () => {
             )}
           </div>
         </div>
+
+        {hospitalName && (
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl shadow-lg overflow-hidden py-4">
+            <div className="animate-marquee whitespace-nowrap">
+              <span className="text-3xl font-bold text-white tracking-wider mx-8">
+                {hospitalName}
+              </span>
+              <span className="text-3xl text-white mx-4">★</span>
+              <span className="text-3xl font-bold text-white tracking-wider mx-8">
+                {hospitalName}
+              </span>
+              <span className="text-3xl text-white mx-4">★</span>
+              <span className="text-3xl font-bold text-white tracking-wider mx-8">
+                {hospitalName}
+              </span>
+              <span className="text-3xl text-white mx-4">★</span>
+              <span className="text-3xl font-bold text-white tracking-wider mx-8">
+                {hospitalName}
+              </span>
+              <span className="text-3xl text-white mx-4">★</span>
+            </div>
+            <style>{`
+              @keyframes marquee {
+                0% { transform: translateX(0%); }
+                100% { transform: translateX(-50%); }
+              }
+              .animate-marquee {
+                display: inline-block;
+                animation: marquee 15s linear infinite;
+              }
+            `}</style>
+          </div>
+        )}
 
         <div className="flex-1 bg-teal-500 rounded-3xl shadow-xl overflow-hidden">
           <div className="bg-teal-600 px-8 py-4 flex items-center gap-6">

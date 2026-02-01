@@ -59,6 +59,11 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-01: Version 1.26 - Hospital Name Marquee on Display Screen
+  - Added animated scrolling marquee showing hospital name between OPD and Next Queue sections
+  - Hospital name fetched from metadata.json (hospitalName field)
+  - Purple gradient background with stars as separators
+  - Smooth continuous scrolling animation
 - 2026-02-01: Version 1.25 - Queue Display Screen Improvements
   - OPD single patient card made wider (max-w-4xl) so names display on one line
   - Removed patient queue ID (#3, #4) from display - not needed
