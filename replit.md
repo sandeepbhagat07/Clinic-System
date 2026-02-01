@@ -59,6 +59,12 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-01: Version 1.22 - Patient History Feature
+  - New History column in Patient Report table with clickable icon
+  - PatientHistoryModal shows complete visit history for a patient
+  - Displays all past visits sorted by date (newest first)
+  - Shows doctor notes and medicines from each visit
+  - API endpoint: GET /api/patients/:patientId/history
 - 2026-01-30: Version 1.21 - Patient ID Badge Styling
   - Improved visibility of Patient ID/Queue Number badge
   - Changed from dark background to light grey badge (bg-gray-200)
