@@ -74,7 +74,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
       )}
 
       {/* Main Content */}
-      <div className={`flex items-start ${isLarge && isOPD ? 'gap-4 p-4' : isLarge ? 'gap-4 p-8' : 'gap-4 p-4'}`}>
+      <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : 'gap-3 p-4'}`}>
         
         {/* Left Column: Avatar & Type Label */}
         <div className="flex flex-col items-center gap-3 flex-shrink-0">
@@ -89,14 +89,14 @@ const PatientCard: React.FC<PatientCardProps> = ({
         {/* Info Column */}
         <div className="flex-1 min-w-0 flex flex-col pt-0.5">
           {/* Row 1: Queue ID Badge (High Visibility) and Name */}
-          <div className="flex items-center gap-3 mb-1.5">
+          <div className="flex items-center gap-2 mb-1.5">
             {!isVisitorCategory && (
               <span className="bg-gray-200 text-gray-900 font-black px-3 py-1 rounded-full text-[12px] flex-shrink-0 shadow-md flex items-center gap-0.5">
                 <span className="text-[11px] text-gray-600">#</span>
                 <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.5rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.15rem] font-bold'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.15rem] font-bold'}`}>
               {patient.name}
             </h4>
           </div>
@@ -107,8 +107,8 @@ const PatientCard: React.FC<PatientCardProps> = ({
               {patient.age} yrs <span className="mx-1 text-slate-300">•</span> {patient.gender}
             </div>
             {patient.inTime && (
-              <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[10px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
-                IN : &nbsp; {formatTime(patient.inTime)}
+              <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
+                IN &nbsp;:  {formatTime(patient.inTime)}
               </div>
             )}
           </div>
