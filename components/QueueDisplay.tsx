@@ -156,7 +156,7 @@ const QueueDisplay: React.FC = () => {
           <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
             <Icons.Stethoscope />
           </div>
-          <h1 className="text-3xl font-bold tracking-wide">ClinicFlow Queue Display</h1>
+          <h1 className="text-3xl font-bold tracking-wide">{hospitalName} - ClinicFlow Queue Display</h1>
         </div>
         <div className="text-right">
           <div className="text-4xl font-bold font-mono">{formatClock(currentTime)}</div>
@@ -166,7 +166,7 @@ const QueueDisplay: React.FC = () => {
 
       <div className="flex-1 p-8 flex flex-col gap-8">
         <div className="bg-orange-500 rounded-3xl shadow-xl overflow-hidden">
-          <div className="bg-orange-600 px-8 py-4 flex items-center justify-between">
+          <div className="bg-orange-600 px-8 py-2 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-white uppercase tracking-wider">
               Currently in OPD
             </h2>
@@ -227,7 +227,7 @@ const QueueDisplay: React.FC = () => {
         )}
 
         <div className="flex-1 bg-teal-500 rounded-3xl shadow-xl overflow-hidden">
-          <div className="bg-teal-600 px-8 py-4 flex items-center gap-6">
+          <div className="bg-teal-600 px-8 py-2 flex items-center gap-6">
             <div className="flex items-center gap-2">
               <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="17 11 12 6 7 11"/>
