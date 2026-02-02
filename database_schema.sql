@@ -1,6 +1,7 @@
 -- ClinicFlow OPD Management Database Schema
 -- PostgreSQL Database Setup Script
--- Version 1.21
+-- Version 1.26
+-- Last Updated: February 2, 2026
 
 -- Drop existing tables if they exist (for fresh setup)
 DROP TABLE IF EXISTS messages CASCADE;
@@ -8,8 +9,11 @@ DROP TABLE IF EXISTS visits CASCADE;
 DROP TABLE IF EXISTS patient CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 
--- Patient Master Table
+-- =============================================
+-- PATIENT MASTER TABLE
+-- =============================================
 -- Stores unique patient information (can lookup by mobile)
+-- Same mobile can have multiple patients (family members)
 CREATE TABLE patient (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -20,8 +24,11 @@ CREATE TABLE patient (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Visits Table
+-- =============================================
+-- VISITS TABLE
+-- =============================================
 -- Each clinic visit is a separate record
+-- Links to patient master via patient_id for returning patients
 CREATE TABLE visits (
     id VARCHAR(50) PRIMARY KEY,
     queue_id INTEGER NOT NULL,
@@ -32,7 +39,7 @@ CREATE TABLE visits (
     type VARCHAR(50) NOT NULL,
     city VARCHAR(255),
     mobile VARCHAR(20),
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'WAITING',
     created_at TIMESTAMP NOT NULL,
     in_time TIMESTAMP,
     out_time TIMESTAMP,
@@ -43,8 +50,10 @@ CREATE TABLE visits (
     patient_id INTEGER REFERENCES patient(id)
 );
 
--- Messages Table
--- Chat messages between operator and doctor
+-- =============================================
+-- MESSAGES TABLE
+-- =============================================
+-- Chat messages between operator and doctor for each patient
 CREATE TABLE messages (
     id VARCHAR(50) PRIMARY KEY,
     patient_id VARCHAR(50) NOT NULL,
@@ -53,8 +62,11 @@ CREATE TABLE messages (
     timestamp BIGINT NOT NULL
 );
 
--- Events Table
+-- =============================================
+-- EVENTS TABLE
+-- =============================================
 -- Calendar events for doctors and operators
+-- Event types: NORMAL, OPERATION, VISIT, HOSPITAL RELATED, SOCIAL
 CREATE TABLE events (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -68,22 +80,46 @@ CREATE TABLE events (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes for better performance
+-- =============================================
+-- INDEXES FOR PERFORMANCE
+-- =============================================
 CREATE INDEX idx_visits_status ON visits(status);
 CREATE INDEX idx_visits_created_at ON visits(created_at);
 CREATE INDEX idx_visits_patient_id ON visits(patient_id);
+CREATE INDEX idx_visits_mobile ON visits(mobile);
 CREATE INDEX idx_patient_mobile ON patient(mobile);
+CREATE INDEX idx_patient_name ON patient(name);
 CREATE INDEX idx_events_date ON events(event_date);
+CREATE INDEX idx_events_created_by ON events(created_by);
 CREATE INDEX idx_messages_patient_id ON messages(patient_id);
 
--- Sample Data (Optional - uncomment if needed)
-/*
-INSERT INTO patient (name, age, gender, city, mobile) VALUES
-('John Doe', 35, 'MALE', 'Mumbai', '9876543210'),
-('Jane Smith', 28, 'FEMALE', 'Delhi', '9876543211'),
-('Raj Kumar', 45, 'MALE', 'Bangalore', '9876543212');
+-- =============================================
+-- TABLE REFERENCE
+-- =============================================
+-- 
+-- patient: Master patient records
+--   - id: Auto-increment primary key
+--   - Used for patient lookup by mobile number
+--   - Returning patients reuse existing records
+--
+-- visits: Each clinic visit
+--   - id: UUID string
+--   - queue_id: Daily queue number (resets each day)
+--   - status: WAITING | OPD | COMPLETED
+--   - category: PATIENT | VISITOR
+--   - type: GEN PATIENT | REF PATIENT | REL PATIENT | FAMILY | RELATIVE | MR
+--   - sort_order: Controls queue ordering for WAITING patients
+--   - patient_id: Links to patient master table
+--
+-- messages: Real-time chat
+--   - sender: OPERATOR | DOCTOR
+--   - patient_id: Links to visits.id
+--
+-- events: Calendar
+--   - event_type: NORMAL | OPERATION | VISIT | HOSPITAL RELATED | SOCIAL
+--   - remind_me: Shows notification dot on calendar menu
+--   - created_by: OPERATOR | DOCTOR
 
-INSERT INTO events (title, event_date, event_time, description, event_type, remind_me, created_by) VALUES
-('Team Meeting', CURRENT_DATE, '10:00:00', 'Weekly team sync', 'NORMAL', true, 'DOCTOR'),
-('Hospital Visit', CURRENT_DATE + INTERVAL '1 day', '14:00:00', 'Visit to City Hospital', 'HOSPITAL RELATED', false, 'DOCTOR');
-*/
+-- =============================================
+-- END OF SCHEMA
+-- =============================================

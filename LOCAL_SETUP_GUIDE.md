@@ -14,7 +14,8 @@ This guide provides complete step-by-step instructions to run ClinicFlow on your
 6. [Install Dependencies](#install-dependencies)
 7. [Run the Application](#run-the-application)
 8. [Accessing the Application](#accessing-the-application)
-9. [Troubleshooting](#troubleshooting)
+9. [Application Features](#application-features)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -154,7 +155,31 @@ Enter the password when prompted.
 
 **Note:** 
 - Use `database_schema.sql` for a fresh installation (creates empty tables)
-- Use `database_backup.sql` if you want to restore existing data from a previous backup
+- Use `database_backup.sql` if you want sample data included
+
+---
+
+## Database Structure
+
+ClinicFlow uses 4 main tables:
+
+| Table | Description |
+|-------|-------------|
+| **patient** | Master patient data (name, age, gender, city, mobile). Used for patient lookup. |
+| **visits** | Each clinic visit record with queue info, status, notes, and medicines. |
+| **messages** | Real-time chat messages between Operator and Doctor. |
+| **events** | Calendar events with reminders for Doctor and Operator. |
+
+### Key Fields in visits table:
+
+| Field | Description |
+|-------|-------------|
+| queue_id | Daily queue number (resets each day) |
+| status | WAITING, OPD, or COMPLETED |
+| category | PATIENT or VISITOR |
+| type | GEN PATIENT, REF PATIENT, REL PATIENT, FAMILY, RELATIVE, MR |
+| sort_order | Controls queue ordering |
+| patient_id | Links to patient master table |
 
 ---
 
@@ -211,10 +236,10 @@ You need to run two processes: the backend server and the frontend development s
 Open a terminal and run:
 
 ```bash
-node server.js & npm run dev
+npx concurrently "node server.js" "npm run dev"
 ```
 
-On Windows, you may need to run them in separate terminals:
+Or on Windows, you may need to run them in separate terminals:
 
 **Terminal 1 (Backend):**
 ```cmd
@@ -256,6 +281,41 @@ http://localhost:5000
 |------|----------|----------|
 | Operator | OPERATOR | op123 |
 | Doctor | DOCTOR | doc123 |
+
+### Application URLs
+
+| URL | Description |
+|-----|-------------|
+| http://localhost:5000 | Main application (login required) |
+| http://localhost:5000/display | Queue Display Screen (no login, for waiting room TV) |
+
+---
+
+## Application Features
+
+### Version 1.26 Features
+
+| Feature | Description |
+|---------|-------------|
+| **Queue Management** | Waiting, OPD, and Completed queues with real-time sync |
+| **Patient Registration** | Register patients with mobile lookup for returning patients |
+| **Doctor Consultation** | Add notes and medicines during consultation |
+| **Real-time Chat** | Operator and Doctor can communicate about patients |
+| **Queue Display Screen** | Public TV display at /display URL for waiting room |
+| **Event Calendar** | Monthly/daily calendar with event types and reminders |
+| **Patient History** | View complete visit history for any patient |
+| **Patient Report** | Search and export patient records with date filters |
+| **Call Operator** | Doctor can send alert to Operator with sound notification |
+| **Queue Reordering** | Up/Down buttons to reorder waiting queue |
+| **Hospital Name Marquee** | Animated hospital name on display screen (configurable in metadata.json) |
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `metadata.json` | Hospital name and app configuration |
+| `.env` | Database connection string |
+| `vite.config.ts` | Frontend development server settings |
 
 ---
 
@@ -339,6 +399,15 @@ psql -U clinicflow -d clinicflow_db -f database_schema.sql
 npm install pg
 ```
 
+### Issue: Queue Display shows "No patients"
+
+**Cause:** No patients registered for today.
+
+**Solution:**
+1. Login as OPERATOR
+2. Register a new patient
+3. The display screen will update automatically via Socket.IO
+
 ---
 
 ## Production Deployment Notes
@@ -370,4 +439,4 @@ If you encounter issues not covered in this guide, check:
 
 ---
 
-**ClinicFlow v1.21** | Last Updated: January 2026
+**ClinicFlow v1.26** | Last Updated: February 2026
