@@ -38,6 +38,11 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-03: Version 1.33 - Fixed Patient History Icon Logic
+  - History icon now only appears if patient has PREVIOUS visits (before today, not just patientId)
+  - History modal excludes today's current visit, shows only past visits
+  - Added `hasPreviousVisits` flag computed by backend for accurate icon visibility
+  - Updated modal wording: "Previous Visits" instead of "Visit History"
 - 2026-02-03: Version 1.32 - Patient History Icon in Consultation Form
   - Added History icon (document icon) before Chat button in OPD Consultation Form
   - Icon only visible if patient has previous visits (patientId exists)
