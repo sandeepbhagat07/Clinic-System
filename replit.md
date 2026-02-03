@@ -36,3 +36,8 @@ The system is designed for daily-based patient management, where queues reset da
 - **Node.js/Express**: Backend server (optional, for full functionality).
 - **PostgreSQL**: Database for persistent storage (used with `pg` client library).
 - **Socket.IO**: Real-time bidirectional event-based communication.
+
+## Recent Changes
+- 2026-02-03: Version 1.31 - Dynamic OPD Status Options
+  - OPDSTATUS.txt is now read fresh each time dropdown opens (no server restart needed)
+  - Just edit the file and refresh the page to see new/updated pause reasons

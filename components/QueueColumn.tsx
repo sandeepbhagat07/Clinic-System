@@ -57,6 +57,8 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [localOptions, setLocalOptions] = useState<string[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
   const pausedButtonRef = useRef<HTMLButtonElement>(null);
   
   const onDragOver = (e: React.DragEvent) => {
@@ -103,7 +105,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     setShowDropdown(false);
   };
 
-  const handlePausedClick = (e: React.MouseEvent) => {
+  const handlePausedClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!onOpdStatusChange) return;
@@ -125,6 +127,23 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         top: rect.bottom + 8,
         left: left
       });
+      
+      setLoadingOptions(true);
+      try {
+        const response = await fetch('/api/opd-status-options');
+        if (response.ok) {
+          const { options } = await response.json();
+          setLocalOptions(options || opdStatusOptions || []);
+        } else {
+          console.error('Non-OK response fetching OPD status options:', response.status);
+          setLocalOptions(opdStatusOptions || []);
+        }
+      } catch (err) {
+        console.error('Error fetching OPD status options:', err);
+        setLocalOptions(opdStatusOptions || []);
+      } finally {
+        setLoadingOptions(false);
+      }
     }
     setShowDropdown(!showDropdown);
   };
@@ -261,7 +280,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         )}
       </div>
       
-      {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && createPortal(
+      {showDropdown && !opdStatus?.isPaused && createPortal(
         <>
           <div 
             className="fixed inset-0" 
@@ -280,7 +299,11 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
             <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
               Select Pause Reason
             </div>
-            {opdStatusOptions.map((option, index) => (
+            {loadingOptions ? (
+              <div className="px-3 py-4 text-center text-gray-500 text-sm">Loading...</div>
+            ) : localOptions.length === 0 ? (
+              <div className="px-3 py-4 text-center text-gray-500 text-sm">No reasons available</div>
+            ) : localOptions.map((option, index) => (
               <div
                 key={index}
                 role="button"
