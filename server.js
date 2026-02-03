@@ -93,6 +93,7 @@ app.get('/api/patients', async (req, res) => {
         const data = patients.map(p => ({
             ...p,
             queueId: p.queue_id,
+            patientId: p.patient_id,
             createdAt: p.created_at,
             inTime: p.in_time,
             outTime: p.out_time,
