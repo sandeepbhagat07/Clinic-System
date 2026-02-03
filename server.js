@@ -78,6 +78,17 @@ app.use((req, res, next) => {
     next();
 });
 
+// Get metadata (hospital name, etc.)
+app.get('/api/metadata', (req, res) => {
+    try {
+        const metadataPath = path.join(__dirname, 'metadata.json');
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+        res.json(metadata);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to read metadata' });
+    }
+});
+
 // Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', async (req, res) => {
     try {
