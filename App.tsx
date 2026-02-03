@@ -38,6 +38,31 @@ const App: React.FC = () => {
   const [hasEventsToday, setHasEventsToday] = useState(false);
   const [opdStatus, setOpdStatus] = useState<{isPaused: boolean; pauseReason: string}>({ isPaused: false, pauseReason: '' });
   const [opdStatusOptions, setOpdStatusOptions] = useState<string[]>([]);
+  
+  // Resizable column widths (percentages)
+  const defaultWidths = { left: 25, center: 50, right: 25 };
+  const [columnWidths, setColumnWidths] = useState<{left: number; center: number; right: number}>(() => {
+    const saved = localStorage.getItem('clinicflow_columnWidths');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Validate: must have all fields as numbers, sum to ~100, within limits
+        if (typeof parsed.left === 'number' && typeof parsed.center === 'number' && typeof parsed.right === 'number' &&
+            !isNaN(parsed.left) && !isNaN(parsed.center) && !isNaN(parsed.right) &&
+            parsed.left >= 15 && parsed.left <= 60 &&
+            parsed.center >= 15 && parsed.center <= 60 &&
+            parsed.right >= 15 && parsed.right <= 60 &&
+            Math.abs(parsed.left + parsed.center + parsed.right - 100) < 1) {
+          return { left: parsed.left, center: parsed.center, right: parsed.right };
+        }
+      } catch {
+        // Invalid JSON, fall through to default
+      }
+    }
+    return defaultWidths;
+  });
+  const [isResizing, setIsResizing] = useState<'left' | 'right' | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -273,6 +298,78 @@ const App: React.FC = () => {
     return () => {
       socket.disconnect();
     };
+  }, []);
+
+  // Save column widths to localStorage
+  useEffect(() => {
+    localStorage.setItem('clinicflow_columnWidths', JSON.stringify(columnWidths));
+  }, [columnWidths]);
+
+  // Handle column resize
+  const handleResizeStart = useCallback((divider: 'left' | 'right') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(divider);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const mouseX = e.clientX - containerRect.left;
+      const percentage = (mouseX / containerWidth) * 100;
+      
+      setColumnWidths(prev => {
+        const minWidth = 15; // Minimum 15% for any column
+        const maxWidth = 60; // Maximum 60% for any column
+        
+        if (isResizing === 'left') {
+          // Moving left divider: adjusts left and center columns
+          let newLeft = Math.max(minWidth, Math.min(maxWidth, percentage));
+          let newCenter = 100 - newLeft - prev.right;
+          
+          // Ensure center column has minimum width
+          if (newCenter < minWidth) {
+            newCenter = minWidth;
+            newLeft = 100 - newCenter - prev.right;
+          }
+          
+          return { left: newLeft, center: newCenter, right: prev.right };
+        } else {
+          // Moving right divider: adjusts center and right columns
+          let newRight = Math.max(minWidth, Math.min(maxWidth, 100 - percentage));
+          let newCenter = 100 - prev.left - newRight;
+          
+          // Ensure center column has minimum width
+          if (newCenter < minWidth) {
+            newCenter = minWidth;
+            newRight = 100 - prev.left - newCenter;
+          }
+          
+          return { left: prev.left, center: newCenter, right: newRight };
+        }
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Reset column widths to default
+  const resetColumnWidths = useCallback(() => {
+    setColumnWidths({ left: 25, center: 50, right: 25 });
   }, []);
 
   // Refresh patients from server
@@ -789,6 +886,17 @@ const App: React.FC = () => {
               )}
             </div>
           )}
+          {/* Reset Columns Button - Only on Dashboard when columns are modified */}
+          {currentPage === 'DASHBOARD' && (columnWidths.left !== 25 || columnWidths.center !== 50 || columnWidths.right !== 25) && (
+            <button
+              onClick={resetColumnWidths}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide text-indigo-200 hover:text-white hover:bg-white/10 transition-all border border-indigo-400/30"
+              title="Reset column widths to default"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Reset
+            </button>
+          )}
           {/* Compact Stats Badge */}
           <div className="flex items-center gap-3 bg-[#1e1b4b]/40 px-3 py-1.5 rounded-full border border-indigo-400/20">
             <div className="flex items-center gap-1.5">
@@ -843,11 +951,11 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex flex-1 p-3 gap-3 overflow-hidden">
+      <main className="flex flex-1 p-3 overflow-hidden">
         {currentPage === 'DASHBOARD' ? (
-          <>
+          <div ref={containerRef} className="flex w-full h-full relative" style={{ userSelect: isResizing ? 'none' : 'auto' }}>
             {/* LEFT COLUMN: WAITING QUEUE */}
-            <section className="w-1/4 h-full">
+            <section className="h-full overflow-hidden flex-shrink-0" style={{ flexBasis: `${columnWidths.left}%`, width: `${columnWidths.left}%` }}>
               <QueueColumn 
                 title="WAITING QUEUE" 
                 patients={waitingPatients}
@@ -865,8 +973,23 @@ const App: React.FC = () => {
               />
             </section>
 
+            {/* LEFT RESIZE DIVIDER */}
+            <div 
+              className="w-2 flex-shrink-0 cursor-col-resize group relative z-10 flex items-center justify-center"
+              onMouseDown={handleResizeStart('left')}
+            >
+              <div className={`w-1 h-full transition-colors ${isResizing === 'left' ? 'bg-indigo-500' : 'bg-gray-200 group-hover:bg-indigo-400'}`}></div>
+              <div className="absolute top-1/2 -translate-y-1/2 w-4 h-12 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex flex-col gap-0.5">
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
             {/* CENTER COLUMN: OPD QUEUE + FORM */}
-            <section className="w-1/2 flex flex-col gap-3 h-full">
+            <section className="flex flex-col gap-3 h-full overflow-hidden flex-shrink-0" style={{ flexBasis: `${columnWidths.center}%`, width: `${columnWidths.center}%` }}>
               {/* TOP: OPD QUEUE */}
               <div className="h-1/3 min-h-[180px]">
                 <QueueColumn 
@@ -928,8 +1051,23 @@ const App: React.FC = () => {
               </div>
             </section>
 
+            {/* RIGHT RESIZE DIVIDER */}
+            <div 
+              className="w-2 flex-shrink-0 cursor-col-resize group relative z-10 flex items-center justify-center"
+              onMouseDown={handleResizeStart('right')}
+            >
+              <div className={`w-1 h-full transition-colors ${isResizing === 'right' ? 'bg-indigo-500' : 'bg-gray-200 group-hover:bg-indigo-400'}`}></div>
+              <div className="absolute top-1/2 -translate-y-1/2 w-4 h-12 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex flex-col gap-0.5">
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-indigo-400 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
             {/* RIGHT COLUMN: COMPLETED OPD */}
-            <section className="w-1/4 h-full">
+            <section className="h-full overflow-hidden flex-shrink-0" style={{ flexBasis: `${columnWidths.right}%`, width: `${columnWidths.right}%` }}>
               <QueueColumn 
                 title="COMPLETED OPD" 
                 patients={completedPatients}
@@ -942,7 +1080,7 @@ const App: React.FC = () => {
                 activeView={activeView}
               />
             </section>
-          </>
+          </div>
         ) : currentPage === 'REPORT' ? (
           <PatientReport apiBase={API_BASE} />
         ) : (

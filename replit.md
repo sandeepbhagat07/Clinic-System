@@ -38,6 +38,12 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-03: Version 1.37 - Resizable Dashboard Columns
+  - Added drag-to-resize dividers between the 3 dashboard columns (Waiting, OPD, Completed)
+  - Column widths are saved to localStorage and persist across sessions
+  - Visual feedback on hover (indigo color) and during drag
+  - Minimum 15% / Maximum 60% limits prevent columns from becoming too small/large
+  - "Reset" button appears in header when columns have been customized
 - 2026-02-03: Version 1.36 - Login Persistence
   - Login state now persists across page refreshes using localStorage
   - Operator/Doctor stays logged in after browser refresh
