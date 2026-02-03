@@ -398,6 +398,11 @@ const App: React.FC = () => {
   const updatePatientStatus = useCallback(async (id: string, newStatus: PatientStatus) => {
     const patient = patients.find(p => p.id === id);
     if (!patient || patient.status === newStatus) return;
+    
+    if (newStatus === PatientStatus.OPD && opdStatus.isPaused) {
+      console.log('Cannot move patient to OPD - OPD is paused');
+      return;
+    }
 
     const updates: any = { status: newStatus };
     if (newStatus === PatientStatus.COMPLETED) updates.outTime = Date.now();
@@ -422,7 +427,7 @@ const App: React.FC = () => {
         setActiveConsultationId(null);
       }
     }
-  }, [patients, activeConsultationId, isBackendOnline]);
+  }, [patients, activeConsultationId, isBackendOnline, opdStatus.isPaused]);
 
   const reorderPatient = useCallback(async (id: string, direction: 'up' | 'down') => {
     const patient = patients.find(p => p.id === id);

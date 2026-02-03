@@ -67,11 +67,17 @@ const DisplayCard: React.FC<DisplayCardProps> = ({ patient, size, position }) =>
   );
 };
 
+interface OpdStatusState {
+  isPaused: boolean;
+  pauseReason: string;
+}
+
 const QueueDisplay: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hospitalName, setHospitalName] = useState<string>('');
+  const [opdStatus, setOpdStatus] = useState<OpdStatusState>({ isPaused: false, pauseReason: '' });
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -85,8 +91,21 @@ const QueueDisplay: React.FC = () => {
     }
   }, []);
 
+  const fetchOpdStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/opd-status`);
+      if (response.ok) {
+        const data = await response.json();
+        setOpdStatus({ isPaused: data.isPaused, pauseReason: data.pauseReason });
+      }
+    } catch (error) {
+      console.error('Error fetching OPD status:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPatients();
+    fetchOpdStatus();
     
     const newSocket = io(window.location.origin);
     setSocket(newSocket);
@@ -95,6 +114,9 @@ const QueueDisplay: React.FC = () => {
     newSocket.on('patient:update', fetchPatients);
     newSocket.on('patient:delete', fetchPatients);
     newSocket.on('patient:reorder', fetchPatients);
+    newSocket.on('opd:status-change', (data: OpdStatusState) => {
+      setOpdStatus(data);
+    });
 
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
@@ -104,7 +126,7 @@ const QueueDisplay: React.FC = () => {
       newSocket.disconnect();
       clearInterval(timeInterval);
     };
-  }, [fetchPatients]);
+  }, [fetchPatients, fetchOpdStatus]);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -176,9 +198,25 @@ const QueueDisplay: React.FC = () => {
           </div>
           
           <div className="p-6">
-            {opdPatients.length === 0 ? (
-              <div className="bg-orange-100 rounded-2xl p-12 text-center">
-                <p className="text-2xl text-orange-600 font-semibold">No patients currently in OPD</p>
+            {opdStatus.isPaused ? (
+              <div className="bg-red-100 border-4 border-red-300 rounded-2xl p-12 text-center">
+                <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-4xl text-red-700 font-bold mb-4">OPD PAUSED</p>
+                <p className="text-2xl text-red-600 font-medium">{opdStatus.pauseReason}</p>
+              </div>
+            ) : opdPatients.length === 0 ? (
+              <div className="bg-emerald-100 border-4 border-emerald-300 rounded-2xl p-12 text-center">
+                <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-4xl text-emerald-700 font-bold mb-4">DOCTOR IS AVAILABLE</p>
+                <p className="text-2xl text-emerald-600 font-medium">WAIT FOR YOUR TURN</p>
               </div>
             ) : (
               <div className={`grid gap-6 ${opdPatients.length === 1 ? 'grid-cols-1 max-w-4xl mx-auto' : 'grid-cols-2'}`}>
