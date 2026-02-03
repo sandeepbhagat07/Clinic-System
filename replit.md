@@ -59,6 +59,11 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-03: Version 1.27 - Call Operator Button Tooltip Fix
+  - Fixed tooltip appearing above button (was getting cut off at page top border)
+  - Tooltip now appears BELOW the button for full visibility
+  - Added "Sent!" success notification below button when call is successful
+  - Both hover tooltip and click notification now display within visible page area
 - 2026-02-01: Version 1.26 - Hospital Name Marquee on Display Screen
   - Added animated scrolling marquee showing hospital name between OPD and Next Queue sections
   - Hospital name fetched from metadata.json (hospitalName field)
