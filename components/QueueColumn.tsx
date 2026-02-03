@@ -92,18 +92,24 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     return patients.filter(p => p.category === PatientCategory.PATIENT).length;
   }, [patients]);
 
-  const handleToggleOpdStatus = () => {
+  const handleRunningClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!onOpdStatusChange) return;
-    
-    if (opdStatus?.isPaused) {
-      onOpdStatusChange(false, '');
-      setShowDropdown(false);
-    } else {
-      setShowDropdown(!showDropdown);
-    }
+    onOpdStatusChange(false, '');
+    setShowDropdown(false);
   };
 
-  const handleSelectPauseReason = (reason: string) => {
+  const handlePausedClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!onOpdStatusChange) return;
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleSelectPauseReason = (e: React.MouseEvent, reason: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (onOpdStatusChange) {
       onOpdStatusChange(true, reason);
       setShowDropdown(false);
@@ -120,31 +126,53 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         <div className="flex items-center gap-3">
           <span className="uppercase tracking-wider text-sm">{title}</span>
           {isOpdColumn && onOpdStatusChange && (
-            <div className="relative">
-              <button
-                onClick={handleToggleOpdStatus}
-                className={`
-                  px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-                  transition-all duration-200 shadow-md border-2 border-white/30
-                  ${opdStatus?.isPaused 
-                    ? 'bg-red-500 hover:bg-red-600 text-white' 
-                    : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                  }
-                `}
-              >
-                {opdStatus?.isPaused ? 'OPD PAUSED' : 'OPD RUNNING'}
-              </button>
+            <div className="relative flex items-center gap-2">
+              <div className="flex rounded-lg overflow-hidden shadow-md border border-white/30">
+                <button
+                  onClick={handleRunningClick}
+                  className={`
+                    px-3 py-1.5 text-xs font-bold uppercase tracking-wide
+                    transition-all duration-200 flex items-center gap-1.5
+                    ${!opdStatus?.isPaused 
+                      ? 'bg-emerald-500 text-white' 
+                      : 'bg-white/80 text-gray-600 hover:bg-emerald-100'
+                    }
+                  `}
+                >
+                  <span className={`w-2 h-2 rounded-full ${!opdStatus?.isPaused ? 'bg-white' : 'bg-gray-400'}`}></span>
+                  Running
+                </button>
+                <button
+                  onClick={handlePausedClick}
+                  className={`
+                    px-3 py-1.5 text-xs font-bold uppercase tracking-wide
+                    transition-all duration-200 flex items-center gap-1.5
+                    ${opdStatus?.isPaused 
+                      ? 'bg-red-500 text-white' 
+                      : showDropdown
+                        ? 'bg-red-400 text-white'
+                        : 'bg-white/80 text-gray-600 hover:bg-red-100'
+                    }
+                  `}
+                >
+                  <span className={`w-2 h-2 rounded-full ${opdStatus?.isPaused || showDropdown ? 'bg-white' : 'bg-gray-400'}`}></span>
+                  Paused
+                </button>
+              </div>
               
               {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && (
-                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                <div 
+                  className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
                     Select Pause Reason
                   </div>
                   {opdStatusOptions.map((option, index) => (
                     <button
                       key={index}
-                      onClick={() => handleSelectPauseReason(option)}
-                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0"
+                      onClick={(e) => handleSelectPauseReason(e, option)}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0 cursor-pointer"
                     >
                       {option}
                     </button>
@@ -219,8 +247,12 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
       
       {showDropdown && !opdStatus?.isPaused && (
         <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowDropdown(false)}
+          className="fixed inset-0 z-[99]" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDropdown(false);
+          }}
         />
       )}
     </div>
