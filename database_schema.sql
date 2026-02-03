@@ -1,7 +1,7 @@
 -- ClinicFlow OPD Management Database Schema
 -- PostgreSQL Database Setup Script
--- Version 1.26
--- Last Updated: February 2, 2026
+-- Version 1.37
+-- Last Updated: February 3, 2026
 
 -- Drop existing tables if they exist (for fresh setup)
 DROP TABLE IF EXISTS messages CASCADE;
