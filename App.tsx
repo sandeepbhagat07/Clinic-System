@@ -689,7 +689,10 @@ const App: React.FC = () => {
             >
               Calendar
               {hasEventsToday && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-indigo-600"></span>
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
               )}
             </button>
             <button
