@@ -161,23 +161,39 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
               </div>
               
               {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && (
-                <div 
-                  className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
-                    Select Pause Reason
+                <>
+                  <div 
+                    className="fixed inset-0" 
+                    style={{ zIndex: 9998, pointerEvents: 'auto' }}
+                    onMouseDown={() => setShowDropdown(false)}
+                  />
+                  <div 
+                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+                    style={{ zIndex: 9999, pointerEvents: 'auto', position: 'relative' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
+                      Select Pause Reason
+                    </div>
+                    {opdStatusOptions.map((option, index) => (
+                      <div
+                        key={index}
+                        role="button"
+                        tabIndex={0}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          if (onOpdStatusChange) {
+                            onOpdStatusChange(true, option);
+                            setShowDropdown(false);
+                          }
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0 cursor-pointer select-none"
+                      >
+                        {option}
+                      </div>
+                    ))}
                   </div>
-                  {opdStatusOptions.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => handleSelectPauseReason(e, option)}
-                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0 cursor-pointer"
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+                </>
               )}
             </div>
           )}
@@ -245,16 +261,6 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         )}
       </div>
       
-      {showDropdown && !opdStatus?.isPaused && (
-        <div 
-          className="fixed inset-0 z-[99]" 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowDropdown(false);
-          }}
-        />
-      )}
     </div>
   );
 };
