@@ -200,20 +200,30 @@ const QueueDisplay: React.FC = () => {
           <div className="p-6">
             {opdStatus.isPaused ? (
               <div className="bg-red-100 border-4 border-red-300 rounded-2xl p-12 text-center">
-                <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                  <div className="radar-wave-red absolute w-24 h-24 rounded-full border-4 border-red-400"></div>
+                  <div className="radar-wave-red absolute w-24 h-24 rounded-full border-4 border-red-400" style={{animationDelay: '0.5s'}}></div>
+                  <div className="radar-wave-red absolute w-24 h-24 rounded-full border-4 border-red-400" style={{animationDelay: '1s'}}></div>
+                  <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                 </div>
                 <p className="text-4xl text-red-700 font-bold mb-4">OPD PAUSED</p>
                 <p className="text-2xl text-red-600 font-medium">{opdStatus.pauseReason}</p>
               </div>
             ) : opdPatients.length === 0 ? (
               <div className="bg-emerald-100 border-4 border-emerald-300 rounded-2xl p-12 text-center">
-                <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                <div className="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                  <div className="radar-wave-green absolute w-24 h-24 rounded-full border-4 border-emerald-400"></div>
+                  <div className="radar-wave-green absolute w-24 h-24 rounded-full border-4 border-emerald-400" style={{animationDelay: '0.5s'}}></div>
+                  <div className="radar-wave-green absolute w-24 h-24 rounded-full border-4 border-emerald-400" style={{animationDelay: '1s'}}></div>
+                  <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                 </div>
                 <p className="text-4xl text-emerald-700 font-bold mb-4">DOCTOR IS AVAILABLE</p>
                 <p className="text-2xl text-emerald-600 font-medium">WAIT FOR YOUR TURN</p>
@@ -259,6 +269,20 @@ const QueueDisplay: React.FC = () => {
               @keyframes scroll {
                 0% { transform: translateX(0); }
                 100% { transform: translateX(-50%); }
+              }
+              .radar-wave-red {
+                animation: radarWaveRed 1.5s ease-out infinite;
+              }
+              .radar-wave-green {
+                animation: radarWaveGreen 1.5s ease-out infinite;
+              }
+              @keyframes radarWaveRed {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(1.8); opacity: 0; }
+              }
+              @keyframes radarWaveGreen {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(1.8); opacity: 0; }
               }
             `}</style>
           </div>
