@@ -60,9 +60,10 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 
 ## Recent Changes
 - 2026-02-03: Version 1.29 - OPD Status Toggle (Pause/Resume)
-  - New toggle button next to OPD QUEUE title: "OPD RUNNING" (green) / "OPD PAUSED" (red)
-  - When paused, dropdown shows predefined reasons loaded from OPDSTATUS.txt
-  - OPD queue displays selected pause reason prominently when paused
+  - Radio-style toggle buttons: "Running" (green) / "Paused" (red) next to OPD QUEUE title
+  - Click "Paused" to open dropdown with reasons loaded from OPDSTATUS.txt
+  - Select a reason to pause OPD - OPD queue displays selected pause reason prominently
+  - Click "Running" to instantly resume OPD operations
   - Patients cannot be moved to OPD queue while paused
   - Empty OPD queue now shows "DOCTOR IS AVAILABLE. WAIT FOR YOUR TURN"
   - Real-time sync via Socket.IO - both Doctor and Operator see same status
