@@ -59,6 +59,10 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-03: Version 1.28 - Calendar Notification Ping Animation
+  - Added eye-catching ping animation to Calendar notification dot
+  - Pulsing red ring radiates outward from solid red center dot
+  - Much more visible notification when there are events for today
 - 2026-02-03: Version 1.27 - Call Operator Button Tooltip Fix
   - Fixed tooltip appearing above button (was getting cut off at page top border)
   - Tooltip now appears BELOW the button for full visibility
