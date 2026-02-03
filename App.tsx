@@ -19,8 +19,13 @@ const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [nextQueueId, setNextQueueId] = useState(1);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [activeView, setActiveView] = useState<AppView>('LOGIN');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeView, setActiveView] = useState<AppView>(() => {
+    const saved = localStorage.getItem('clinicflow_activeView');
+    return (saved === 'OPERATOR' || saved === 'DOCTOR') ? saved : 'LOGIN';
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('clinicflow_isLoggedIn') === 'true';
+  });
   const [activeConsultationId, setActiveConsultationId] = useState<string | null>(null);
   const [activeChatPatientId, setActiveChatPatientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -660,6 +665,10 @@ const App: React.FC = () => {
     setActiveView(role);
     setIsLoggedIn(true);
     
+    // Persist login state to localStorage
+    localStorage.setItem('clinicflow_isLoggedIn', 'true');
+    localStorage.setItem('clinicflow_activeView', role);
+    
     // Check for today's events to show notification dot on Calendar menu
     checkTodayEvents();
     
@@ -681,6 +690,10 @@ const App: React.FC = () => {
     setIsLoggedIn(false);
     setActiveView('LOGIN');
     setActiveConsultationId(null);
+    
+    // Clear persisted login state
+    localStorage.removeItem('clinicflow_isLoggedIn');
+    localStorage.removeItem('clinicflow_activeView');
   };
 
   if (!isLoggedIn) {
