@@ -28,8 +28,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-indigo-700 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 space-y-8">
         <div className="text-center">
-          <h2 className="text-4xl font-black text-indigo-900 uppercase tracking-widest">ClinicFlow</h2>
-          <p className="mt-2 text-slate-500 font-bold uppercase tracking-wider text-xs">Secure Access Terminal</p>
+          <h2 className="text-4xl font-black text-indigo-900 tracking-widest">Clinic Q Flow</h2>
+          <p className="mt-2 text-slate-500 font-bold uppercase tracking-wider text-xl">Secure Access Terminal</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
