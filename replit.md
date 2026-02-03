@@ -38,6 +38,11 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-03: Version 1.35 - Radar Wave Animations on Display Screen
+  - Added radar/wave animation effects to OPD status icons on Queue Display screen
+  - Red Pause icon has red waves pulsing outward
+  - Green Available icon has green waves pulsing outward
+  - Creates eye-catching visual effect for waiting room display
 - 2026-02-03: Version 1.34 - Hospital Name on Login Screen
   - Login screen now displays hospital name from metadata.json below "Clinic Q Flow"
   - Hospital name fetched dynamically from /api/metadata endpoint
