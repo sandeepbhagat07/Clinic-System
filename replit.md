@@ -59,6 +59,14 @@ Uses `concurrently --kill-others` to manage both servers - ensures clean process
 - **messages** table: Chat messages for patient communication
 
 ## Recent Changes
+- 2026-02-03: Version 1.29 - OPD Status Toggle (Pause/Resume)
+  - New toggle button next to OPD QUEUE title: "OPD RUNNING" (green) / "OPD PAUSED" (red)
+  - When paused, dropdown shows predefined reasons loaded from OPDSTATUS.txt
+  - OPD queue displays selected pause reason prominently when paused
+  - Patients cannot be moved to OPD queue while paused
+  - Empty OPD queue now shows "DOCTOR IS AVAILABLE. WAIT FOR YOUR TURN"
+  - Real-time sync via Socket.IO - both Doctor and Operator see same status
+  - API endpoints: GET/POST /api/opd-status, GET /api/opd-status-options
 - 2026-02-03: Version 1.28 - Calendar Notification Ping Animation
   - Added eye-catching ping animation to Calendar notification dot
   - Pulsing red ring radiates outward from solid red center dot
