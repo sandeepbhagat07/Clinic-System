@@ -3,8 +3,8 @@ import React from 'react';
 import { PatientCategory, PatientType } from './types';
 
 export const CITIES = [
-  'New York', 'London', 'Mumbai', 'Tokyo', 'Berlin', 
-  'Paris', 'Sydney', 'Toronto', 'Dhavda', 'Singapore', 'Dubai'
+  'New York', 'London', 'Mumbai', 'Tokyo', 'Nakhatrana - નખત્રાણા','Berlin', 
+  'Paris', 'Sydney', 'Toronto', 'Dhavda - ધાવડા', 'Singapore', 'Dubai'
 ];
 
 export const CATEGORY_OPTIONS = [
