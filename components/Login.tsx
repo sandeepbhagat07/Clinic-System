@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppView } from '../types';
 
 interface LoginProps {
@@ -10,6 +10,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [hospitalName, setHospitalName] = useState('');
+
+  useEffect(() => {
+    fetch('/api/metadata')
+      .then(res => res.json())
+      .then(data => {
+        if (data.hospitalName) {
+          setHospitalName(data.hospitalName);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +41,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 space-y-8">
         <div className="text-center">
           <h2 className="text-4xl font-black text-indigo-900 tracking-widest">Clinic Q Flow</h2>
-          <p className="mt-2 text-slate-500 font-bold uppercase tracking-wider text-xl">Secure Access Terminal</p>
+          {hospitalName && (
+            <p className="mt-1 text-indigo-600 font-bold uppercase tracking-wider text-lg">{hospitalName}</p>
+          )}
+          <p className="mt-2 text-slate-500 font-bold uppercase tracking-wider text-sm">Secure Access Terminal</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
