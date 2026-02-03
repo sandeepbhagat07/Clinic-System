@@ -1,5 +1,6 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Patient, PatientStatus, PatientCategory, AppView } from '../types';
 import PatientCard from './PatientCard';
 
@@ -55,6 +56,8 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
 }) => {
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const pausedButtonRef = useRef<HTMLButtonElement>(null);
   
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -104,8 +107,39 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!onOpdStatusChange) return;
+    
+    if (!showDropdown && pausedButtonRef.current) {
+      const rect = pausedButtonRef.current.getBoundingClientRect();
+      const dropdownWidth = 288;
+      const viewportWidth = window.innerWidth;
+      
+      let left = rect.left;
+      if (left + dropdownWidth > viewportWidth - 16) {
+        left = viewportWidth - dropdownWidth - 16;
+      }
+      if (left < 8) {
+        left = 8;
+      }
+      
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: left
+      });
+    }
     setShowDropdown(!showDropdown);
   };
+  
+  useEffect(() => {
+    if (showDropdown) {
+      const handleScrollOrResize = () => setShowDropdown(false);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+      return () => {
+        window.removeEventListener('scroll', handleScrollOrResize, true);
+        window.removeEventListener('resize', handleScrollOrResize);
+      };
+    }
+  }, [showDropdown]);
 
   const handleSelectPauseReason = (e: React.MouseEvent, reason: string) => {
     e.preventDefault();
@@ -143,6 +177,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
                   Running
                 </button>
                 <button
+                  ref={pausedButtonRef}
                   onClick={handlePausedClick}
                   className={`
                     px-3 py-1.5 text-xs font-bold uppercase tracking-wide
@@ -160,41 +195,6 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
                 </button>
               </div>
               
-              {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && (
-                <>
-                  <div 
-                    className="fixed inset-0" 
-                    style={{ zIndex: 9998, pointerEvents: 'auto' }}
-                    onMouseDown={() => setShowDropdown(false)}
-                  />
-                  <div 
-                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
-                    style={{ zIndex: 9999, pointerEvents: 'auto', position: 'relative' }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
-                      Select Pause Reason
-                    </div>
-                    {opdStatusOptions.map((option, index) => (
-                      <div
-                        key={index}
-                        role="button"
-                        tabIndex={0}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          if (onOpdStatusChange) {
-                            onOpdStatusChange(true, option);
-                            setShowDropdown(false);
-                          }
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0 cursor-pointer select-none"
-                      >
-                        {option}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
             </div>
           )}
         </div>
@@ -261,6 +261,46 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         )}
       </div>
       
+      {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && createPortal(
+        <>
+          <div 
+            className="fixed inset-0" 
+            style={{ zIndex: 9998 }}
+            onMouseDown={() => setShowDropdown(false)}
+          />
+          <div 
+            className="fixed w-72 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+            style={{ 
+              zIndex: 9999, 
+              top: dropdownPosition.top,
+              left: Math.max(8, dropdownPosition.left)
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
+              Select Pause Reason
+            </div>
+            {opdStatusOptions.map((option, index) => (
+              <div
+                key={index}
+                role="button"
+                tabIndex={0}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  if (onOpdStatusChange) {
+                    onOpdStatusChange(true, option);
+                    setShowDropdown(false);
+                  }
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0 cursor-pointer select-none"
+              >
+                {option}
+              </div>
+            ))}
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };
