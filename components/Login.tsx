@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {hospitalName && (
             <p className="mt-1 text-indigo-600 font-bold uppercase tracking-wider text-lg">{hospitalName}</p>
           )}
-          <p className="mt-2 text-slate-500 font-bold uppercase tracking-wider text-sm">Secure Access Terminal</p>
+         
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
