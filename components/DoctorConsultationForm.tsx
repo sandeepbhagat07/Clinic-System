@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Patient, PatientCategory } from '../types';
 import { Icons } from '../constants';
+import PatientHistoryModal from './PatientHistoryModal';
+
+const API_BASE = '/api';
 
 interface DoctorConsultationFormProps {
   patient?: Patient;
@@ -12,6 +15,7 @@ interface DoctorConsultationFormProps {
 const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat }) => {
   const [notes, setNotes] = useState('');
   const [medicines, setMedicines] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     if (patient) {
@@ -68,17 +72,31 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
               )}
             </div>
           </div>
-          <button 
-            type="button"
-            onClick={() => onOpenChat(patient.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold shadow-sm transition-all border-2 ${
-              patient.hasUnreadAlert 
-              ? 'bg-rose-600 text-white border-rose-500 animate-pulse' 
-              : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
-            } text-xs uppercase tracking-widest`}
-          >
-            <Icons.Message /> {patient.hasUnreadAlert ? 'URGENT ALERT' : 'CHAT'}
-          </button>
+          <div className="flex items-center gap-2">
+            {patient.patientId && (
+              <button 
+                type="button"
+                onClick={() => setShowHistoryModal(true)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 shadow-sm transition-all"
+                title="View Patient History"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            )}
+            <button 
+              type="button"
+              onClick={() => onOpenChat(patient.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold shadow-sm transition-all border-2 ${
+                patient.hasUnreadAlert 
+                ? 'bg-rose-600 text-white border-rose-500 animate-pulse' 
+                : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+              } text-xs uppercase tracking-widest`}
+            >
+              <Icons.Message /> {patient.hasUnreadAlert ? 'URGENT ALERT' : 'CHAT'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -115,6 +133,14 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         <Icons.CheckCircle />
         Finalize Consultation
       </button>
+      
+      {showHistoryModal && patient?.patientId && (
+        <PatientHistoryModal
+          patientId={patient.patientId}
+          apiBase={API_BASE}
+          onClose={() => setShowHistoryModal(false)}
+        />
+      )}
     </form>
   );
 };
