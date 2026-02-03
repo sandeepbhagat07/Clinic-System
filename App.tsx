@@ -31,6 +31,8 @@ const App: React.FC = () => {
   const [isCallingOperator, setIsCallingOperator] = useState(false);
   const [callOperatorSuccess, setCallOperatorSuccess] = useState(false);
   const [hasEventsToday, setHasEventsToday] = useState(false);
+  const [opdStatus, setOpdStatus] = useState<{isPaused: boolean; pauseReason: string}>({ isPaused: false, pauseReason: '' });
+  const [opdStatusOptions, setOpdStatusOptions] = useState<string[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const alertSoundRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -143,6 +145,24 @@ const App: React.FC = () => {
         
         // Fetch next queue ID for today from server
         await fetchNextQueueId();
+        
+        // Fetch OPD status options and current status
+        try {
+          const [optionsRes, statusRes] = await Promise.all([
+            fetch(`${API_BASE}/opd-status-options`),
+            fetch(`${API_BASE}/opd-status`)
+          ]);
+          if (optionsRes.ok) {
+            const { options } = await optionsRes.json();
+            setOpdStatusOptions(options || []);
+          }
+          if (statusRes.ok) {
+            const status = await statusRes.json();
+            setOpdStatus(status);
+          }
+        } catch (opdErr) {
+          console.warn('Could not fetch OPD status:', opdErr);
+        }
       } catch (err) {
         console.warn("Backend unreachable. Falling back to local storage.", err);
         setIsBackendOnline(false);
@@ -234,6 +254,12 @@ const App: React.FC = () => {
       console.log('Socket: event updated, checking today events...');
       checkTodayEvents();
     });
+    // OPD status change - sync across all clients
+    socket.on('opd:status-change', (status: {isPaused: boolean; pauseReason: string}) => {
+      console.log('Socket: OPD status changed:', status);
+      setOpdStatus(status);
+    });
+
     socket.on('event:delete', () => {
       console.log('Socket: event deleted, checking today events...');
       checkTodayEvents();
@@ -474,6 +500,24 @@ const App: React.FC = () => {
     // 2-second cooldown
     setTimeout(() => setIsCallingOperator(false), 2000);
   }, [isCallingOperator]);
+
+  // Update OPD status (pause/resume)
+  const updateOpdStatus = useCallback(async (isPaused: boolean, pauseReason: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/opd-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPaused, pauseReason })
+      });
+      if (res.ok) {
+        const status = await res.json();
+        setOpdStatus({ isPaused: status.isPaused, pauseReason: status.pauseReason });
+        console.log('OPD status updated:', status);
+      }
+    } catch (err) {
+      console.error('Failed to update OPD status:', err);
+    }
+  }, []);
 
   const movePatient = useCallback((id: string, direction: 'up' | 'down') => {
     if (isBackendOnline) {
@@ -822,6 +866,10 @@ const App: React.FC = () => {
                   activeCardId={activeConsultationId || undefined}
                   isLarge={activeView === 'DOCTOR'}
                   activeView={activeView}
+                  isOpdColumn={true}
+                  opdStatus={opdStatus}
+                  opdStatusOptions={opdStatusOptions}
+                  onOpdStatusChange={updateOpdStatus}
                 />
               </div>
               

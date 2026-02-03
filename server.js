@@ -783,6 +783,53 @@ app.delete('/api/events/:id', async (req, res) => {
     }
 });
 
+// OPD Status Management - In-memory state (resets on server restart)
+let opdStatus = {
+    isPaused: false,
+    pauseReason: ''
+};
+
+// Get OPD status options from OPDSTATUS.txt
+app.get('/api/opd-status-options', (req, res) => {
+    try {
+        const filePath = path.join(__dirname, 'OPDSTATUS.txt');
+        if (fs.existsSync(filePath)) {
+            const content = fs.readFileSync(filePath, 'utf8');
+            const options = content.split('\n').filter(line => line.trim() !== '');
+            res.json({ options });
+        } else {
+            res.json({ options: ['OPD is Paused. Please Wait'] });
+        }
+    } catch (err) {
+        console.error('Error reading OPDSTATUS.txt:', err.message);
+        res.json({ options: ['OPD is Paused. Please Wait'] });
+    }
+});
+
+// Get current OPD status
+app.get('/api/opd-status', (req, res) => {
+    res.json(opdStatus);
+});
+
+// Set OPD status (toggle pause/unpause)
+app.post('/api/opd-status', (req, res) => {
+    try {
+        const { isPaused, pauseReason } = req.body;
+        opdStatus = {
+            isPaused: isPaused || false,
+            pauseReason: isPaused ? (pauseReason || '') : ''
+        };
+        
+        // Broadcast OPD status change to all connected clients
+        io.emit('opd:status-change', opdStatus);
+        
+        console.log('OPD Status changed:', opdStatus);
+        res.json({ success: true, ...opdStatus });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Handle React routing, return all requests to React app (only in production)
 if (isProduction) {
     app.get('*', (req, res) => {

@@ -3,6 +3,11 @@ import React, { useMemo, useState } from 'react';
 import { Patient, PatientStatus, PatientCategory, AppView } from '../types';
 import PatientCard from './PatientCard';
 
+interface OpdStatusState {
+  isPaused: boolean;
+  pauseReason: string;
+}
+
 interface QueueColumnProps {
   title: string;
   patients: Patient[];
@@ -20,6 +25,10 @@ interface QueueColumnProps {
   isSortable?: boolean;
   isLarge?: boolean;
   activeView?: AppView;
+  isOpdColumn?: boolean;
+  opdStatus?: OpdStatusState;
+  opdStatusOptions?: string[];
+  onOpdStatusChange?: (isPaused: boolean, pauseReason: string) => void;
 }
 
 const QueueColumn: React.FC<QueueColumnProps> = ({ 
@@ -38,9 +47,14 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
   headerColor,
   isSortable,
   isLarge,
-  activeView
+  activeView,
+  isOpdColumn,
+  opdStatus,
+  opdStatusOptions,
+  onOpdStatusChange
 }) => {
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -51,6 +65,9 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     setDragOverCardId(null);
     const patientId = e.dataTransfer.getData('patientId');
     if (patientId) {
+      if (isOpdColumn && opdStatus?.isPaused) {
+        return;
+      }
       onUpdateStatus(patientId, status);
     }
   };
@@ -64,14 +81,34 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
     } else if (sourceId === targetId) {
        // do nothing
     } else if (sourceId) {
+       if (isOpdColumn && opdStatus?.isPaused) {
+         return;
+       }
        onUpdateStatus(sourceId, status);
     }
   };
 
   const patientCount = useMemo(() => {
-    // Count only actual patients, exclude all VISITOR category entries
     return patients.filter(p => p.category === PatientCategory.PATIENT).length;
   }, [patients]);
+
+  const handleToggleOpdStatus = () => {
+    if (!onOpdStatusChange) return;
+    
+    if (opdStatus?.isPaused) {
+      onOpdStatusChange(false, '');
+      setShowDropdown(false);
+    } else {
+      setShowDropdown(!showDropdown);
+    }
+  };
+
+  const handleSelectPauseReason = (reason: string) => {
+    if (onOpdStatusChange) {
+      onOpdStatusChange(true, reason);
+      setShowDropdown(false);
+    }
+  };
 
   return (
     <div 
@@ -80,16 +117,76 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
       onDrop={onDrop}
     >
       <div className={`${headerColor} text-white px-5 py-4 rounded-t-[14px] font-black flex items-center justify-between shadow-sm z-10`}>
-        <span className="uppercase tracking-wider text-sm">{title}</span>
+        <div className="flex items-center gap-3">
+          <span className="uppercase tracking-wider text-sm">{title}</span>
+          {isOpdColumn && onOpdStatusChange && (
+            <div className="relative">
+              <button
+                onClick={handleToggleOpdStatus}
+                className={`
+                  px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+                  transition-all duration-200 shadow-md border-2 border-white/30
+                  ${opdStatus?.isPaused 
+                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  }
+                `}
+              >
+                {opdStatus?.isPaused ? 'OPD PAUSED' : 'OPD RUNNING'}
+              </button>
+              
+              {showDropdown && !opdStatus?.isPaused && opdStatusOptions && opdStatusOptions.length > 0 && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                  <div className="bg-gray-100 px-3 py-2 text-xs text-gray-600 font-semibold uppercase tracking-wide border-b">
+                    Select Pause Reason
+                  </div>
+                  {opdStatusOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSelectPauseReason(option)}
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors border-b last:border-b-0"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-mono border border-white/30">
           {patientCount}
         </span>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-300">
-        {patients.length === 0 ? (
+        {isOpdColumn && opdStatus?.isPaused ? (
+          <div className="h-full flex flex-col items-center justify-center py-8">
+            <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6 text-center max-w-md">
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-red-700 font-bold text-lg mb-2">OPD PAUSED</p>
+              <p className="text-red-600 text-base font-medium">{opdStatus.pauseReason}</p>
+            </div>
+          </div>
+        ) : patients.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60 italic text-sm py-12 border-2 border-dashed border-slate-300 rounded-xl">
-            <p className="font-medium text-center px-4">Empty</p>
+            {isOpdColumn ? (
+              <div className="text-center px-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="font-bold text-emerald-600 text-base not-italic">DOCTOR IS AVAILABLE</p>
+                <p className="text-slate-500 mt-1 not-italic">WAIT FOR YOUR TURN</p>
+              </div>
+            ) : (
+              <p className="font-medium text-center px-4">Empty</p>
+            )}
           </div>
         ) : (
           patients.map(p => (
@@ -119,6 +216,13 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
           ))
         )}
       </div>
+      
+      {showDropdown && !opdStatus?.isPaused && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
     </div>
   );
 };
