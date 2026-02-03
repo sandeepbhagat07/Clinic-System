@@ -38,6 +38,11 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-03: Version 1.32 - Patient History Icon in Consultation Form
+  - Added History icon (document icon) before Chat button in OPD Consultation Form
+  - Icon only visible if patient has previous visits (patientId exists)
+  - Clicking icon opens Patient History modal showing all previous visits
+  - OPDSTATUS.txt updated with Gujarati text support
 - 2026-02-03: Version 1.31 - Dynamic OPD Status Options
   - OPDSTATUS.txt is now read fresh each time dropdown opens (no server restart needed)
   - Just edit the file and refresh the page to see new/updated pause reasons
