@@ -81,9 +81,17 @@ app.use((req, res, next) => {
 // Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', async (req, res) => {
     try {
-        // Filter visits where created_at is today
+        // Filter visits where created_at is today, with subquery to check for previous visits
         const patientsRes = await pool.query(
-            `SELECT * FROM visits WHERE DATE(created_at) = CURRENT_DATE ORDER BY created_at ASC`
+            `SELECT v.*, 
+                    CASE WHEN v.patient_id IS NOT NULL AND EXISTS(
+                        SELECT 1 FROM visits v2 
+                        WHERE v2.patient_id = v.patient_id 
+                        AND DATE(v2.created_at) < CURRENT_DATE
+                    ) THEN true ELSE false END as has_previous_visits
+             FROM visits v 
+             WHERE DATE(v.created_at) = CURRENT_DATE 
+             ORDER BY v.created_at ASC`
         );
         const messagesRes = await pool.query('SELECT * FROM messages ORDER BY timestamp ASC');
         
@@ -94,6 +102,7 @@ app.get('/api/patients', async (req, res) => {
             ...p,
             queueId: p.queue_id,
             patientId: p.patient_id,
+            hasPreviousVisits: p.has_previous_visits,
             createdAt: p.created_at,
             inTime: p.in_time,
             outTime: p.out_time,
@@ -188,12 +197,12 @@ app.get('/api/patients/:patientId/history', async (req, res) => {
         
         const patient = patientResult.rows[0];
         
-        // Get all visits for this patient, ordered by date (newest first)
+        // Get all PREVIOUS visits for this patient (exclude today's visit), ordered by date (newest first)
         const visitsResult = await pool.query(
             `SELECT id, queue_id, name, age, gender, category, type, city, mobile, status, 
                     created_at, in_time, out_time, notes, medicines
              FROM visits 
-             WHERE patient_id = $1 
+             WHERE patient_id = $1 AND DATE(created_at) < CURRENT_DATE
              ORDER BY created_at DESC`,
             [patientId]
         );

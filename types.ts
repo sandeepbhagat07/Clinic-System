@@ -45,6 +45,8 @@ export interface Patient {
   mobile?: string;
   // Link to patient master record
   patientId?: number;
+  // Flag indicating if patient has previous visits (before today)
+  hasPreviousVisits?: boolean;
   // Timestamps
   inTime?: number;
   outTime?: number;

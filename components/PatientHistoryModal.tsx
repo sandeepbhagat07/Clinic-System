@@ -170,7 +170,7 @@ const PatientHistoryModal: React.FC<PatientHistoryModalProps> = ({ patientId, ap
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
-                        {data.totalVisits} Total Visit{data.totalVisits !== 1 ? 's' : ''}
+                        {data.totalVisits} Previous Visit{data.totalVisits !== 1 ? 's' : ''}
                       </span>
                       <span className="text-xs text-slate-500">
                         First Visit: {formatDate(data.patient.createdAt)}
@@ -182,9 +182,9 @@ const PatientHistoryModal: React.FC<PatientHistoryModalProps> = ({ patientId, ap
 
               {/* Visits List */}
               <div className="p-4">
-                <h5 className="font-bold text-sm text-slate-700 uppercase tracking-wide mb-3">Visit History</h5>
+                <h5 className="font-bold text-sm text-slate-700 uppercase tracking-wide mb-3">Previous Visits</h5>
                 {data.visits.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">No visit records found</p>
+                  <p className="text-slate-500 text-center py-8">No previous visits found</p>
                 ) : (
                   <div className="space-y-3">
                     {data.visits.map((visit, index) => (

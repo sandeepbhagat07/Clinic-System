@@ -73,7 +73,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {patient.patientId && (
+            {patient.hasPreviousVisits && (
               <button 
                 type="button"
                 onClick={() => setShowHistoryModal(true)}
@@ -134,7 +134,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         Finalize Consultation
       </button>
       
-      {showHistoryModal && patient?.patientId && (
+      {showHistoryModal && patient?.patientId && patient?.hasPreviousVisits && (
         <PatientHistoryModal
           patientId={patient.patientId}
           apiBase={API_BASE}
