@@ -38,6 +38,10 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-03: Version 1.36 - Login Persistence
+  - Login state now persists across page refreshes using localStorage
+  - Operator/Doctor stays logged in after browser refresh
+  - Logout properly clears the saved session
 - 2026-02-03: Version 1.35 - Radar Wave Animations on Display Screen
   - Added radar/wave animation effects to OPD status icons on Queue Display screen
   - Red Pause icon has red waves pulsing outward
