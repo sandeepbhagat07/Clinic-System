@@ -89,6 +89,39 @@ app.get('/api/metadata', (req, res) => {
     }
 });
 
+// Login endpoint - validates against secretcred.json
+app.post('/api/login', (req, res) => {
+    try {
+        const { username, password, mobile } = req.body;
+        
+        if (!username || !password || !mobile) {
+            return res.status(400).json({ success: false, error: 'All fields are required' });
+        }
+        
+        const credPath = path.join(__dirname, 'secretcred.json');
+        const credData = JSON.parse(fs.readFileSync(credPath, 'utf8'));
+        
+        const user = credData.users.find(u => 
+            u.username.toUpperCase() === username.toUpperCase() &&
+            u.password === password &&
+            u.mobile === mobile
+        );
+        
+        if (user) {
+            res.json({ 
+                success: true, 
+                role: user.role.toUpperCase(),
+                username: user.username
+            });
+        } else {
+            res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, error: 'Login failed' });
+    }
+});
+
 // Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', async (req, res) => {
     try {

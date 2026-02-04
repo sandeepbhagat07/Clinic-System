@@ -7,9 +7,11 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [mobile, setMobile] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [hospitalName, setHospitalName] = useState('');
   const [appName, setAppName] = useState('Clinic-Q');
 
@@ -27,16 +29,29 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       .catch(() => {});
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const upperUser = username.toUpperCase();
+    setError('');
+    setLoading(true);
     
-    if (upperUser === 'DOCTOR' && password === '123') {
-      onLogin('DOCTOR');
-    } else if (upperUser === 'OPERATOR' && password === '321') {
-      onLogin('OPERATOR');
-    } else {
-      setError('Invalid username or password');
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, mobile })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        onLogin(data.role as AppView);
+      } else {
+        setError(data.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,6 +73,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
           )}
           
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
+            <input
+              type="tel"
+              required
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+              placeholder="Enter Mobile Number"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
             <input
@@ -84,9 +111,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm"
           >
-            Authenticate
+            {loading ? 'Authenticating...' : 'Authenticate'}
           </button>
         </form>
       </div>

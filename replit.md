@@ -38,6 +38,12 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.42 - Custom Login Credentials System
+  - Added secretcred.json file for configurable user credentials
+  - Login now requires 3 fields: Mobile Number, Username, Password
+  - Users are validated against secretcred.json (role determines DOCTOR/OPERATOR access)
+  - Easy to customize - just edit secretcred.json to add/change users
+  - Backend /api/login endpoint validates all 3 fields
 - 2026-02-04: Version 1.41 - Dynamic App Name from Metadata
   - App name now loaded dynamically from metadata.json (appName field)
   - Header font size increased to text-3xl
