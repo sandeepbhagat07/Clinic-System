@@ -42,7 +42,7 @@ The system is designed for daily-based patient management, where queues reset da
   - Menu items now show both icon and text label
   - Home icon + "Home", Report icon + "Report", Calendar icon + "Event"
   - Info icon + "Info", Monitor icon + "Display"
-  - Icons sized at 16x16px with 11px text labels
+  - Icons sized at 16x16px with 13px text labels
   - Clean, compact design with proper spacing
 - 2026-02-04: Version 1.44 - Enhanced Statistics Page
   - Added New vs Returning patients pie chart (purple/cyan)
