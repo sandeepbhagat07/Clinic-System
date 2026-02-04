@@ -11,6 +11,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [hospitalName, setHospitalName] = useState('');
+  const [appName, setAppName] = useState('Clinic-Q');
 
   useEffect(() => {
     fetch('/api/metadata')
@@ -18,6 +19,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       .then(data => {
         if (data.hospitalName) {
           setHospitalName(data.hospitalName);
+        }
+        if (data.appName) {
+          setAppName(data.appName);
         }
       })
       .catch(() => {});
@@ -40,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center bg-indigo-700 px-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 space-y-8">
         <div className="text-center">
-          <h2 className="text-4xl font-black text-indigo-900 tracking-widest">CliniQ</h2>
+          <h2 className="text-4xl font-black text-indigo-900 tracking-widest">{appName}</h2>
           {hospitalName && (
             <p className="mt-1 text-indigo-600 font-bold uppercase tracking-wider text-lg">{hospitalName}</p>
           )}

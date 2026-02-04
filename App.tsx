@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [hasEventsToday, setHasEventsToday] = useState(false);
   const [opdStatus, setOpdStatus] = useState<{isPaused: boolean; pauseReason: string}>({ isPaused: false, pauseReason: '' });
   const [opdStatusOptions, setOpdStatusOptions] = useState<string[]>([]);
+  const [appName, setAppName] = useState('Clinic-Q');
   
   // Resizable column widths (percentages)
   const defaultWidths = { left: 25, center: 50, right: 25 };
@@ -192,6 +193,17 @@ const App: React.FC = () => {
           }
         } catch (opdErr) {
           console.warn('Could not fetch OPD status:', opdErr);
+        }
+        
+        // Fetch app metadata (appName)
+        try {
+          const metaRes = await fetch('/api/metadata');
+          if (metaRes.ok) {
+            const meta = await metaRes.json();
+            if (meta.appName) setAppName(meta.appName);
+          }
+        } catch (metaErr) {
+          console.warn('Could not fetch metadata:', metaErr);
         }
       } catch (err) {
         console.warn("Backend unreachable. Falling back to local storage.", err);
@@ -810,8 +822,8 @@ const App: React.FC = () => {
     <div className="flex flex-col h-screen w-full bg-[#f8fafc] font-sans overflow-hidden">
       <header className="bg-[#4338ca] text-white p-3 px-4 shadow-md flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">
-            CliniQ
+          <h1 className="text-3xl font-bold">
+            {appName}
           </h1>
           <div className="text-[10px] font-black bg-[#1e1b4b]/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
             {activeView} PANEL
@@ -1130,7 +1142,7 @@ const App: React.FC = () => {
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
-        <span className="font-medium">CliniQ OPD v2.0</span>
+        <span className="font-medium">{appName} OPD v2.0</span>
       </footer>
     </div>
   );

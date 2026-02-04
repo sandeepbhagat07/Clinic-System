@@ -1,7 +1,7 @@
-# ClinicFlow OPD Management
+# Clinic-Q OPD Management
 
 ## Overview
-ClinicFlow is a React-based outpatient department (OPD) management application designed to streamline clinic operations. It provides a queue management system with distinct interfaces for operators (patient registration) and doctors (consultation management). The project aims to enhance efficiency in outpatient departments through real-time communication, patient tracking, and reporting, with a strong focus on a user-friendly experience for clinic staff.
+Clinic-Q is a React-based outpatient department (OPD) management application designed to streamline clinic operations. It provides a queue management system with distinct interfaces for operators (patient registration) and doctors (consultation management). The project aims to enhance efficiency in outpatient departments through real-time communication, patient tracking, and reporting, with a strong focus on a user-friendly experience for clinic staff.
 
 ## User Preferences
 - I want iterative development.
@@ -38,8 +38,13 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
-- 2026-02-04: Version 1.40 - App Renamed to CliniQ
-  - Renamed from "ClinicFlow" to "CliniQ" throughout the application
+- 2026-02-04: Version 1.41 - Dynamic App Name from Metadata
+  - App name now loaded dynamically from metadata.json (appName field)
+  - Header font size increased to text-3xl
+  - Login screen, main header, footer, and Queue Display all use dynamic appName
+  - metadata.json stores both hospitalName and appName for easy configuration
+- 2026-02-04: Version 1.40 - App Renamed to Clinic-Q
+  - Renamed from "ClinicFlow" to "Clinic-Q" throughout the application
   - Removed logo icon from header - text-only branding now
   - Updated page title, login screen, footer, and queue display
 - 2026-02-04: Version 1.39 - New Queue Logo
