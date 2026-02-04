@@ -35,8 +35,27 @@ interface StatisticsData {
   busiestDay: {
     day: string;
     count: number;
+    date: string;
   } | null;
+  newReturning: {
+    newPatients: number;
+    returningPatients: number;
+  };
+  monthlyComparison: {
+    thisMonth: number;
+    lastMonth: number;
+    change: number;
+  };
 }
+
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const day = date.getDate().toString().padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
 const Statistics: React.FC = () => {
   const [data, setData] = useState<StatisticsData | null>(null);
@@ -104,8 +123,8 @@ const Statistics: React.FC = () => {
     const percentage2 = (pieData[1] / total) * 100;
 
     return (
-      <div className="flex items-center gap-4">
-        <div className="relative w-28 h-28">
+      <div className="flex items-center gap-3">
+        <div className="relative w-24 h-24 flex-shrink-0">
           <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
             <circle
               cx="18" cy="18" r="15.915"
@@ -124,17 +143,17 @@ const Statistics: React.FC = () => {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-lg font-bold text-slate-700">{total}</span>
+            <span className="text-base font-bold text-slate-700">{total}</span>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[0] }}></div>
-            <span className="text-sm text-slate-600">{labels[0]}: <strong>{pieData[0]}</strong> ({percentage1.toFixed(0)}%)</span>
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[0] }}></div>
+            <span className="text-xs text-slate-600">{labels[0]}: <strong>{pieData[0]}</strong> ({percentage1.toFixed(0)}%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[1] }}></div>
-            <span className="text-sm text-slate-600">{labels[1]}: <strong>{pieData[1]}</strong> ({percentage2.toFixed(0)}%)</span>
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[1] }}></div>
+            <span className="text-xs text-slate-600">{labels[1]}: <strong>{pieData[1]}</strong> ({percentage2.toFixed(0)}%)</span>
           </div>
         </div>
       </div>
@@ -168,8 +187,13 @@ const Statistics: React.FC = () => {
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">This Month</div>
-            <div className="text-3xl font-black text-emerald-600">{data.month.count}</div>
-            <div className="text-xs text-slate-500 mt-1">Total patients</div>
+            <div className="flex items-baseline">
+              <span className="text-3xl font-black text-emerald-600">{data.month.count}</span>
+              {data.monthlyComparison?.change !== 0 && data.monthlyComparison && <TrendArrow value={data.monthlyComparison.change} />}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              vs last month ({data.monthlyComparison?.lastMonth ?? 0})
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
@@ -211,8 +235,17 @@ const Statistics: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <h2 className="text-lg font-bold text-slate-700 mb-4">Gender Ratio</h2>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h2 className="text-base font-bold text-slate-700 mb-3">New vs Returning</h2>
+            <PieChart 
+              data={[data.newReturning?.newPatients ?? 0, data.newReturning?.returningPatients ?? 0]}
+              colors={['#8b5cf6', '#06b6d4']}
+              labels={['New', 'Returning']}
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h2 className="text-base font-bold text-slate-700 mb-3">Gender Ratio</h2>
             <PieChart 
               data={[data.gender.male, data.gender.female]}
               colors={['#3b82f6', '#ec4899']}
@@ -220,15 +253,17 @@ const Statistics: React.FC = () => {
             />
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-            <h2 className="text-lg font-bold text-slate-700 mb-4">Patient vs Visitor</h2>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h2 className="text-base font-bold text-slate-700 mb-3">Patient vs Visitor</h2>
             <PieChart 
               data={[data.category.patient, data.category.visitor]}
               colors={['#10b981', '#f59e0b']}
               labels={['Patient', 'Visitor']}
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
             <h2 className="text-lg font-bold text-slate-700 mb-4">Top 3 Cities</h2>
             {data.topCities.length > 0 ? (
@@ -250,12 +285,48 @@ const Statistics: React.FC = () => {
             ) : (
               <div className="text-slate-400 text-sm">No city data available</div>
             )}
-            
-            {data.busiestDay && (
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Busiest Day</div>
-                <div className="text-lg font-bold text-slate-700">{data.busiestDay.day}</div>
-                <div className="text-xs text-slate-500">{data.busiestDay.count} patients this month</div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <h2 className="text-lg font-bold text-slate-700 mb-4">Busiest Day</h2>
+            {data.busiestDay ? (
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-800">{data.busiestDay.day}</div>
+                  <div className="text-sm text-slate-600">on {formatDate(data.busiestDay.date)}</div>
+                  <div className="text-xs text-slate-500 mt-1">{data.busiestDay.count} patients</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-slate-400 text-sm">No data available this month</div>
+            )}
+
+            {data.monthlyComparison && (
+              <div className="mt-6 pt-4 border-t border-slate-100">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Monthly Comparison</div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-slate-600">Last Month</div>
+                    <div className="text-xl font-bold text-slate-700">{data.monthlyComparison.lastMonth}</div>
+                  </div>
+                  <div className="text-2xl text-slate-300">→</div>
+                  <div>
+                    <div className="text-sm text-slate-600">This Month</div>
+                    <div className="text-xl font-bold text-emerald-600">{data.monthlyComparison.thisMonth}</div>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    data.monthlyComparison.change >= 0 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : 'bg-rose-100 text-rose-700'
+                  }`}>
+                    {data.monthlyComparison.change >= 0 ? '+' : ''}{data.monthlyComparison.change}%
+                  </div>
+                </div>
               </div>
             )}
           </div>

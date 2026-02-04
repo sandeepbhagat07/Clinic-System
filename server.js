@@ -959,19 +959,51 @@ app.get('/api/statistics', async (req, res) => {
             count: parseInt(r.count)
         }));
 
-        // Busiest day of week (this month)
+        // Busiest day of week (this month) - with specific date
         const busiestDayRes = await pool.query(
-            `SELECT TO_CHAR(created_at, 'Day') as day_name, COUNT(*) as count 
+            `SELECT DATE(created_at) as specific_date, TO_CHAR(created_at, 'Day') as day_name, COUNT(*) as count 
              FROM visits 
              WHERE created_at >= $1::date
-             GROUP BY TO_CHAR(created_at, 'Day'), EXTRACT(DOW FROM created_at)
+             GROUP BY DATE(created_at), TO_CHAR(created_at, 'Day')
              ORDER BY count DESC 
              LIMIT 1`,
             [startOfMonth.toISOString().split('T')[0]]
         );
         const busiestDay = busiestDayRes.rows[0] 
-            ? { day: busiestDayRes.rows[0].day_name.trim(), count: parseInt(busiestDayRes.rows[0].count) }
+            ? { 
+                day: busiestDayRes.rows[0].day_name.trim(), 
+                count: parseInt(busiestDayRes.rows[0].count),
+                date: busiestDayRes.rows[0].specific_date
+              }
             : null;
+
+        // New vs Returning patients (this month)
+        // New = patient_id is null, Returning = patient_id exists (has previous visits)
+        const newReturningRes = await pool.query(
+            `SELECT 
+                COUNT(*) FILTER (WHERE patient_id IS NULL) as new_patients,
+                COUNT(*) FILTER (WHERE patient_id IS NOT NULL) as returning_patients
+             FROM visits 
+             WHERE created_at >= $1::date`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const newReturning = {
+            newPatients: parseInt(newReturningRes.rows[0].new_patients) || 0,
+            returningPatients: parseInt(newReturningRes.rows[0].returning_patients) || 0
+        };
+
+        // Last month comparison
+        const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        const lastMonthRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits 
+             WHERE created_at >= $1::date AND created_at <= $2::date`,
+            [lastMonthStart.toISOString().split('T')[0], lastMonthEnd.toISOString().split('T')[0]]
+        );
+        const lastMonthCount = parseInt(lastMonthRes.rows[0].count) || 0;
+        const monthlyChange = lastMonthCount > 0 
+            ? Math.round(((monthCount - lastMonthCount) / lastMonthCount) * 100) 
+            : (monthCount > 0 ? 100 : 0);
 
         res.json({
             today: {
@@ -992,7 +1024,13 @@ app.get('/api/statistics', async (req, res) => {
             gender: genderData,
             category: categoryData,
             topCities,
-            busiestDay
+            busiestDay,
+            newReturning,
+            monthlyComparison: {
+                thisMonth: monthCount,
+                lastMonth: lastMonthCount,
+                change: monthlyChange
+            }
         });
     } catch (err) {
         console.error('Statistics error:', err);

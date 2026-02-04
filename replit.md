@@ -38,6 +38,13 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.44 - Enhanced Statistics Page
+  - Added New vs Returning patients pie chart (purple/cyan)
+  - Added Monthly Comparison section (this month vs last month with % change)
+  - Busiest Day now shows specific date (e.g., "Tuesday on 04/Feb/2026")
+  - Rearranged layout: 3 pie charts in one row (New vs Returning, Gender, Patient vs Visitor)
+  - Top 3 Cities and Busiest Day moved to bottom row side by side
+  - Summary cards now show monthly trend arrow
 - 2026-02-04: Version 1.43 - Statistics/Info Page
   - New INFO menu item added after CALENDAR in navigation
   - Statistics page with comprehensive clinic analytics:
