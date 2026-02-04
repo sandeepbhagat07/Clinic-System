@@ -38,6 +38,12 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.45 - Icon-based Navigation Menu
+  - Replaced text menu items with icons for cleaner look
+  - Home icon for Dashboard, Report icon for Patient Report
+  - Calendar icon, Info icon, and Monitor icon for Display
+  - Icons sized at 22x22px for clear visibility
+  - Tooltips on hover show the page name
 - 2026-02-04: Version 1.44 - Enhanced Statistics Page
   - Added New vs Returning patients pie chart (purple/cyan)
   - Added Monthly Comparison section (this month vs last month with % change)
