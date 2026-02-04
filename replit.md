@@ -38,6 +38,16 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.43 - Statistics/Info Page
+  - New INFO menu item added after CALENDAR in navigation
+  - Statistics page with comprehensive clinic analytics:
+    - Summary cards: Today's count (with trend), Monthly count, Avg/Day, Weekly change %
+    - 7-day patient trend bar chart
+    - Gender ratio pie chart (Male/Female)
+    - Patient vs Visitor pie chart
+    - Top 3 cities with highest patient count
+    - Busiest day of the week
+  - Backend /api/statistics endpoint fetches all analytics data from database
 - 2026-02-04: Version 1.42 - Custom Login Credentials System
   - Added secretcred.json file for configurable user credentials
   - Login now requires 3 fields: Mobile Number, Username, Password

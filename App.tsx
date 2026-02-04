@@ -8,12 +8,13 @@ import ChatModal from './components/ChatModal';
 import Login from './components/Login';
 import PatientReport from './components/PatientReport';
 import Calendar from './components/Calendar';
+import Statistics from './components/Statistics';
 import { Icons } from './constants';
 
 const API_BASE = '/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
 
-type PageView = 'DASHBOARD' | 'REPORT' | 'CALENDAR';
+type PageView = 'DASHBOARD' | 'REPORT' | 'CALENDAR' | 'INFO';
 
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -867,6 +868,16 @@ const App: React.FC = () => {
               )}
             </button>
             <button
+              onClick={() => setCurrentPage('INFO')}
+              className={`px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all ${
+                currentPage === 'INFO' 
+                  ? 'bg-white text-indigo-700 shadow-sm' 
+                  : 'text-indigo-100 hover:bg-white/10'
+              }`}
+            >
+              Info
+            </button>
+            <button
               onClick={() => window.open('/display', '_blank')}
               className="px-3 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide transition-all text-indigo-100 hover:bg-white/10 flex items-center gap-1"
               title="Open Queue Display for waiting room TV"
@@ -1095,6 +1106,8 @@ const App: React.FC = () => {
           </div>
         ) : currentPage === 'REPORT' ? (
           <PatientReport apiBase={API_BASE} />
+        ) : currentPage === 'INFO' ? (
+          <Statistics />
         ) : (
           <Calendar currentUser={activeView as 'OPERATOR' | 'DOCTOR'} isBackendOnline={isBackendOnline} />
         )}

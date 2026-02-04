@@ -837,6 +837,169 @@ app.delete('/api/events/:id', async (req, res) => {
     }
 });
 
+// Statistics API - Dashboard analytics data
+app.get('/api/statistics', async (req, res) => {
+    try {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const lastWeekStart = new Date(today);
+        lastWeekStart.setDate(lastWeekStart.getDate() - 13);
+        const thisWeekStart = new Date(today);
+        thisWeekStart.setDate(thisWeekStart.getDate() - 6);
+
+        // Today's patient count
+        const todayRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits WHERE DATE(created_at) = CURRENT_DATE`
+        );
+        const todayCount = parseInt(todayRes.rows[0].count) || 0;
+
+        // Yesterday's count for trend
+        const yesterdayRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits WHERE DATE(created_at) = CURRENT_DATE - 1`
+        );
+        const yesterdayCount = parseInt(yesterdayRes.rows[0].count) || 0;
+
+        // This month's count
+        const monthRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits 
+             WHERE created_at >= $1::date AND created_at < (CURRENT_DATE + 1)`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const monthCount = parseInt(monthRes.rows[0].count) || 0;
+
+        // Days elapsed in month for average calculation
+        const daysInMonth = today.getDate();
+        const avgPerDay = daysInMonth > 0 ? Math.round(monthCount / daysInMonth) : 0;
+
+        // Last 7 days data for chart
+        const last7DaysRes = await pool.query(
+            `SELECT DATE(created_at) as date, COUNT(*) as count 
+             FROM visits 
+             WHERE created_at >= CURRENT_DATE - 6
+             GROUP BY DATE(created_at) 
+             ORDER BY date ASC`
+        );
+
+        // Fill in missing days with 0
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const found = last7DaysRes.rows.find(r => r.date.toISOString().split('T')[0] === dateStr);
+            last7Days.push({
+                date: dateStr,
+                count: found ? parseInt(found.count) : 0,
+                dayName: d.toLocaleDateString('en-US', { weekday: 'short' })
+            });
+        }
+
+        // This week vs last week comparison
+        const thisWeekRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits 
+             WHERE created_at >= CURRENT_DATE - 6`
+        );
+        const thisWeekCount = parseInt(thisWeekRes.rows[0].count) || 0;
+
+        const lastWeekRes = await pool.query(
+            `SELECT COUNT(*) as count FROM visits 
+             WHERE created_at >= CURRENT_DATE - 13 AND created_at < CURRENT_DATE - 6`
+        );
+        const lastWeekCount = parseInt(lastWeekRes.rows[0].count) || 0;
+
+        const weeklyChange = lastWeekCount > 0 
+            ? Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100) 
+            : (thisWeekCount > 0 ? 100 : 0);
+
+        // Gender distribution
+        const genderRes = await pool.query(
+            `SELECT gender, COUNT(*) as count FROM visits 
+             WHERE created_at >= $1::date
+             GROUP BY gender`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const genderData = {
+            male: 0,
+            female: 0
+        };
+        genderRes.rows.forEach(r => {
+            if (r.gender === 'Male') genderData.male = parseInt(r.count);
+            else if (r.gender === 'Female') genderData.female = parseInt(r.count);
+        });
+
+        // Patient vs Visitor distribution
+        const categoryRes = await pool.query(
+            `SELECT category, COUNT(*) as count FROM visits 
+             WHERE created_at >= $1::date
+             GROUP BY category`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const categoryData = {
+            patient: 0,
+            visitor: 0
+        };
+        categoryRes.rows.forEach(r => {
+            if (r.category === 'PATIENT') categoryData.patient = parseInt(r.count);
+            else if (r.category === 'VISITOR') categoryData.visitor = parseInt(r.count);
+        });
+
+        // Top 3 cities
+        const citiesRes = await pool.query(
+            `SELECT city, COUNT(*) as count FROM visits 
+             WHERE city IS NOT NULL AND city != '' AND created_at >= $1::date
+             GROUP BY city 
+             ORDER BY count DESC 
+             LIMIT 3`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const topCities = citiesRes.rows.map(r => ({
+            city: r.city,
+            count: parseInt(r.count)
+        }));
+
+        // Busiest day of week (this month)
+        const busiestDayRes = await pool.query(
+            `SELECT TO_CHAR(created_at, 'Day') as day_name, COUNT(*) as count 
+             FROM visits 
+             WHERE created_at >= $1::date
+             GROUP BY TO_CHAR(created_at, 'Day'), EXTRACT(DOW FROM created_at)
+             ORDER BY count DESC 
+             LIMIT 1`,
+            [startOfMonth.toISOString().split('T')[0]]
+        );
+        const busiestDay = busiestDayRes.rows[0] 
+            ? { day: busiestDayRes.rows[0].day_name.trim(), count: parseInt(busiestDayRes.rows[0].count) }
+            : null;
+
+        res.json({
+            today: {
+                count: todayCount,
+                trend: todayCount - yesterdayCount,
+                trendPercent: yesterdayCount > 0 ? Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 100) : 0
+            },
+            month: {
+                count: monthCount,
+                avgPerDay
+            },
+            weekly: {
+                thisWeek: thisWeekCount,
+                lastWeek: lastWeekCount,
+                change: weeklyChange
+            },
+            last7Days,
+            gender: genderData,
+            category: categoryData,
+            topCities,
+            busiestDay
+        });
+    } catch (err) {
+        console.error('Statistics error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // OPD Status Management - In-memory state (resets on server restart)
 let opdStatus = {
     isPaused: false,
