@@ -145,6 +145,11 @@ const QueueDisplay: React.FC = () => {
     fetchMetadata();
   }, []);
 
+  // Set dynamic page title
+  useEffect(() => {
+    document.title = `${appName} - Queue Display`;
+  }, [appName]);
+
   const opdPatients = patients
     .filter(p => p.status === PatientStatus.OPD)
     .sort((a, b) => (a.inTime || 0) - (b.inTime || 0))
