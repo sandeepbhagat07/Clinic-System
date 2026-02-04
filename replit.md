@@ -38,6 +38,8 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.38 - Patient Form Field Swap
+  - Mobile Number field now appears first (left), Full Name second (right) in patient registration form
 - 2026-02-03: Version 1.37 - Resizable Dashboard Columns + Setup Guide
   - Added SETUP_GUIDE.md with complete hosting instructions (local, VPS, Docker, Nginx)
   - Updated database_schema.sql to version 1.37
