@@ -38,6 +38,9 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.39 - New Queue Logo
+  - Replaced stethoscope icon with stylized "Q" logo (circle with medical cross tail)
+  - Better represents the Queue management function of the app
 - 2026-02-04: Version 1.38 - Patient Form Field Swap
   - Mobile Number field now appears first (left), Full Name second (right) in patient registration form
 - 2026-02-03: Version 1.37 - Resizable Dashboard Columns + Setup Guide

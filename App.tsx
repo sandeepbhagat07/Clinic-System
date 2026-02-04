@@ -811,7 +811,7 @@ const App: React.FC = () => {
       <header className="bg-[#4338ca] text-white p-3 px-4 shadow-md flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-bold flex items-center gap-2">
-            <Icons.Stethoscope className="w-5 h-5" /> ClinicFlow
+            <Icons.QueueLogo className="w-6 h-6" /> ClinicFlow
           </h1>
           <div className="text-[10px] font-black bg-[#1e1b4b]/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
             {activeView} PANEL
