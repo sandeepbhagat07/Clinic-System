@@ -178,7 +178,7 @@ const QueueDisplay: React.FC = () => {
           <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
             <Icons.Stethoscope />
           </div>
-          <h1 className="text-3xl font-bold tracking-wide">{hospitalName} - ClinicFlow Queue Display</h1>
+          <h1 className="text-3xl font-bold tracking-wide">{hospitalName} - CliniQ Queue Display</h1>
         </div>
         <div className="text-right">
           <div className="text-4xl font-bold font-mono">{formatClock(currentTime)}</div>

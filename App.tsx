@@ -810,8 +810,8 @@ const App: React.FC = () => {
     <div className="flex flex-col h-screen w-full bg-[#f8fafc] font-sans overflow-hidden">
       <header className="bg-[#4338ca] text-white p-3 px-4 shadow-md flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-bold flex items-center gap-2">
-            <Icons.QueueLogo className="w-12 h-5" /> ClinicFlow
+          <h1 className="text-xl font-bold">
+            CliniQ
           </h1>
           <div className="text-[10px] font-black bg-[#1e1b4b]/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 uppercase tracking-widest text-indigo-100">
             {activeView} PANEL
@@ -1130,7 +1130,7 @@ const App: React.FC = () => {
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
-        <span className="font-medium">ClinicFlow Management v2.0</span>
+        <span className="font-medium">CliniQ OPD v2.0</span>
       </footer>
     </div>
   );

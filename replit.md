@@ -38,6 +38,10 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Version 1.40 - App Renamed to CliniQ
+  - Renamed from "ClinicFlow" to "CliniQ" throughout the application
+  - Removed logo icon from header - text-only branding now
+  - Updated page title, login screen, footer, and queue display
 - 2026-02-04: Version 1.39 - New Queue Logo
   - Custom "Q+" logo with 3 decreasing dots (queue indicator)
   - Design: Q letter with + symbol inside, followed by 3 dots (large → medium → small)
