@@ -39,7 +39,8 @@ The system is designed for daily-based patient management, where queues reset da
 
 ## Recent Changes
 - 2026-02-04: Version 1.39 - New Queue Logo
-  - Replaced stethoscope icon with stylized "Q" logo (circle with medical cross tail)
+  - Custom "Q+" logo with 3 decreasing dots (queue indicator)
+  - Design: Q letter with + symbol inside, followed by 3 dots (large → medium → small)
   - Better represents the Queue management function of the app
 - 2026-02-04: Version 1.38 - Patient Form Field Swap
   - Mobile Number field now appears first (left), Full Name second (right) in patient registration form

@@ -46,11 +46,17 @@ export const TYPE_THEMES: Record<PatientType, string> = {
 
 export const Icons = {
   QueueLogo: ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 20" fill="currentColor">
+      {/* Q letter - circle with tail */}
       <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2.5" fill="none"/>
-      <line x1="15" y1="15" x2="22" y2="22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-      <rect x="18" y="16" width="2" height="6" rx="0.5" fill="currentColor"/>
-      <rect x="16" y="18" width="6" height="2" rx="0.5" fill="currentColor"/>
+      <line x1="14" y1="14" x2="20" y2="18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Plus symbol inside Q */}
+      <line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      {/* Three decreasing dots */}
+      <circle cx="26" cy="14" r="3.5" fill="currentColor"/>
+      <circle cx="34" cy="14" r="2.5" fill="currentColor"/>
+      <circle cx="40" cy="14" r="1.8" fill="currentColor"/>
     </svg>
   ),
   Trash: () => (
