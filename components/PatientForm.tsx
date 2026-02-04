@@ -139,19 +139,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         
-        {/* Full Name */}
-        <div className="flex flex-col gap-2 sm:col-span-1">
-          <label className={labelClasses}>Full Name</label>
-          <input
-            type="text"
-            className={inputClasses}
-            placeholder="e.g. John Doe"
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </div>
-
         {/* Mobile Number with Lookup */}
         <div className="flex flex-col gap-2 relative" ref={lookupRef}>
           <label className={labelClasses}>Mobile (Optional)</label>
@@ -208,6 +195,19 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
               )}
             </div>
           )}
+        </div>
+
+        {/* Full Name */}
+        <div className="flex flex-col gap-2 sm:col-span-1">
+          <label className={labelClasses}>Full Name</label>
+          <input
+            type="text"
+            className={inputClasses}
+            placeholder="e.g. John Doe"
+            value={formData.name}
+            onChange={e => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
         </div>
 
         {/* Category Radio Group */}
