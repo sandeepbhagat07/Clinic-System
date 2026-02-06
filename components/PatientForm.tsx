@@ -3,6 +3,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PatientFormData, PatientCategory, Patient, PatientType } from '../types';
 import { CITIES, CATEGORY_OPTIONS, PATIENT_TYPE_OPTIONS, VISITOR_TYPE_OPTIONS, Icons } from '../constants';
 
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   initialData?: Patient;
@@ -69,7 +76,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     }
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/patients/lookup/${encodeURIComponent(mobile)}`);
+      const response = await authFetch(`/api/patients/lookup/${encodeURIComponent(mobile)}`);
       if (!response.ok) {
         throw new Error('Server error');
       }

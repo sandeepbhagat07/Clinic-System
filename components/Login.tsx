@@ -44,6 +44,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const data = await response.json();
       
       if (data.success) {
+        if (data.token) {
+          localStorage.setItem('clinicflow_authToken', data.token);
+        }
         onLogin(data.role as AppView);
       } else {
         setError(data.error || 'Invalid credentials');

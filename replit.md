@@ -38,6 +38,16 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-06: API Authentication & Security
+  - Token-based session authentication added to backend
+  - Login returns a session token; all sensitive API endpoints require Bearer token
+  - In-memory session store with crypto.randomUUID token generation
+  - requireAuth middleware protects: patients, visits, statistics, events, messages, calendar, reorder, move-to, call-operator, opd-status POST
+  - Public endpoints (no auth): /api/metadata, /api/login, /api/logout, /api/plan-inquiry, /api/opd-status GET, /api/opd-status-options, /api/display/queue
+  - New /api/display/queue endpoint: returns limited patient data (no medical notes/messages) for public Queue Display screen
+  - Frontend stores token in localStorage, sends Authorization header with all authenticated requests
+  - 401 responses automatically redirect to login screen and clear session
+  - authFetch helper function used across App.tsx and all child components
 - 2026-02-06: Pricing Page Redesigned with 2 Plans
   - FREE TRIAL PLAN: Full app for 30 days, GET STARTED FREE button opens form
   - PAID SUPPORT PLAN: Rs 25/day, recharge-based, interactive day calculator

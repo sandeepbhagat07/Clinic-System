@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { CalendarEvent, EventType } from '../types';
 
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
 interface CalendarProps {
   currentUser: 'OPERATOR' | 'DOCTOR';
   isBackendOnline: boolean;
@@ -40,7 +47,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      const res = await fetch(`${API_BASE}/events?year=${year}&month=${month}`);
+      const res = await authFetch(`${API_BASE}/events?year=${year}&month=${month}`);
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
@@ -163,7 +170,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
     if (!confirm('Are you sure you want to delete this event?')) return;
     
     try {
-      const res = await fetch(`${API_BASE}/events/${eventId}`, { method: 'DELETE' });
+      const res = await authFetch(`${API_BASE}/events/${eventId}`, { method: 'DELETE' });
       if (res.ok) {
         setEvents(events.filter(e => e.id !== eventId));
       }
@@ -182,7 +189,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
 
     try {
       if (editingEvent) {
-        const res = await fetch(`${API_BASE}/events/${editingEvent.id}`, {
+        const res = await authFetch(`${API_BASE}/events/${editingEvent.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
@@ -192,7 +199,7 @@ const Calendar: React.FC<CalendarProps> = ({ currentUser, isBackendOnline }) => 
           setEvents(events.map(e => e.id === editingEvent.id ? updated : e));
         }
       } else {
-        const res = await fetch(`${API_BASE}/events`, {
+        const res = await authFetch(`${API_BASE}/events`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),

@@ -3,6 +3,13 @@ import { Patient, PatientCategory } from '../types';
 import { Icons } from '../constants';
 import PatientHistoryModal from './PatientHistoryModal';
 
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
 interface PatientReportProps {
   apiBase: string;
 }
@@ -27,7 +34,7 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       
-      const res = await fetch(`${apiBase}/patients/report?${params.toString()}`);
+      const res = await authFetch(`${apiBase}/patients/report?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPatients(data);

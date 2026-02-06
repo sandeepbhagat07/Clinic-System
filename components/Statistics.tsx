@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
 interface StatisticsData {
   today: {
     count: number;
@@ -69,7 +76,7 @@ const Statistics: React.FC = () => {
   const fetchStatistics = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/statistics');
+      const response = await authFetch('/api/statistics');
       if (!response.ok) throw new Error('Failed to fetch statistics');
       const result = await response.json();
       setData(result);

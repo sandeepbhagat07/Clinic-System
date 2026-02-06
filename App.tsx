@@ -13,6 +13,21 @@ import { Icons } from './constants';
 
 const API_BASE = '/api';
 const LOCAL_STORAGE_KEY = 'clinicflow_patients_fallback';
+const AUTH_TOKEN_KEY = 'clinicflow_authToken';
+
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
 
 type PageView = 'DASHBOARD' | 'REPORT' | 'CALENDAR' | 'INFO';
 
@@ -134,7 +149,7 @@ const App: React.FC = () => {
   // Fetch next queue ID from server (for today)
   const fetchNextQueueId = async () => {
     try {
-      const res = await fetch(`${API_BASE}/next-queue-id`);
+      const res = await authFetch(`${API_BASE}/next-queue-id`);
       if (res.ok) {
         const data = await res.json();
         setNextQueueId(data.nextQueueId);
@@ -150,7 +165,7 @@ const App: React.FC = () => {
       const today = new Date();
       const year = today.getFullYear();
       const month = today.getMonth() + 1;
-      const res = await fetch(`${API_BASE}/events?year=${year}&month=${month}`);
+      const res = await authFetch(`${API_BASE}/events?year=${year}&month=${month}`);
       if (res.ok) {
         const events = await res.json();
         const todayStr = `${year}-${String(month).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -166,7 +181,17 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/patients?t=${Date.now()}`);
+        const res = await authFetch(`${API_BASE}/patients?t=${Date.now()}`);
+        if (res.status === 401) {
+          localStorage.removeItem('clinicflow_isLoggedIn');
+          localStorage.removeItem('clinicflow_activeView');
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          setIsLoggedIn(false);
+          setActiveView('LOGIN');
+          setActiveConsultationId(null);
+          setLoading(false);
+          return;
+        }
         if (!res.ok) throw new Error('Backend responded with error');
         
         const data = await res.json();
@@ -388,7 +413,7 @@ const App: React.FC = () => {
   // Refresh patients from server
   const refreshPatients = async () => {
     try {
-      const res = await fetch(`${API_BASE}/patients?t=${Date.now()}`);
+      const res = await authFetch(`${API_BASE}/patients?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         setPatients(data);
@@ -414,9 +439,8 @@ const App: React.FC = () => {
 
     try {
       if (isBackendOnline) {
-        const res = await fetch(`${API_BASE}/patients`, {
+        const res = await authFetch(`${API_BASE}/patients`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newPatient)
         });
         const responseData = await res.json();
@@ -446,9 +470,8 @@ const App: React.FC = () => {
   const updatePatient = useCallback(async (id: string, formData: Partial<Patient>) => {
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${id}`, {
+        await authFetch(`${API_BASE}/patients/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
       }
@@ -472,9 +495,8 @@ const App: React.FC = () => {
 
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${patientId}/messages`, {
+        await authFetch(`${API_BASE}/patients/${patientId}/messages`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newMessage)
         });
       }
@@ -496,9 +518,8 @@ const App: React.FC = () => {
   const markChatRead = useCallback(async (patientId: string) => {
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${patientId}`, {
+        await authFetch(`${API_BASE}/patients/${patientId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ hasUnreadAlert: false })
         });
       }
@@ -526,9 +547,8 @@ const App: React.FC = () => {
     try {
       if (isBackendOnline) {
         // Use dedicated status endpoint for proper sort_order handling
-        await fetch(`${API_BASE}/patients/${id}/status`, {
+        await authFetch(`${API_BASE}/patients/${id}/status`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus, outTime: updates.outTime })
         });
       }
@@ -553,9 +573,8 @@ const App: React.FC = () => {
     
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${id}/reorder`, {
+        await authFetch(`${API_BASE}/patients/${id}/reorder`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ direction })
         });
       }
@@ -568,7 +587,7 @@ const App: React.FC = () => {
     if (!confirm("Are you sure you want to remove this record?")) return;
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${id}`, { method: 'DELETE' });
+        await authFetch(`${API_BASE}/patients/${id}`, { method: 'DELETE' });
       }
     } catch (err) {
       console.error("API delete failed, removing locally.");
@@ -585,9 +604,8 @@ const App: React.FC = () => {
     const updates = { notes, medicines, status: PatientStatus.COMPLETED, outTime: Date.now() };
     try {
       if (isBackendOnline) {
-        await fetch(`${API_BASE}/patients/${id}`, {
+        await authFetch(`${API_BASE}/patients/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updates)
         });
       }
@@ -607,7 +625,7 @@ const App: React.FC = () => {
     
     setIsCallingOperator(true);
     try {
-      await fetch(`${API_BASE}/call-operator`, { method: 'POST' });
+      await authFetch(`${API_BASE}/call-operator`, { method: 'POST' });
       console.log('Called operator successfully');
       
       // Show success flash
@@ -624,9 +642,8 @@ const App: React.FC = () => {
   // Update OPD status (pause/resume)
   const updateOpdStatus = useCallback(async (isPaused: boolean, pauseReason: string) => {
     try {
-      const res = await fetch(`${API_BASE}/opd-status`, {
+      const res = await authFetch(`${API_BASE}/opd-status`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isPaused, pauseReason })
       });
       if (res.ok) {
@@ -679,9 +696,8 @@ const App: React.FC = () => {
   const handleReorder = useCallback(async (sourceId: string, targetId: string) => {
     if (isBackendOnline) {
       try {
-        const res = await fetch(`${API_BASE}/api/patients/${sourceId}/move-to`, {
+        const res = await authFetch(`${API_BASE}/api/patients/${sourceId}/move-to`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ targetId })
         });
         if (res.ok) {
@@ -804,6 +820,7 @@ const App: React.FC = () => {
     // Clear persisted login state
     localStorage.removeItem('clinicflow_isLoggedIn');
     localStorage.removeItem('clinicflow_activeView');
+    localStorage.removeItem('clinicflow_authToken');
   };
 
   if (!isLoggedIn) {

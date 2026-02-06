@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+}
+
 interface Visit {
   id: string;
   queueId: number;
@@ -50,7 +57,7 @@ const PatientHistoryModal: React.FC<PatientHistoryModalProps> = ({ patientId, ap
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${apiBase}/patients/${patientId}/history`);
+        const res = await authFetch(`${apiBase}/patients/${patientId}/history`);
         if (!res.ok) {
           throw new Error('Failed to fetch patient history');
         }

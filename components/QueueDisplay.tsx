@@ -82,7 +82,7 @@ const QueueDisplay: React.FC = () => {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/patients`);
+      const response = await fetch(`${API_BASE}/display/queue`);
       if (response.ok) {
         const data = await response.json();
         setPatients(data);

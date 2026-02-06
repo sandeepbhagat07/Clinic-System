@@ -4,10 +4,31 @@ import pg from 'pg';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import crypto from 'crypto';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+
+const sessions = new Map();
+
+function generateToken() {
+    return crypto.randomUUID() + '-' + crypto.randomBytes(16).toString('hex');
+}
+
+function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    const token = authHeader.split(' ')[1];
+    const session = sessions.get(token);
+    if (!session) {
+        return res.status(401).json({ error: 'Invalid or expired session' });
+    }
+    req.user = session;
+    next();
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -126,10 +147,13 @@ app.post('/api/login', (req, res) => {
         );
         
         if (user) {
+            const token = generateToken();
+            sessions.set(token, { role: user.role.toUpperCase(), username: user.username, mobile: user.mobile });
             res.json({ 
                 success: true, 
                 role: user.role.toUpperCase(),
-                username: user.username
+                username: user.username,
+                token: token
             });
         } else {
             res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -140,8 +164,48 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+app.post('/api/logout', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        sessions.delete(token);
+    }
+    res.json({ success: true });
+});
+
+app.get('/api/display/queue', async (req, res) => {
+    try {
+        const patientsRes = await pool.query(
+            `SELECT v.id, v.name, v.age, v.gender, v.city, v.type, v.category, v.status, 
+                    v.queue_id, v.created_at, v.in_time, v.sort_order
+             FROM visits v 
+             WHERE DATE(v.created_at) = CURRENT_DATE 
+             ORDER BY v.created_at ASC`
+        );
+        
+        const data = patientsRes.rows.map(p => ({
+            id: p.id,
+            name: p.name,
+            age: p.age,
+            gender: p.gender,
+            city: p.city,
+            type: p.type,
+            category: p.category,
+            status: p.status,
+            queueId: p.queue_id,
+            createdAt: p.created_at,
+            inTime: p.in_time,
+            sortOrder: p.sort_order || 0
+        }));
+        
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Get all patients with their messages (filtered by today's date)
-app.get('/api/patients', async (req, res) => {
+app.get('/api/patients', requireAuth, async (req, res) => {
     try {
         // Filter visits where created_at is today, with subquery to check for previous visits
         const patientsRes = await pool.query(
@@ -216,7 +280,7 @@ const formatDateLocal = (date) => {
 };
 
 // Get next queue ID for today (only counts PATIENT category, not VISITOR)
-app.get('/api/next-queue-id', async (req, res) => {
+app.get('/api/next-queue-id', requireAuth, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT COALESCE(MAX(queue_id), 0) + 1 as next_id 
@@ -230,7 +294,7 @@ app.get('/api/next-queue-id', async (req, res) => {
 });
 
 // Patient Lookup by Mobile Number - returns patients from patient table matching the mobile
-app.get('/api/patients/lookup/:mobile', async (req, res) => {
+app.get('/api/patients/lookup/:mobile', requireAuth, async (req, res) => {
     try {
         const { mobile } = req.params;
         if (!mobile || mobile.length < 3) {
@@ -248,7 +312,7 @@ app.get('/api/patients/lookup/:mobile', async (req, res) => {
 });
 
 // Patient History - Get all visits for a specific patient by patient_id
-app.get('/api/patients/:patientId/history', async (req, res) => {
+app.get('/api/patients/:patientId/history', requireAuth, async (req, res) => {
     try {
         const { patientId } = req.params;
         
@@ -303,7 +367,7 @@ app.get('/api/patients/:patientId/history', async (req, res) => {
 });
 
 // Patient Report: Search with filters and date range (returns last 150 records by default)
-app.get('/api/patients/report', async (req, res) => {
+app.get('/api/patients/report', requireAuth, async (req, res) => {
     try {
         const { name, city, mobile, startDate, endDate } = req.query;
         
@@ -362,7 +426,7 @@ app.get('/api/patients/report', async (req, res) => {
 });
 
 // Add new patient (with atomic queue ID assignment using transaction)
-app.post('/api/patients', async (req, res) => {
+app.post('/api/patients', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const p = req.body;
@@ -451,7 +515,7 @@ app.post('/api/patients', async (req, res) => {
 });
 
 // Update patient status/data
-app.patch('/api/patients/:id', async (req, res) => {
+app.patch('/api/patients/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -487,7 +551,7 @@ app.patch('/api/patients/:id', async (req, res) => {
 });
 
 // Change patient status (handles sort_order logic)
-app.post('/api/patients/:id/status', async (req, res) => {
+app.post('/api/patients/:id/status', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const { id } = req.params;
@@ -563,7 +627,7 @@ app.post('/api/patients/:id/status', async (req, res) => {
 });
 
 // Reorder patient in waiting queue (move up or down)
-app.post('/api/patients/:id/reorder', async (req, res) => {
+app.post('/api/patients/:id/reorder', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const { id } = req.params;
@@ -628,7 +692,7 @@ app.post('/api/patients/:id/reorder', async (req, res) => {
 });
 
 // Drag-and-drop reorder endpoint
-app.post('/api/patients/:id/move-to', async (req, res) => {
+app.post('/api/patients/:id/move-to', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
         const { id } = req.params;
@@ -713,7 +777,7 @@ app.post('/api/patients/:id/move-to', async (req, res) => {
 });
 
 // Delete patient
-app.delete('/api/patients/:id', async (req, res) => {
+app.delete('/api/patients/:id', requireAuth, async (req, res) => {
     try {
         await pool.query('DELETE FROM visits WHERE id = $1', [req.params.id]);
         
@@ -726,7 +790,7 @@ app.delete('/api/patients/:id', async (req, res) => {
 });
 
 // Add message to chat
-app.post('/api/patients/:id/messages', async (req, res) => {
+app.post('/api/patients/:id/messages', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const m = req.body;
@@ -745,7 +809,7 @@ app.post('/api/patients/:id/messages', async (req, res) => {
 });
 
 // Doctor calls operator - broadcasts to all connected clients
-app.post('/api/call-operator', (req, res) => {
+app.post('/api/call-operator', requireAuth, (req, res) => {
     console.log('Doctor calling operator...');
     io.emit('doctor:call-operator', { timestamp: Date.now() });
     res.json({ success: true });
@@ -754,7 +818,7 @@ app.post('/api/call-operator', (req, res) => {
 // ==================== EVENT CALENDAR API ====================
 
 // Get events for a month (or all if no filter)
-app.get('/api/events', async (req, res) => {
+app.get('/api/events', requireAuth, async (req, res) => {
     try {
         const { year, month } = req.query;
         let query = 'SELECT * FROM events';
@@ -785,7 +849,7 @@ app.get('/api/events', async (req, res) => {
 });
 
 // Create new event
-app.post('/api/events', async (req, res) => {
+app.post('/api/events', requireAuth, async (req, res) => {
     try {
         const { title, eventDate, eventTime, description, eventType, remindMe, createdBy } = req.body;
         const result = await pool.query(
@@ -814,7 +878,7 @@ app.post('/api/events', async (req, res) => {
 });
 
 // Update event
-app.put('/api/events/:id', async (req, res) => {
+app.put('/api/events/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { title, eventDate, eventTime, description, eventType, remindMe } = req.body;
@@ -848,7 +912,7 @@ app.put('/api/events/:id', async (req, res) => {
 });
 
 // Delete event
-app.delete('/api/events/:id', async (req, res) => {
+app.delete('/api/events/:id', requireAuth, async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query('DELETE FROM events WHERE id = $1', [id]);
@@ -861,7 +925,7 @@ app.delete('/api/events/:id', async (req, res) => {
 });
 
 // Statistics API - Dashboard analytics data
-app.get('/api/statistics', async (req, res) => {
+app.get('/api/statistics', requireAuth, async (req, res) => {
     try {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -1090,7 +1154,7 @@ app.get('/api/opd-status', (req, res) => {
 });
 
 // Set OPD status (toggle pause/unpause)
-app.post('/api/opd-status', (req, res) => {
+app.post('/api/opd-status', requireAuth, (req, res) => {
     try {
         const { isPaused, pauseReason } = req.body;
         opdStatus = {
