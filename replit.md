@@ -38,6 +38,16 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-04: Clinic-Q Marketing Website
+  - Separate static marketing website at /site/ route
+  - 4 pages: Home (index.html), About (about.html), Pricing (pricing.html), Contact (contact.html)
+  - Home: Hero section, 8 feature cards, how-it-works flow, testimonials, CTA
+  - About: Company story, stats, mission/vision, values, team section
+  - Pricing: 3 tiers (Basic/Free, Professional/$29, Enterprise/Custom), FAQ accordion
+  - Contact: Contact form, company info card, address, phone, email
+  - Shared navbar and footer across all pages
+  - Indigo/purple gradient theme matching Clinic-Q branding
+  - Served via Express static at /site/ path, proxied through Vite in dev mode
 - 2026-02-04: Version 1.46 - Icon + Text Navigation Menu
   - Menu items now show both icon and text label
   - Home icon + "Home", Report icon + "Report", Calendar icon + "Event"

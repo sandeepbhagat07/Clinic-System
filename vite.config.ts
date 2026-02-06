@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
             changeOrigin: true,
             ws: true,
           },
+          '/site': {
+            target: 'http://localhost:3001',
+            changeOrigin: true,
+          },
         },
         historyApiFallback: true,
       },

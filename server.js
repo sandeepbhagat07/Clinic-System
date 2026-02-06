@@ -164,10 +164,15 @@ app.get('/api/patients', async (req, res) => {
     }
 });
 
-// Serve static files with headers to prevent caching (only in production)
+app.use('/site', express.static(path.join(__dirname, 'website'), {
+    setHeaders: (res, filePath) => {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    }
+}));
+
 if (isProduction) {
     app.use(express.static(distPath, {
-        setHeaders: (res, path) => {
+        setHeaders: (res, filePath) => {
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         }
     }));
