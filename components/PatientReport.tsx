@@ -7,7 +7,15 @@ function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const token = localStorage.getItem('clinicflow_authToken');
   const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(url, { ...options, headers });
+  return fetch(url, { ...options, headers }).then(res => {
+    if (res.status === 401) {
+      localStorage.removeItem('clinicflow_isLoggedIn');
+      localStorage.removeItem('clinicflow_activeView');
+      localStorage.removeItem('clinicflow_authToken');
+      window.dispatchEvent(new Event('auth:logout'));
+    }
+    return res;
+  });
 }
 
 interface PatientReportProps {

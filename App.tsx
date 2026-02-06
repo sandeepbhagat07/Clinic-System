@@ -26,7 +26,14 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(options.headers as Record<string, string> || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) {
+    localStorage.removeItem('clinicflow_isLoggedIn');
+    localStorage.removeItem('clinicflow_activeView');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.dispatchEvent(new Event('auth:logout'));
+  }
+  return res;
 }
 
 type PageView = 'DASHBOARD' | 'REPORT' | 'CALENDAR' | 'INFO';
@@ -812,16 +819,21 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setIsLoggedIn(false);
     setActiveView('LOGIN');
     setActiveConsultationId(null);
+    setIsBackendOnline(false);
     
-    // Clear persisted login state
     localStorage.removeItem('clinicflow_isLoggedIn');
     localStorage.removeItem('clinicflow_activeView');
     localStorage.removeItem('clinicflow_authToken');
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, [handleLogout]);
 
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
