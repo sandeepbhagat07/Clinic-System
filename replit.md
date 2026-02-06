@@ -38,12 +38,21 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-06: Pricing Page Redesigned with 2 Plans
+  - FREE TRIAL PLAN: Full app for 30 days, GET STARTED FREE button opens form
+  - PAID SUPPORT PLAN: Rs 25/day, recharge-based, interactive day calculator
+  - Calculator: [Days] x Rs 25 = Total with +/- buttons and direct input
+  - Both plans open form modal: Name, Hospital Name, Address, Mobile, Email, Plan details
+  - Form submits to formsubmit.co (email to sandeep.bhagat1985@gmail.com) + backend API
+  - Backend /api/plan-inquiry stores inquiries in plan_inquiries database table
+  - Success/error states with visual feedback in modal
+  - FAQ section updated for new plan structure
 - 2026-02-04: Clinic-Q Marketing Website
   - Separate static marketing website at /site/ route
   - 4 pages: Home (index.html), About (about.html), Pricing (pricing.html), Contact (contact.html)
   - Home: Hero section, 8 feature cards, how-it-works flow, testimonials, CTA
   - About: Company story, stats, mission/vision, values, team section
-  - Pricing: 3 tiers (Basic/Free, Professional/$29, Enterprise/Custom), FAQ accordion
+  - Pricing: 2 plans (FREE TRIAL 30-day, PAID SUPPORT Rs 25/day)
   - Contact: Contact form, company info card, address, phone, email
   - Shared navbar and footer across all pages
   - Indigo/purple gradient theme matching Clinic-Q branding

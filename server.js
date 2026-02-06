@@ -89,6 +89,24 @@ app.get('/api/metadata', (req, res) => {
     }
 });
 
+app.post('/api/plan-inquiry', async (req, res) => {
+    try {
+        const { name, hospital_name, address, mobile, email, plan_type, days, amount } = req.body;
+        if (!name || !hospital_name || !mobile || !email || !plan_type) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        await pool.query(
+            `INSERT INTO plan_inquiries (name, hospital_name, address, mobile, email, plan_type, days, amount) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [name, hospital_name, address || '', mobile, email, plan_type, parseInt(days) || 0, parseInt(amount) || 0]
+        );
+        res.json({ success: true, message: 'Inquiry submitted successfully' });
+    } catch (err) {
+        console.error('Plan inquiry error:', err);
+        res.status(500).json({ error: 'Failed to submit inquiry' });
+    }
+});
+
 // Login endpoint - validates against secretcred.json
 app.post('/api/login', (req, res) => {
     try {
