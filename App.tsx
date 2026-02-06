@@ -259,8 +259,10 @@ const App: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (isLoggedIn) {
+      fetchData();
+    }
+  }, [isLoggedIn]);
 
   // Socket.IO connection for real-time sync
   useEffect(() => {
