@@ -60,6 +60,10 @@ const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+pool.on('connect', (client) => {
+    client.query("SET timezone = 'Asia/Kolkata'");
+});
+
 // Normalize sort_order on startup - ensures sequential values for waiting patients
 async function normalizeSortOrder() {
     try {
