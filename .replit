@@ -45,3 +45,8 @@ externalPort = 3000
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 run = ["node", "server.js"]
+
+[userenv]
+
+[userenv.shared]
+TZ = "Asia/Kolkata"

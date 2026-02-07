@@ -36,11 +36,11 @@ interface LookupPatient {
 const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEditing }) => {
   const defaultData: PatientFormData = {
     name: '',
-    age: 25,
+    age: 0,
     gender: 'Male',
     category: PatientCategory.PATIENT,
     type: PatientType.GEN_PATIENT,
-    city: CITIES[0],
+    city: '',
     mobile: '',
   };
 
@@ -197,7 +197,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     
     onSubmit({
       ...formData,
-      age: formData.age || 25,
+      age: formData.age || 0,
     });
     
     if (!isEditing) setFormData(defaultData);
@@ -342,16 +342,20 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
         {/* Row 3: City (full width) */}
         <div className="flex flex-col gap-2 sm:col-span-2">
           <label className={labelClasses}>City / Location</label>
-          <select
+          <input
             tabIndex={7}
-            className={`${inputClasses} cursor-pointer`}
+            type="text"
+            list="city-suggestions"
+            className={inputClasses}
+            placeholder="Type or select a city"
             value={formData.city}
             onChange={e => setFormData({ ...formData, city: e.target.value })}
-          >
-            {CITIES.map(city => (
-              <option key={city} value={city}>{city}</option>
+          />
+          <datalist id="city-suggestions">
+            {CITIES.filter(c => c !== '--').map(city => (
+              <option key={city} value={city} />
             ))}
-          </select>
+          </datalist>
         </div>
 
         {/* Row 4: Primary Category (full width) */}
