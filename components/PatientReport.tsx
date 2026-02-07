@@ -166,9 +166,11 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
           <div className="flex-1 min-w-[150px]">
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Mobile</label>
             <input
-              type="text"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={searchMobile}
-              onChange={(e) => setSearchMobile(e.target.value)}
+              onChange={(e) => setSearchMobile(e.target.value.replace(/[^0-9]/g, ''))}
               placeholder="Search by mobile..."
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />

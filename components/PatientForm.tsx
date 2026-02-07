@@ -160,10 +160,12 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
           <div className="flex gap-2">
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className={`${inputClasses} flex-1`}
               placeholder="Contact number"
               value={formData.mobile}
-              onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+              onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/[^0-9]/g, '') })}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleMobileLookup(); } }}
             />
             <button

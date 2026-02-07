@@ -80,11 +80,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile Number</label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               required
               className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
               placeholder="Enter Mobile Number"
               value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
+              onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
             />
           </div>
 
