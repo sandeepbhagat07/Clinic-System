@@ -102,7 +102,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
             <div className="flex items-center justify-between gap-2">
               <div className="font-semibold text-slate-600 truncate text-3xl">
-                {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
+                {patient.age} yrs ({patient.gender === 'Male' ? 'M' : 'F'})
                 {patient.mobile && (
                   <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
                 )}
