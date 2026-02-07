@@ -85,6 +85,17 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     }
   }, [showLookup, lookupResults]);
 
+  useEffect(() => {
+    const handleF2 = (e: KeyboardEvent) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        mobileInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleF2);
+    return () => window.removeEventListener('keydown', handleF2);
+  }, []);
+
   const handleMobileLookup = async () => {
     const mobile = formData.mobile.trim();
     if (mobile.length < 3) {
