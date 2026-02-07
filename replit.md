@@ -42,6 +42,9 @@ The system is designed for daily-based patient management, where queues reset da
   - F2 keyboard shortcut for Doctor on Home screen: opens consultation form for the first patient in OPD queue
   - Close button added to Doctor Consultation Form: allows doctor to exit form without finalizing
   - Doctor can now switch between OPD patients without completing consultation first
+  - Ctrl+Enter shortcut on Doctor Consultation Form to finalize consultation (scoped to form focus)
+  - Ctrl+Enter shortcut on Operator Patient Registration Form to save patient (scoped to form focus)
+  - Button labels updated: "Finalize Consultation (Ctrl+Ent)" and "SAVE (Ctrl+Ent)"
 - 2026-02-06: API Authentication & Security
   - Token-based session authentication added to backend
   - Login returns a session token; all sensitive API endpoints require Bearer token
