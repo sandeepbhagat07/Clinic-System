@@ -73,10 +73,10 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
         <div className="flex items-start gap-3 p-3">
           <div className="flex flex-col items-center gap-2 flex-shrink-0">
-            <div className="rounded-full overflow-hidden shadow-sm w-14 h-14">
+            <div className="rounded-full overflow-hidden shadow-sm w-20 h-20">
               <AvatarIcon className="w-full h-full" />
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg px-1.5 py-0.5 text-[8px] font-bold text-slate-500 uppercase tracking-widest min-w-[60px] text-center shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-widest min-w-[80px] text-center shadow-sm">
               {patient.type}
             </div>
           </div>
