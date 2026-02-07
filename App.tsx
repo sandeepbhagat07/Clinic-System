@@ -795,11 +795,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (activeView !== 'DOCTOR' || currentPage !== 'DASHBOARD') return;
     const handleF2 = (e: KeyboardEvent) => {
-      if (e.key === 'F2') {
+      if (e.key === 'F2' && opdPatients.length > 0) {
         e.preventDefault();
-        if (opdPatients.length > 0) {
-          setActiveConsultationId(opdPatients[0].id);
-        }
+        setActiveConsultationId(opdPatients[0].id);
       }
     };
     window.addEventListener('keydown', handleF2);

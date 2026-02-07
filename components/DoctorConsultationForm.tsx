@@ -18,12 +18,25 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
   const [medicines, setMedicines] = useState('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   useEffect(() => {
     if (patient) {
       setNotes(patient.notes || '');
       setMedicines(patient.medicines || '');
     }
   }, [patient]);
+
+  useEffect(() => {
+    const handleCtrlEnter = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter' && formRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        formRef.current.requestSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleCtrlEnter);
+    return () => window.removeEventListener('keydown', handleCtrlEnter);
+  }, []);
 
   if (!patient) {
     return (
@@ -45,19 +58,6 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
     setNotes('');
     setMedicines('');
   };
-
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    const handleCtrlEnter = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'Enter' && formRef.current?.contains(document.activeElement)) {
-        e.preventDefault();
-        formRef.current.requestSubmit();
-      }
-    };
-    window.addEventListener('keydown', handleCtrlEnter);
-    return () => window.removeEventListener('keydown', handleCtrlEnter);
-  }, []);
 
   const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-base font-medium";
 
