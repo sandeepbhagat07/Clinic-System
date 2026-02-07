@@ -8,24 +8,24 @@ Clinic-Q is a React-based outpatient department (OPD) management application des
 - I want to be asked before making major changes.
 
 ## System Architecture
-ClinicFlow uses a modern web stack with React 19 and TypeScript for the frontend, bundled with Vite. The UI is styled using Tailwind CSS (via CDN) for a responsive and consistent design.
-
-The application features separate views for operators and doctors, managing patient flow through "Waiting," "OPD," and "Completed" queues. Real-time communication and queue synchronization between users are achieved using Socket.IO.
+Clinic-Q uses a modern web stack with React and TypeScript for the frontend, bundled with Vite. The UI is styled using Tailwind CSS for a responsive design. The application features separate views for operators and doctors, managing patient flow through "Waiting," "OPD," and "Completed" queues. Real-time communication and queue synchronization between users are achieved using Socket.IO.
 
 Key features include:
 - Patient registration and lookup by mobile number.
-- Doctor consultation management with notes and medicine details.
-- Dynamic queue reordering for waiting patients (excluding specific categories).
-- A public-facing Queue Display screen (`/display`) for waiting rooms, showing current OPD patients and the next in queue with real-time updates.
-- OPD status toggle (Pause/Resume) with configurable reasons, instantly reflected across all interfaces and the display screen.
+- Doctor consultation management with structured data entry for vitals, chief complaints, diagnosis, and prescriptions.
+- Dynamic queue reordering for waiting patients and a public-facing Queue Display screen (`/display`) for waiting rooms with real-time updates.
+- OPD status toggle (Pause/Resume) with configurable reasons, instantly reflected across all interfaces.
 - An Event Calendar system with monthly and daily views, allowing event creation, editing, and deletion, with color-coded event types and real-time synchronization.
 - Patient Report generation with search filters, date range selection, patient history lookup, and CSV export.
-- Notifications, including a "Call Operator" feature for doctors to alert operators and a calendar notification for today's events.
-- UI/UX elements include gender-specific avatars, animated elements (e.g., calendar notification ping, hospital name marquee on display screen), and optimized card layouts for different queues.
-- Data persistence is handled via `localStorage` for standalone frontend use, with full functionality enabled by a Node.js/Express backend.
-- The backend manages patient master data, visit records, messages, and events, ensuring atomic operations for queue ID generation and proper timestamp handling.
-
-The system is designed for daily-based patient management, where queues reset daily and queue numbers are assigned sequentially per day.
+- Notifications, including a "Call Operator" feature for doctors and calendar notifications.
+- UI/UX elements include gender-specific avatars, animated elements, optimized card layouts, and resizable dashboard columns with persistence.
+- Patient history is accessible with previous visit details.
+- Daily-based patient management where queues reset daily and queue numbers are assigned sequentially.
+- Secure API authentication with token-based sessions and role-based access for doctors and operators.
+- Customizable login credentials via `secretcred.json`.
+- Dynamic application name and hospital name loaded from metadata.
+- A static marketing website (`/site/`) with Home, About, Pricing, and Contact pages, consistent with Clinic-Q branding.
+- Comprehensive statistics page with analytics like patient trends, gender ratio, patient vs. visitor, top cities, and busiest day.
 
 ## External Dependencies
 - **React**: Frontend library.
@@ -33,153 +33,6 @@ The system is designed for daily-based patient management, where queues reset da
 - **Vite**: Build tool.
 - **Tailwind CSS**: Utility-first CSS framework.
 - **localStorage**: Browser-based data persistence.
-- **Node.js/Express**: Backend server (optional, for full functionality).
-- **PostgreSQL**: Database for persistent storage (used with `pg` client library).
+- **Node.js/Express**: Backend server.
+- **PostgreSQL**: Database for persistent storage.
 - **Socket.IO**: Real-time bidirectional event-based communication.
-
-## Environment
-- **TZ=Asia/Kolkata** — Server timezone is set to Indian Standard Time (IST) so queue resets and all date/time operations align with local clinic time.
-
-## Recent Changes
-- 2026-02-08: Timezone Fix — TIMESTAMP WITH TIME ZONE
-  - All timestamp columns across all tables (visits, events, patient, plan_inquiries, tag tables) changed from TIMESTAMP WITHOUT TIME ZONE to TIMESTAMP WITH TIME ZONE
-  - PostgreSQL pool connection now sets timezone via options parameter: `-c timezone=Asia/Kolkata` (in addition to pool.on('connect') SET timezone)
-  - This ensures CURRENT_DATE and DATE(created_at) always use IST regardless of server location worldwide
-  - Previously, timestamps stored in UTC caused DATE comparisons to use UTC date, making patients added after midnight IST appear under the previous day
-- 2026-02-08: Structured Doctor Consultation Form
-  - Complete redesign of DoctorConsultationForm with structured data entry
-  - Vitals row: BP, Temperature, Pulse, Weight, SpO2 with labeled inputs and units
-  - Tag-based Chief Complaints: WordPress-style input with autocomplete from database (comma/Enter to add, X to remove)
-  - Tag-based Diagnosis: Same tag input pattern with separate autocomplete source
-  - Structured Prescription table: repeatable rows with Type (Tab/Cap/Syp/etc), Medicine Name (with autocomplete), Dose, Days, Instructions dropdown
-  - Add/Remove prescription rows dynamically
-  - Advice/Instructions textarea and Follow-up Date picker
-  - Legacy Clinical Notes and Free-text Medicines collapsed under "Additional Notes"
-  - New database tables: complaint_tags, diagnosis_tags, medicine_tags for autocomplete suggestions with usage_count
-  - visits table extended: bp, temperature, pulse, weight, spo2, complaints JSONB, diagnosis JSONB, prescription JSONB, advice TEXT, follow_up_date DATE
-  - Backend tag suggestion APIs: GET /api/tags/complaints, /api/tags/diagnosis, /api/tags/medicines with ?q= query
-  - Tags auto-saved to suggestion tables on consultation finalize (ON CONFLICT upsert increments usage_count)
-  - Patient History modal updated: shows vitals badges, complaints/diagnosis capsules, structured prescription, advice, follow-up date
-  - Patient Report CSV export includes all new consultation fields
-  - Reusable TagInput component (components/TagInput.tsx) for any tag-based input field
-  - PrescriptionItem interface added to types.ts
-  - All keyboard shortcuts preserved (Ctrl+Enter, F2, Close button)
-- 2026-02-08: Timezone, Age Default & City Combo-Box
-  - Set TZ=Asia/Kolkata environment variable for IST timezone across server/database
-  - Default patient age changed from 25 to 0 (empty if not entered)
-  - City field converted from fixed dropdown to combo-box: operator can type any custom city OR pick from suggestions
-  - City default changed from '--' to empty string
-- 2026-02-07: Doctor Panel Keyboard & UX Improvements
-  - F2 keyboard shortcut for Doctor on Home screen: opens consultation form for the first patient in OPD queue
-  - Close button added to Doctor Consultation Form: allows doctor to exit form without finalizing
-  - Doctor can now switch between OPD patients without completing consultation first
-  - Ctrl+Enter shortcut on Doctor Consultation Form to finalize consultation (scoped to form focus)
-  - Ctrl+Enter shortcut on Operator Patient Registration Form to save patient (scoped to form focus)
-  - Button labels updated: "Finalize Consultation (Ctrl+Ent)" and "SAVE (Ctrl+Ent)"
-- 2026-02-06: API Authentication & Security
-  - Token-based session authentication added to backend
-  - Login returns a session token; all sensitive API endpoints require Bearer token
-  - In-memory session store with crypto.randomUUID token generation
-  - requireAuth middleware protects: patients, visits, statistics, events, messages, calendar, reorder, move-to, call-operator, opd-status POST
-  - Public endpoints (no auth): /api/metadata, /api/login, /api/logout, /api/plan-inquiry, /api/opd-status GET, /api/opd-status-options, /api/display/queue
-  - New /api/display/queue endpoint: returns limited patient data (no medical notes/messages) for public Queue Display screen
-  - Frontend stores token in localStorage, sends Authorization header with all authenticated requests
-  - 401 responses automatically redirect to login screen and clear session
-  - authFetch helper function used across App.tsx and all child components
-- 2026-02-06: Pricing Page Redesigned with 2 Plans
-  - FREE TRIAL PLAN: Full app for 30 days, GET STARTED FREE button opens form
-  - PAID SUPPORT PLAN: Rs 25/day, recharge-based, interactive day calculator
-  - Calculator: [Days] x Rs 25 = Total with +/- buttons and direct input
-  - Both plans open form modal: Name, Hospital Name, Address, Mobile, Email, Plan details
-  - Form submits to formsubmit.co (email to sandeep.bhagat1985@gmail.com) + backend API
-  - Backend /api/plan-inquiry stores inquiries in plan_inquiries database table
-  - Success/error states with visual feedback in modal
-  - FAQ section updated for new plan structure
-- 2026-02-04: Clinic-Q Marketing Website
-  - Separate static marketing website at /site/ route
-  - 4 pages: Home (index.html), About (about.html), Pricing (pricing.html), Contact (contact.html)
-  - Home: Hero section, 8 feature cards, how-it-works flow, testimonials, CTA
-  - About: Company story, stats, mission/vision, values, team section
-  - Pricing: 2 plans (FREE TRIAL 30-day, PAID SUPPORT Rs 25/day)
-  - Contact: Contact form, company info card, address, phone, email
-  - Shared navbar and footer across all pages
-  - Indigo/purple gradient theme matching Clinic-Q branding
-  - Served via Express static at /site/ path, proxied through Vite in dev mode
-- 2026-02-04: Version 1.46 - Icon + Text Navigation Menu
-  - Menu items now show both icon and text label
-  - Home icon + "Home", Report icon + "Report", Calendar icon + "Event"
-  - Info icon + "Info", Monitor icon + "Display"
-  - Icons sized at 16x16px with 13px text labels
-  - Clean, compact design with proper spacing
-- 2026-02-04: Version 1.44 - Enhanced Statistics Page
-  - Added New vs Returning patients pie chart (purple/cyan)
-  - Added Monthly Comparison section (this month vs last month with % change)
-  - Busiest Day now shows specific date (e.g., "Tuesday on 04/Feb/2026")
-  - Rearranged layout: 3 pie charts in one row (New vs Returning, Gender, Patient vs Visitor)
-  - Top 3 Cities and Busiest Day moved to bottom row side by side
-  - Summary cards now show monthly trend arrow
-- 2026-02-04: Version 1.43 - Statistics/Info Page
-  - New INFO menu item added after CALENDAR in navigation
-  - Statistics page with comprehensive clinic analytics:
-    - Summary cards: Today's count (with trend), Monthly count, Avg/Day, Weekly change %
-    - 7-day patient trend bar chart
-    - Gender ratio pie chart (Male/Female)
-    - Patient vs Visitor pie chart
-    - Top 3 cities with highest patient count
-    - Busiest day of the week
-  - Backend /api/statistics endpoint fetches all analytics data from database
-- 2026-02-04: Version 1.42 - Custom Login Credentials System
-  - Added secretcred.json file for configurable user credentials
-  - Login now requires 3 fields: Mobile Number, Username, Password
-  - Users are validated against secretcred.json (role determines DOCTOR/OPERATOR access)
-  - Easy to customize - just edit secretcred.json to add/change users
-  - Backend /api/login endpoint validates all 3 fields
-- 2026-02-04: Version 1.41 - Dynamic App Name from Metadata
-  - App name now loaded dynamically from metadata.json (appName field)
-  - Header font size increased to text-3xl
-  - Login screen, main header, footer, and Queue Display all use dynamic appName
-  - metadata.json stores both hospitalName and appName for easy configuration
-- 2026-02-04: Version 1.40 - App Renamed to Clinic-Q
-  - Renamed from "ClinicFlow" to "Clinic-Q" throughout the application
-  - Removed logo icon from header - text-only branding now
-  - Updated page title, login screen, footer, and queue display
-- 2026-02-04: Version 1.39 - New Queue Logo
-  - Custom "Q+" logo with 3 decreasing dots (queue indicator)
-  - Design: Q letter with + symbol inside, followed by 3 dots (large → medium → small)
-  - Better represents the Queue management function of the app
-- 2026-02-04: Version 1.38 - Patient Form Field Swap
-  - Mobile Number field now appears first (left), Full Name second (right) in patient registration form
-- 2026-02-03: Version 1.37 - Resizable Dashboard Columns + Setup Guide
-  - Added SETUP_GUIDE.md with complete hosting instructions (local, VPS, Docker, Nginx)
-  - Updated database_schema.sql to version 1.37
-- 2026-02-03: Version 1.37 - Resizable Dashboard Columns
-  - Added drag-to-resize dividers between the 3 dashboard columns (Waiting, OPD, Completed)
-  - Column widths are saved to localStorage and persist across sessions
-  - Visual feedback on hover (indigo color) and during drag
-  - Minimum 15% / Maximum 60% limits prevent columns from becoming too small/large
-  - "Reset" button appears in header when columns have been customized
-- 2026-02-03: Version 1.36 - Login Persistence
-  - Login state now persists across page refreshes using localStorage
-  - Operator/Doctor stays logged in after browser refresh
-  - Logout properly clears the saved session
-- 2026-02-03: Version 1.35 - Radar Wave Animations on Display Screen
-  - Added radar/wave animation effects to OPD status icons on Queue Display screen
-  - Red Pause icon has red waves pulsing outward
-  - Green Available icon has green waves pulsing outward
-  - Creates eye-catching visual effect for waiting room display
-- 2026-02-03: Version 1.34 - Hospital Name on Login Screen
-  - Login screen now displays hospital name from metadata.json below "Clinic Q Flow"
-  - Hospital name fetched dynamically from /api/metadata endpoint
-- 2026-02-03: Version 1.33 - Fixed Patient History Icon Logic
-  - History icon now only appears if patient has PREVIOUS visits (before today, not just patientId)
-  - History modal excludes today's current visit, shows only past visits
-  - Added `hasPreviousVisits` flag computed by backend for accurate icon visibility
-  - Updated modal wording: "Previous Visits" instead of "Visit History"
-- 2026-02-03: Version 1.32 - Patient History Icon in Consultation Form
-  - Added History icon (document icon) before Chat button in OPD Consultation Form
-  - Icon only visible if patient has previous visits (patientId exists)
-  - Clicking icon opens Patient History modal showing all previous visits
-  - OPDSTATUS.txt updated with Gujarati text support
-- 2026-02-03: Version 1.31 - Dynamic OPD Status Options
-  - OPDSTATUS.txt is now read fresh each time dropdown opens (no server restart needed)
-  - Just edit the file and refresh the page to see new/updated pause reasons
