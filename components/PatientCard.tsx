@@ -89,7 +89,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
                   <span>{patient.queueId}</span>
                 </span>
               )}
-              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-lg font-bold">
+              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-3xl font-extrabold">
                 {patient.name}
               </h4>
               <button 
@@ -108,7 +108,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
             
             <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="font-semibold text-slate-600 truncate text-sm">
+              <div className="font-semibold text-slate-600 truncate text-2xl">
                 {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
                 {patient.mobile && (
                   <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
@@ -122,7 +122,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <div className="font-black text-slate-900 truncate tracking-tight text-base">
+              <div className="font-black text-slate-900 truncate tracking-tight text-2xl">
                 {patient.city}
               </div>
               <button 
