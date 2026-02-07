@@ -10,9 +10,10 @@ interface DoctorConsultationFormProps {
   patient?: Patient;
   onSave: (id: string, notes: string, medicines: string) => void;
   onOpenChat: (id: string) => void;
+  onCancel?: () => void;
 }
 
-const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat }) => {
+const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat, onCancel }) => {
   const [notes, setNotes] = useState('');
   const [medicines, setMedicines] = useState('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -126,13 +127,27 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
-      >
-        <Icons.CheckCircle />
-        Finalize Consultation
-      </button>
+      <div className="flex gap-3">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-4 rounded-2xl shadow-sm transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em] border-2 border-slate-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Close
+          </button>
+        )}
+        <button
+          type="submit"
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
+        >
+          <Icons.CheckCircle />
+          Finalize Consultation
+        </button>
+      </div>
       
       {showHistoryModal && patient?.patientId && patient?.hasPreviousVisits && (
         <PatientHistoryModal

@@ -791,6 +791,21 @@ const App: React.FC = () => {
 
   const handleEditPatient = (p: Patient) => setEditingPatient(p);
   const handleDoctorClick = (id: string) => setActiveConsultationId(id);
+
+  useEffect(() => {
+    if (activeView !== 'DOCTOR' || currentPage !== 'DASHBOARD') return;
+    const handleF2 = (e: KeyboardEvent) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (opdPatients.length > 0) {
+          setActiveConsultationId(opdPatients[0].id);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleF2);
+    return () => window.removeEventListener('keydown', handleF2);
+  }, [activeView, currentPage, opdPatients]);
+
   const openChat = useCallback((id: string) => {
     setActiveChatPatientId(id);
     markChatRead(id);
@@ -1107,6 +1122,7 @@ const App: React.FC = () => {
                       patient={patients.find(p => p.id === activeConsultationId)}
                       onSave={handleSaveConsultation}
                       onOpenChat={openChat}
+                      onCancel={() => setActiveConsultationId(null)}
                     />
                   )}
                 </div>
