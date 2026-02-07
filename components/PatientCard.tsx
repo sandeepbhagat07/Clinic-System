@@ -115,7 +115,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 title="Mark Done"
               >
                 <Icons.CheckCircle />
-                <span>DONE &raquo;</span>
+                <span>&nbsp; DONE &raquo;</span>
               </button>
             </div>
           </div>
