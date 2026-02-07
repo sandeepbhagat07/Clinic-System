@@ -41,6 +41,24 @@ The system is designed for daily-based patient management, where queues reset da
 - **TZ=Asia/Kolkata** — Server timezone is set to Indian Standard Time (IST) so queue resets and all date/time operations align with local clinic time.
 
 ## Recent Changes
+- 2026-02-08: Structured Doctor Consultation Form
+  - Complete redesign of DoctorConsultationForm with structured data entry
+  - Vitals row: BP, Temperature, Pulse, Weight, SpO2 with labeled inputs and units
+  - Tag-based Chief Complaints: WordPress-style input with autocomplete from database (comma/Enter to add, X to remove)
+  - Tag-based Diagnosis: Same tag input pattern with separate autocomplete source
+  - Structured Prescription table: repeatable rows with Type (Tab/Cap/Syp/etc), Medicine Name (with autocomplete), Dose, Days, Instructions dropdown
+  - Add/Remove prescription rows dynamically
+  - Advice/Instructions textarea and Follow-up Date picker
+  - Legacy Clinical Notes and Free-text Medicines collapsed under "Additional Notes"
+  - New database tables: complaint_tags, diagnosis_tags, medicine_tags for autocomplete suggestions with usage_count
+  - visits table extended: bp, temperature, pulse, weight, spo2, complaints JSONB, diagnosis JSONB, prescription JSONB, advice TEXT, follow_up_date DATE
+  - Backend tag suggestion APIs: GET /api/tags/complaints, /api/tags/diagnosis, /api/tags/medicines with ?q= query
+  - Tags auto-saved to suggestion tables on consultation finalize (ON CONFLICT upsert increments usage_count)
+  - Patient History modal updated: shows vitals badges, complaints/diagnosis capsules, structured prescription, advice, follow-up date
+  - Patient Report CSV export includes all new consultation fields
+  - Reusable TagInput component (components/TagInput.tsx) for any tag-based input field
+  - PrescriptionItem interface added to types.ts
+  - All keyboard shortcuts preserved (Ctrl+Enter, F2, Close button)
 - 2026-02-08: Timezone, Age Default & City Combo-Box
   - Set TZ=Asia/Kolkata environment variable for IST timezone across server/database
   - Default patient age changed from 25 to 0 (empty if not entered)

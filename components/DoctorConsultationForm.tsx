@@ -1,27 +1,69 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Patient, PatientCategory } from '../types';
+import { Patient, PatientCategory, PrescriptionItem } from '../types';
 import { Icons } from '../constants';
 import PatientHistoryModal from './PatientHistoryModal';
+import TagInput from './TagInput';
 
 const API_BASE = '/api';
 
 interface DoctorConsultationFormProps {
   patient?: Patient;
-  onSave: (id: string, notes: string, medicines: string) => void;
+  onSave: (id: string, consultationData: Record<string, any>) => void;
   onOpenChat: (id: string) => void;
   onCancel?: () => void;
 }
 
+const EMPTY_RX: PrescriptionItem = { type: 'Tab', name: '', dose: '', days: '', instructions: 'After Food' };
+
+const RX_TYPES = ['Tab', 'Cap', 'Syp', 'Inj', 'Drops', 'Cream', 'Gel', 'Powder', 'Inhaler', 'Other'];
+const RX_INSTRUCTIONS = ['Before Food', 'After Food', 'With Food', 'Empty Stomach', 'At Bedtime', 'SOS', 'As Directed'];
+
+function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('clinicflow_authToken');
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers }).then(res => {
+    if (res.status === 401) {
+      localStorage.removeItem('clinicflow_isLoggedIn');
+      localStorage.removeItem('clinicflow_activeView');
+      localStorage.removeItem('clinicflow_authToken');
+      window.dispatchEvent(new Event('auth:logout'));
+    }
+    return res;
+  });
+}
+
 const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient, onSave, onOpenChat, onCancel }) => {
+  const [bp, setBp] = useState('');
+  const [temperature, setTemperature] = useState('');
+  const [pulse, setPulse] = useState('');
+  const [weight, setWeight] = useState('');
+  const [spo2, setSpo2] = useState('');
+  const [complaints, setComplaints] = useState<string[]>([]);
+  const [diagnosis, setDiagnosis] = useState<string[]>([]);
+  const [prescription, setPrescription] = useState<PrescriptionItem[]>([{ ...EMPTY_RX }]);
+  const [advice, setAdvice] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
   const [notes, setNotes] = useState('');
   const [medicines, setMedicines] = useState('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [medicineSuggestions, setMedicineSuggestions] = useState<Record<number, string[]>>({});
 
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (patient) {
+      setBp(patient.bp || '');
+      setTemperature(patient.temperature ? String(patient.temperature) : '');
+      setPulse(patient.pulse ? String(patient.pulse) : '');
+      setWeight(patient.weight ? String(patient.weight) : '');
+      setSpo2(patient.spo2 ? String(patient.spo2) : '');
+      setComplaints(patient.complaints || []);
+      setDiagnosis(patient.diagnosis || []);
+      setPrescription(patient.prescription && patient.prescription.length > 0 ? patient.prescription : [{ ...EMPTY_RX }]);
+      setAdvice(patient.advice || '');
+      setFollowUpDate(patient.followUpDate || '');
       setNotes(patient.notes || '');
       setMedicines(patient.medicines || '');
     }
@@ -54,16 +96,79 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(patient.id, notes, medicines);
-    setNotes('');
-    setMedicines('');
+    const cleanPrescription = prescription.filter(rx => rx.name.trim() !== '');
+    onSave(patient.id, {
+      bp: bp || null,
+      temperature: temperature ? parseFloat(temperature) : null,
+      pulse: pulse ? parseInt(pulse) : null,
+      weight: weight ? parseFloat(weight) : null,
+      spo2: spo2 ? parseInt(spo2) : null,
+      complaints,
+      diagnosis,
+      prescription: cleanPrescription,
+      advice: advice || null,
+      followUpDate: followUpDate || null,
+      notes: notes || null,
+      medicines: medicines || null
+    });
+    setBp(''); setTemperature(''); setPulse(''); setWeight(''); setSpo2('');
+    setComplaints([]); setDiagnosis([]);
+    setPrescription([{ ...EMPTY_RX }]);
+    setAdvice(''); setFollowUpDate('');
+    setNotes(''); setMedicines('');
   };
 
-  const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-base font-medium";
+  const updatePrescription = (index: number, field: keyof PrescriptionItem, value: string) => {
+    const updated = [...prescription];
+    updated[index] = { ...updated[index], [field]: value };
+    setPrescription(updated);
+  };
+
+  const addPrescriptionRow = () => {
+    setPrescription([...prescription, { ...EMPTY_RX }]);
+  };
+
+  const removePrescriptionRow = (index: number) => {
+    if (prescription.length <= 1) return;
+    setPrescription(prescription.filter((_, i) => i !== index));
+  };
+
+  const fetchMedicineSuggestions = async (index: number, query: string) => {
+    if (query.trim().length < 1) {
+      setMedicineSuggestions(prev => ({ ...prev, [index]: [] }));
+      return;
+    }
+    try {
+      const res = await authFetch(`${API_BASE}/tags/medicines?q=${encodeURIComponent(query.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMedicineSuggestions(prev => ({ ...prev, [index]: data }));
+      }
+    } catch {
+      setMedicineSuggestions(prev => ({ ...prev, [index]: [] }));
+    }
+  };
+
+  const vitalInput = (label: string, value: string, onChange: (v: string) => void, placeholder: string, unit: string, type: string = 'text') => (
+    <div className="flex flex-col gap-1">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">{label}</label>
+      <div className="flex items-center gap-1">
+        <input
+          type={type}
+          className="w-full bg-white border-2 border-slate-200 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+        />
+        <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">{unit}</span>
+      </div>
+    </div>
+  );
 
   return (
-    <form ref={formRef} onSubmit={handleSave} className="space-y-6 h-full flex flex-col">
-      <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 flex flex-col gap-3">
+    <form ref={formRef} onSubmit={handleSave} className="space-y-4 h-full flex flex-col overflow-auto">
+      {/* Patient Header */}
+      <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex flex-col gap-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
@@ -78,7 +183,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-indigo-600/70 uppercase tracking-widest">
-              <span>{patient.age} Yrs <span className="mx-1">•</span> {patient.gender} <span className="mx-1">•</span> {patient.type}</span>
+              <span>{patient.age} Yrs • {patient.gender} • {patient.type}</span>
               {patient.mobile && (
                 <span className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-indigo-100 text-indigo-900 shadow-sm">
                   <Icons.Phone /> {patient.mobile}
@@ -88,7 +193,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
           </div>
           <div className="flex items-center gap-2">
             {patient.hasPreviousVisits && (
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowHistoryModal(true)}
                 className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 shadow-sm transition-all"
@@ -99,12 +204,12 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
                 </svg>
               </button>
             )}
-            <button 
+            <button
               type="button"
               onClick={() => onOpenChat(patient.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold shadow-sm transition-all border-2 ${
-                patient.hasUnreadAlert 
-                ? 'bg-rose-600 text-white border-rose-500 animate-pulse' 
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-extrabold shadow-sm transition-all border-2 ${
+                patient.hasUnreadAlert
+                ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
                 : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
               } text-xs uppercase tracking-widest`}
             >
@@ -114,38 +219,214 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
-        <div className="flex flex-col gap-3">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-            Clinical Observations
-          </label>
+      {/* Vitals Row */}
+      <div className="bg-sky-50/60 p-3 rounded-xl border border-sky-100 flex-shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <span className="text-[11px] font-black text-sky-700 uppercase tracking-[0.15em]">Vitals</span>
+        </div>
+        <div className="grid grid-cols-5 gap-3">
+          {vitalInput('BP', bp, setBp, '120/80', 'mmHg')}
+          {vitalInput('Temp', temperature, setTemperature, '98.6', '°F', 'number')}
+          {vitalInput('Pulse', pulse, setPulse, '72', 'bpm', 'number')}
+          {vitalInput('Weight', weight, setWeight, '60', 'kg', 'number')}
+          {vitalInput('SpO2', spo2, setSpo2, '98', '%', 'number')}
+        </div>
+      </div>
+
+      {/* Complaints & Diagnosis */}
+      <div className="grid grid-cols-2 gap-4 flex-shrink-0">
+        <TagInput
+          label="Chief Complaints"
+          tags={complaints}
+          onChange={setComplaints}
+          apiEndpoint={`${API_BASE}/tags/complaints`}
+          placeholder="Type complaint, press comma to add"
+        />
+        <TagInput
+          label="Diagnosis"
+          tags={diagnosis}
+          onChange={setDiagnosis}
+          apiEndpoint={`${API_BASE}/tags/diagnosis`}
+          placeholder="Type diagnosis, press comma to add"
+        />
+      </div>
+
+      {/* Prescription Table */}
+      <div className="flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+            <span className="text-[11px] font-black text-emerald-700 uppercase tracking-[0.15em]">Prescription (Rx)</span>
+          </div>
+          <button
+            type="button"
+            onClick={addPrescriptionRow}
+            className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[11px] font-bold hover:bg-emerald-200 transition-colors border border-emerald-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Row
+          </button>
+        </div>
+        <div className="border-2 border-emerald-100 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-[70px_1fr_80px_60px_120px_36px] gap-0 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase tracking-wider">
+            <div className="px-2 py-2 border-r border-emerald-100">Type</div>
+            <div className="px-2 py-2 border-r border-emerald-100">Medicine Name</div>
+            <div className="px-2 py-2 border-r border-emerald-100">Dose</div>
+            <div className="px-2 py-2 border-r border-emerald-100">Days</div>
+            <div className="px-2 py-2 border-r border-emerald-100">Instructions</div>
+            <div className="px-2 py-2"></div>
+          </div>
+          {prescription.map((rx, index) => (
+            <div key={index} className="grid grid-cols-[70px_1fr_80px_60px_120px_36px] gap-0 border-t border-emerald-100 bg-white">
+              <div className="px-1 py-1 border-r border-emerald-50">
+                <select
+                  className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none py-1.5 cursor-pointer"
+                  value={rx.type}
+                  onChange={e => updatePrescription(index, 'type', e.target.value)}
+                >
+                  {RX_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="px-1 py-1 border-r border-emerald-50 relative">
+                <input
+                  type="text"
+                  className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none py-1.5 placeholder:text-slate-300"
+                  placeholder="Medicine name"
+                  value={rx.name}
+                  autoComplete="off"
+                  onChange={e => {
+                    updatePrescription(index, 'name', e.target.value);
+                    fetchMedicineSuggestions(index, e.target.value);
+                  }}
+                  onFocus={() => { if (rx.name.trim()) fetchMedicineSuggestions(index, rx.name); }}
+                  onBlur={() => setTimeout(() => setMedicineSuggestions(prev => ({ ...prev, [index]: [] })), 200)}
+                />
+                {medicineSuggestions[index]?.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-0.5 bg-white border-2 border-indigo-200 rounded-lg shadow-xl z-50 max-h-32 overflow-y-auto">
+                    {medicineSuggestions[index].map(s => (
+                      <div
+                        key={s}
+                        className="px-3 py-1.5 cursor-pointer text-xs font-medium text-slate-700 hover:bg-indigo-50 transition-colors"
+                        onMouseDown={() => {
+                          updatePrescription(index, 'name', s);
+                          setMedicineSuggestions(prev => ({ ...prev, [index]: [] }));
+                        }}
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="px-1 py-1 border-r border-emerald-50">
+                <input
+                  type="text"
+                  className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none py-1.5 placeholder:text-slate-300"
+                  placeholder="1-0-1"
+                  value={rx.dose}
+                  onChange={e => updatePrescription(index, 'dose', e.target.value)}
+                />
+              </div>
+              <div className="px-1 py-1 border-r border-emerald-50">
+                <input
+                  type="text"
+                  className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none py-1.5 placeholder:text-slate-300"
+                  placeholder="5"
+                  value={rx.days}
+                  onChange={e => updatePrescription(index, 'days', e.target.value)}
+                />
+              </div>
+              <div className="px-1 py-1 border-r border-emerald-50">
+                <select
+                  className="w-full bg-transparent text-xs font-medium text-slate-800 outline-none py-1.5 cursor-pointer"
+                  value={rx.instructions}
+                  onChange={e => updatePrescription(index, 'instructions', e.target.value)}
+                >
+                  {RX_INSTRUCTIONS.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </div>
+              <div className="flex items-center justify-center">
+                {prescription.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removePrescriptionRow(index)}
+                    className="w-6 h-6 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Advice & Follow-up */}
+      <div className="grid grid-cols-[1fr_180px] gap-4 flex-shrink-0">
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">Advice / Instructions</label>
           <textarea
-            className={`${inputClasses} flex-1 resize-none placeholder:text-slate-300`}
-            placeholder="Document symptoms, history, and observations..."
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
+            className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 text-sm font-medium text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 resize-none"
+            rows={2}
+            placeholder="Rest, diet instructions, follow-up advice..."
+            value={advice}
+            onChange={e => setAdvice(e.target.value)}
           />
         </div>
-
-        <div className="flex flex-col gap-3">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
-            Prescription Plan
-          </label>
-          <textarea
-            className={`${inputClasses} flex-1 resize-none font-mono text-sm placeholder:text-slate-300 leading-relaxed`}
-            placeholder="Rx: Medicine name, dosage, and instructions..."
-            value={medicines}
-            onChange={e => setMedicines(e.target.value)}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">Follow-up Date</label>
+          <input
+            type="date"
+            className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+            value={followUpDate}
+            onChange={e => setFollowUpDate(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex gap-3">
+      {/* Legacy Notes & Medicines (collapsible) */}
+      <details className="flex-shrink-0 bg-slate-50 rounded-xl border border-slate-200">
+        <summary className="px-3 py-2 cursor-pointer text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] hover:text-slate-600 transition-colors">
+          Additional Notes (Optional)
+        </summary>
+        <div className="grid grid-cols-2 gap-3 p-3 pt-1">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase">Clinical Notes</label>
+            <textarea
+              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-900 outline-none focus:border-indigo-400 resize-none placeholder:text-slate-300"
+              rows={2}
+              placeholder="Additional observations..."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase">Free-text Medicines</label>
+            <textarea
+              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-medium font-mono text-slate-900 outline-none focus:border-indigo-400 resize-none placeholder:text-slate-300"
+              rows={2}
+              placeholder="Additional Rx notes..."
+              value={medicines}
+              onChange={e => setMedicines(e.target.value)}
+            />
+          </div>
+        </div>
+      </details>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 flex-shrink-0 pt-1">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-4 rounded-2xl shadow-sm transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em] border-2 border-slate-200"
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-3.5 rounded-2xl shadow-sm transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-sm uppercase tracking-[0.2em] border-2 border-slate-200"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -155,13 +436,13 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
         )}
         <button
           type="submit"
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-sm uppercase tracking-[0.2em]"
         >
           <Icons.CheckCircle />
           Finalize Consultation (Ctrl+Ent)
         </button>
       </div>
-      
+
       {showHistoryModal && patient?.patientId && patient?.hasPreviousVisits && (
         <PatientHistoryModal
           patientId={patient.patientId}

@@ -208,6 +208,46 @@ app.get('/api/display/queue', async (req, res) => {
     }
 });
 
+// Tag suggestion endpoints for autocomplete
+app.get('/api/tags/complaints', requireAuth, async (req, res) => {
+    try {
+        const q = req.query.q || '';
+        const result = await pool.query(
+            'SELECT name FROM complaint_tags WHERE LOWER(name) LIKE LOWER($1) ORDER BY usage_count DESC LIMIT 15',
+            [`%${q}%`]
+        );
+        res.json(result.rows.map(r => r.name));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/tags/diagnosis', requireAuth, async (req, res) => {
+    try {
+        const q = req.query.q || '';
+        const result = await pool.query(
+            'SELECT name FROM diagnosis_tags WHERE LOWER(name) LIKE LOWER($1) ORDER BY usage_count DESC LIMIT 15',
+            [`%${q}%`]
+        );
+        res.json(result.rows.map(r => r.name));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/tags/medicines', requireAuth, async (req, res) => {
+    try {
+        const q = req.query.q || '';
+        const result = await pool.query(
+            'SELECT name FROM medicine_tags WHERE LOWER(name) LIKE LOWER($1) ORDER BY usage_count DESC LIMIT 15',
+            [`%${q}%`]
+        );
+        res.json(result.rows.map(r => r.name));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Get all patients with their messages (filtered by today's date)
 app.get('/api/patients', requireAuth, async (req, res) => {
     try {
@@ -238,6 +278,7 @@ app.get('/api/patients', requireAuth, async (req, res) => {
             outTime: p.out_time,
             hasUnreadAlert: !!p.has_unread_alert,
             sortOrder: p.sort_order || 0,
+            followUpDate: p.follow_up_date,
             messages: messages.filter(m => m.patient_id === p.id).map(m => ({
                 ...m,
                 patientId: m.patient_id
@@ -335,7 +376,8 @@ app.get('/api/patients/:patientId/history', requireAuth, async (req, res) => {
         // Get all PREVIOUS visits for this patient (exclude today's visit), ordered by date (newest first)
         const visitsResult = await pool.query(
             `SELECT id, queue_id, name, age, gender, category, type, city, mobile, status, 
-                    created_at, in_time, out_time, notes, medicines
+                    created_at, in_time, out_time, notes, medicines,
+                    bp, temperature, pulse, weight, spo2, complaints, diagnosis, prescription, advice, follow_up_date
              FROM visits 
              WHERE patient_id = $1 AND DATE(created_at) < CURRENT_DATE
              ORDER BY created_at DESC`,
@@ -348,7 +390,8 @@ app.get('/api/patients/:patientId/history', requireAuth, async (req, res) => {
             createdAt: v.created_at ? new Date(v.created_at).toISOString() : null,
             inTime: v.in_time ? new Date(v.in_time).toISOString() : null,
             outTime: v.out_time ? new Date(v.out_time).toISOString() : null,
-            queueId: v.queue_id
+            queueId: v.queue_id,
+            followUpDate: v.follow_up_date
         }));
         
         res.json({
@@ -420,7 +463,8 @@ app.get('/api/patients/report', requireAuth, async (req, res) => {
             createdAt: p.created_at,
             inTime: p.in_time,
             outTime: p.out_time,
-            hasUnreadAlert: !!p.has_unread_alert
+            hasUnreadAlert: !!p.has_unread_alert,
+            followUpDate: p.follow_up_date
         }));
         
         res.json(data);
@@ -525,17 +569,26 @@ app.patch('/api/patients/:id', requireAuth, async (req, res) => {
         const updates = req.body;
         
         // Map camelCase to snake_case for PG and convert timestamps safely
-        const pgUpdates = {};
-        if ('queueId' in updates) pgUpdates.queue_id = updates.queueId;
-        if ('createdAt' in updates) pgUpdates.created_at = toISOSafe(updates.createdAt);
-        if ('inTime' in updates) pgUpdates.in_time = toISOSafe(updates.inTime);
-        if ('outTime' in updates) pgUpdates.out_time = toISOSafe(updates.outTime);
-        if ('hasUnreadAlert' in updates) pgUpdates.has_unread_alert = updates.hasUnreadAlert;
+        const camelToSnake = {
+            queueId: 'queue_id',
+            createdAt: 'created_at',
+            inTime: 'in_time',
+            outTime: 'out_time',
+            hasUnreadAlert: 'has_unread_alert',
+            followUpDate: 'follow_up_date',
+            patientId: 'patient_id',
+            sortOrder: 'sort_order'
+        };
+        const timestampFields = ['createdAt', 'inTime', 'outTime'];
+        const jsonbFields = ['complaints', 'diagnosis', 'prescription'];
         
+        const pgUpdates = {};
         Object.keys(updates).forEach(key => {
-            if (!['queueId', 'createdAt', 'inTime', 'outTime', 'hasUnreadAlert'].includes(key)) {
-                pgUpdates[key] = updates[key];
-            }
+            const pgKey = camelToSnake[key] || key;
+            let val = updates[key];
+            if (timestampFields.includes(key)) val = toISOSafe(val);
+            if (jsonbFields.includes(key)) val = JSON.stringify(val);
+            pgUpdates[pgKey] = val;
         });
 
         const keys = Object.keys(pgUpdates);
@@ -545,6 +598,34 @@ app.patch('/api/patients/:id', requireAuth, async (req, res) => {
 
         const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
         await pool.query(`UPDATE visits SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, id]);
+        
+        // Save tags for autocomplete suggestions
+        if (updates.complaints && Array.isArray(updates.complaints)) {
+            for (const tag of updates.complaints) {
+                await pool.query(
+                    'INSERT INTO complaint_tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET usage_count = complaint_tags.usage_count + 1',
+                    [tag]
+                );
+            }
+        }
+        if (updates.diagnosis && Array.isArray(updates.diagnosis)) {
+            for (const tag of updates.diagnosis) {
+                await pool.query(
+                    'INSERT INTO diagnosis_tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET usage_count = diagnosis_tags.usage_count + 1',
+                    [tag]
+                );
+            }
+        }
+        if (updates.prescription && Array.isArray(updates.prescription)) {
+            for (const rx of updates.prescription) {
+                if (rx.name) {
+                    await pool.query(
+                        'INSERT INTO medicine_tags (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET usage_count = medicine_tags.usage_count + 1',
+                        [rx.name]
+                    );
+                }
+            }
+        }
         
         io.emit('patient:update', { patientId: id, updates });
         

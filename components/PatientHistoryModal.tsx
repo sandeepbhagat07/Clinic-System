@@ -31,6 +31,16 @@ interface Visit {
   outTime: string | null;
   notes: string | null;
   medicines: string | null;
+  bp: string | null;
+  temperature: number | null;
+  pulse: number | null;
+  weight: number | null;
+  spo2: number | null;
+  complaints: string[] | null;
+  diagnosis: string[] | null;
+  prescription: { type: string; name: string; dose: string; days: string; instructions: string }[] | null;
+  advice: string | null;
+  followUpDate: string | null;
 }
 
 interface PatientInfo {
@@ -223,8 +233,77 @@ const PatientHistoryModal: React.FC<PatientHistoryModalProps> = ({ patientId, ap
                           <span className="px-2 py-0.5 bg-slate-100 rounded text-xs font-medium">{visit.type}</span>
                         </div>
 
+                        {/* Vitals */}
+                        {(visit.bp || visit.temperature || visit.pulse || visit.weight || visit.spo2) && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {visit.bp && <span className="px-2 py-1 bg-sky-50 border border-sky-200 rounded-md text-xs font-medium text-sky-800">BP: {visit.bp}</span>}
+                            {visit.temperature && <span className="px-2 py-1 bg-sky-50 border border-sky-200 rounded-md text-xs font-medium text-sky-800">Temp: {visit.temperature}°F</span>}
+                            {visit.pulse && <span className="px-2 py-1 bg-sky-50 border border-sky-200 rounded-md text-xs font-medium text-sky-800">Pulse: {visit.pulse} bpm</span>}
+                            {visit.weight && <span className="px-2 py-1 bg-sky-50 border border-sky-200 rounded-md text-xs font-medium text-sky-800">Wt: {visit.weight} kg</span>}
+                            {visit.spo2 && <span className="px-2 py-1 bg-sky-50 border border-sky-200 rounded-md text-xs font-medium text-sky-800">SpO2: {visit.spo2}%</span>}
+                          </div>
+                        )}
+
+                        {/* Complaints */}
+                        {visit.complaints && visit.complaints.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wide mb-1">Complaints</p>
+                            <div className="flex flex-wrap gap-1">
+                              {visit.complaints.map((c: string, ci: number) => (
+                                <span key={ci} className="px-2 py-0.5 bg-orange-50 border border-orange-200 rounded-full text-xs font-medium text-orange-800">{c}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Diagnosis */}
+                        {visit.diagnosis && visit.diagnosis.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-1">Diagnosis</p>
+                            <div className="flex flex-wrap gap-1">
+                              {visit.diagnosis.map((d: string, di: number) => (
+                                <span key={di} className="px-2 py-0.5 bg-purple-50 border border-purple-200 rounded-full text-xs font-medium text-purple-800">{d}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescription */}
+                        {visit.prescription && visit.prescription.length > 0 && (
+                          <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide mb-1.5">Prescription</p>
+                            <div className="space-y-1">
+                              {visit.prescription.map((rx: any, ri: number) => (
+                                <div key={ri} className="flex items-center gap-2 text-xs text-emerald-900">
+                                  <span className="font-bold bg-emerald-200 px-1.5 py-0.5 rounded text-[10px]">{rx.type}</span>
+                                  <span className="font-semibold">{rx.name}</span>
+                                  {rx.dose && <span className="text-emerald-700">| {rx.dose}</span>}
+                                  {rx.days && <span className="text-emerald-700">| {rx.days}d</span>}
+                                  {rx.instructions && <span className="text-emerald-600 italic">({rx.instructions})</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Advice */}
+                        {visit.advice && (
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wide mb-1">Advice</p>
+                            <p className="text-sm text-blue-900 whitespace-pre-wrap">{visit.advice}</p>
+                          </div>
+                        )}
+
+                        {/* Follow-up */}
+                        {visit.followUpDate && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md text-xs font-bold">Follow-up: {formatDate(visit.followUpDate)}</span>
+                          </div>
+                        )}
+
+                        {/* Legacy notes/medicines */}
                         {visit.notes && (
-                          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                             <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wide mb-1">Doctor Notes</p>
                             <p className="text-sm text-amber-900 whitespace-pre-wrap">{visit.notes}</p>
                           </div>
@@ -232,7 +311,7 @@ const PatientHistoryModal: React.FC<PatientHistoryModalProps> = ({ patientId, ap
 
                         {visit.medicines && (
                           <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide mb-1">Medicines</p>
+                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide mb-1">Medicines (Text)</p>
                             <p className="text-sm text-emerald-900 whitespace-pre-wrap">{visit.medicines}</p>
                           </div>
                         )}

@@ -109,7 +109,7 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
   const exportToCSV = () => {
     if (patients.length === 0) return;
     
-    const headers = ['Queue#', 'Name', 'Age', 'Gender', 'City', 'Mobile', 'Category', 'Date', 'In Time'];
+    const headers = ['Queue#', 'Name', 'Age', 'Gender', 'City', 'Mobile', 'Category', 'Date', 'In Time', 'BP', 'Temp', 'Pulse', 'Weight', 'SpO2', 'Complaints', 'Diagnosis', 'Prescription', 'Advice', 'Follow-up'];
     const rows = patients.map(p => [
       p.queueId || '',
       p.name || '',
@@ -119,7 +119,17 @@ const PatientReport: React.FC<PatientReportProps> = ({ apiBase }) => {
       p.mobile || '',
       p.category || '',
       formatDate(p.createdAt),
-      formatTime(p.inTime)
+      formatTime(p.inTime),
+      p.bp || '',
+      p.temperature || '',
+      p.pulse || '',
+      p.weight || '',
+      p.spo2 || '',
+      (p.complaints || []).join('; '),
+      (p.diagnosis || []).join('; '),
+      (p.prescription || []).map((rx: any) => `${rx.type} ${rx.name} ${rx.dose} ${rx.days}d ${rx.instructions}`).join('; '),
+      p.advice || '',
+      p.followUpDate || ''
     ]);
     
     const csvContent = [

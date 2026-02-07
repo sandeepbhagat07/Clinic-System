@@ -609,8 +609,8 @@ const App: React.FC = () => {
     }
   }, [patients, activeConsultationId, activeChatPatientId, isBackendOnline]);
 
-  const handleSaveConsultation = useCallback(async (id: string, notes: string, medicines: string) => {
-    const updates = { notes, medicines, status: PatientStatus.COMPLETED, outTime: Date.now() };
+  const handleSaveConsultation = useCallback(async (id: string, consultationData: Record<string, any>) => {
+    const updates = { ...consultationData, status: PatientStatus.COMPLETED, outTime: Date.now() };
     try {
       if (isBackendOnline) {
         await authFetch(`${API_BASE}/patients/${id}`, {

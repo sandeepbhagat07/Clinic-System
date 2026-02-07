@@ -55,9 +55,28 @@ export interface Patient {
   // Chat Alert System
   messages: ChatMessage[];
   hasUnreadAlert: boolean;
-  // Doctor fields
+  // Doctor fields (legacy)
   notes?: string;
   medicines?: string;
+  // Structured consultation fields
+  bp?: string;
+  temperature?: number;
+  pulse?: number;
+  weight?: number;
+  spo2?: number;
+  complaints?: string[];
+  diagnosis?: string[];
+  prescription?: PrescriptionItem[];
+  advice?: string;
+  followUpDate?: string;
+}
+
+export interface PrescriptionItem {
+  type: string;
+  name: string;
+  dose: string;
+  days: string;
+  instructions: string;
 }
 
 export type PatientFormData = Omit<Patient, 'id' | 'queueId' | 'status' | 'createdAt' | 'notes' | 'medicines' | 'hasUnreadAlert' | 'messages' | 'inTime' | 'outTime'>;
