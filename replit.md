@@ -37,7 +37,15 @@ The system is designed for daily-based patient management, where queues reset da
 - **PostgreSQL**: Database for persistent storage (used with `pg` client library).
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
+## Environment
+- **TZ=Asia/Kolkata** — Server timezone is set to Indian Standard Time (IST) so queue resets and all date/time operations align with local clinic time.
+
 ## Recent Changes
+- 2026-02-08: Timezone, Age Default & City Combo-Box
+  - Set TZ=Asia/Kolkata environment variable for IST timezone across server/database
+  - Default patient age changed from 25 to 0 (empty if not entered)
+  - City field converted from fixed dropdown to combo-box: operator can type any custom city OR pick from suggestions
+  - City default changed from '--' to empty string
 - 2026-02-07: Doctor Panel Keyboard & UX Improvements
   - F2 keyboard shortcut for Doctor on Home screen: opens consultation form for the first patient in OPD queue
   - Close button added to Doctor Consultation Form: allows doctor to exit form without finalizing
