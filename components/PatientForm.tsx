@@ -51,6 +51,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const lookupRef = useRef<HTMLDivElement>(null);
   const lookupListRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -77,6 +78,12 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (showLookup && lookupResults.length > 0 && lookupListRef.current) {
+      lookupListRef.current.focus();
+    }
+  }, [showLookup, lookupResults]);
 
   const handleMobileLookup = async () => {
     const mobile = formData.mobile.trim();
@@ -129,6 +136,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
       e.preventDefault();
       setShowLookup(false);
       setHighlightedIndex(-1);
+      mobileInputRef.current?.focus();
     }
   };
 
@@ -187,10 +195,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         
         {/* Row 1: Mobile | Full Name */}
-        <div className="flex flex-col gap-2 relative" ref={lookupRef} onKeyDown={handleLookupKeyDown}>
+        <div className="flex flex-col gap-2 relative" ref={lookupRef}>
           <label className={labelClasses}>Mobile (Optional)</label>
           <div className="flex gap-2">
             <input
+              ref={mobileInputRef}
               tabIndex={1}
               type="tel"
               inputMode="numeric"
@@ -217,7 +226,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
             </button>
           </div>
           {showLookup && (
-            <div ref={lookupListRef} className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+            <div ref={lookupListRef} tabIndex={-1} onKeyDown={handleLookupKeyDown} className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto outline-none">
               {lookupResults.length === 0 ? (
                 <div className="p-4 text-center text-slate-500 text-sm">
                   No patients found with this mobile number
