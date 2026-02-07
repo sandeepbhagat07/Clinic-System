@@ -49,10 +49,15 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   const [showLookup, setShowLookup] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [cityHighlightedIndex, setCityHighlightedIndex] = useState(-1);
   const lookupRef = useRef<HTMLDivElement>(null);
   const lookupListRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const cityRef = useRef<HTMLDivElement>(null);
+
+  const filteredCities = CITIES.filter(c => c !== '--' && c.toLowerCase().includes(formData.city.toLowerCase()));
 
   useEffect(() => {
     const handleCtrlEnter = (e: KeyboardEvent) => {
@@ -85,6 +90,9 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
     const handleClickOutside = (event: MouseEvent) => {
       if (lookupRef.current && !lookupRef.current.contains(event.target as Node)) {
         setShowLookup(false);
+      }
+      if (cityRef.current && !cityRef.current.contains(event.target as Node)) {
+        setShowCityDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -339,23 +347,82 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
           </div>
         </div>
 
-        {/* Row 3: City (full width) */}
-        <div className="flex flex-col gap-2 sm:col-span-2">
+        {/* Row 3: City (full width) - Custom Combo Box */}
+        <div className="flex flex-col gap-2 sm:col-span-2 relative" ref={cityRef}>
           <label className={labelClasses}>City / Location</label>
-          <input
-            tabIndex={7}
-            type="text"
-            list="city-suggestions"
-            className={inputClasses}
-            placeholder="Type or select a city"
-            value={formData.city}
-            onChange={e => setFormData({ ...formData, city: e.target.value })}
-          />
-          <datalist id="city-suggestions">
-            {CITIES.filter(c => c !== '--').map(city => (
-              <option key={city} value={city} />
-            ))}
-          </datalist>
+          <div className="relative">
+            <input
+              tabIndex={7}
+              type="text"
+              autoComplete="off"
+              className={inputClasses}
+              placeholder="Type or select a city"
+              value={formData.city}
+              onChange={e => {
+                setFormData({ ...formData, city: e.target.value });
+                setShowCityDropdown(true);
+                setCityHighlightedIndex(-1);
+              }}
+              onFocus={() => setShowCityDropdown(true)}
+              onKeyDown={e => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  if (!showCityDropdown) { setShowCityDropdown(true); setCityHighlightedIndex(0); return; }
+                  setCityHighlightedIndex(prev => {
+                    const next = prev < filteredCities.length - 1 ? prev + 1 : 0;
+                    document.getElementById(`city-opt-${next}`)?.scrollIntoView({ block: 'nearest' });
+                    return next;
+                  });
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  if (!showCityDropdown) { setShowCityDropdown(true); setCityHighlightedIndex(filteredCities.length - 1); return; }
+                  setCityHighlightedIndex(prev => {
+                    const next = prev > 0 ? prev - 1 : filteredCities.length - 1;
+                    document.getElementById(`city-opt-${next}`)?.scrollIntoView({ block: 'nearest' });
+                    return next;
+                  });
+                } else if (e.key === 'Enter' && showCityDropdown && cityHighlightedIndex >= 0) {
+                  e.preventDefault();
+                  setFormData({ ...formData, city: filteredCities[cityHighlightedIndex] });
+                  setShowCityDropdown(false);
+                  setCityHighlightedIndex(-1);
+                } else if (e.key === 'Escape') {
+                  setShowCityDropdown(false);
+                }
+              }}
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              onClick={() => setShowCityDropdown(!showCityDropdown)}
+            >
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+            </button>
+          </div>
+          {showCityDropdown && filteredCities.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+              {filteredCities.map((city, index) => (
+                <div
+                  key={city}
+                  id={`city-opt-${index}`}
+                  className={`px-4 py-2.5 cursor-pointer text-sm font-medium transition-colors ${
+                    index === cityHighlightedIndex
+                      ? 'bg-indigo-100 text-indigo-800'
+                      : 'text-slate-700 hover:bg-indigo-50'
+                  }`}
+                  onMouseEnter={() => setCityHighlightedIndex(index)}
+                  onClick={() => {
+                    setFormData({ ...formData, city });
+                    setShowCityDropdown(false);
+                    setCityHighlightedIndex(-1);
+                  }}
+                >
+                  {city}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Row 4: Primary Category (full width) */}
