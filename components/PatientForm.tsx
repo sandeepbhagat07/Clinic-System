@@ -52,6 +52,18 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   const lookupRef = useRef<HTMLDivElement>(null);
   const lookupListRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const handleCtrlEnter = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter' && formRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        formRef.current.requestSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleCtrlEnter);
+    return () => window.removeEventListener('keydown', handleCtrlEnter);
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -202,7 +214,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   const radioTextClasses = "text-slate-700 font-bold text-[11px] uppercase tracking-wider";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         
         {/* Row 1: Mobile | Full Name */}
@@ -402,7 +414,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
           className={`flex-[2] ${isEditing ? 'bg-amber-600' : 'bg-indigo-700'} text-white font-extrabold py-4 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 text-base uppercase tracking-widest`}
         >
           {isEditing ? <Icons.Edit /> : <Icons.CheckCircle />} 
-          {isEditing ? 'Update Profile' : 'Save'}
+          {isEditing ? 'Update Profile' : 'SAVE (Ctrl+Ent)'}
         </button>
       </div>
     </form>

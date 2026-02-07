@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Patient, PatientCategory } from '../types';
 import { Icons } from '../constants';
 import PatientHistoryModal from './PatientHistoryModal';
@@ -46,10 +46,23 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
     setMedicines('');
   };
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const handleCtrlEnter = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter' && formRef.current?.contains(document.activeElement)) {
+        e.preventDefault();
+        formRef.current.requestSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleCtrlEnter);
+    return () => window.removeEventListener('keydown', handleCtrlEnter);
+  }, []);
+
   const inputClasses = "w-full bg-white text-slate-900 border-2 border-slate-200 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-base font-medium";
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 h-full flex flex-col">
+    <form ref={formRef} onSubmit={handleSave} className="space-y-6 h-full flex flex-col">
       <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
@@ -145,7 +158,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
           className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-base uppercase tracking-[0.2em]"
         >
           <Icons.CheckCircle />
-          Finalize Consultation
+          Finalize Consultation (Ctrl+Ent)
         </button>
       </div>
       
