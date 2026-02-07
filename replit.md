@@ -26,6 +26,18 @@ Key features include:
 - Dynamic application name and hospital name loaded from metadata.
 - A static marketing website (`/site/`) with Home, About, Pricing, and Contact pages, consistent with Clinic-Q branding.
 - Comprehensive statistics page with analytics like patient trends, gender ratio, patient vs. visitor, top cities, and busiest day.
+- Print Prescription feature: generates A5-styled printable prescription page in a new tab with auto print dialog.
+
+## Recent Changes
+- 2026-02-08: Print Prescription Feature
+  - Added PRINT PRESCRIPTION button to Doctor Consultation Form (3-button layout: Print Prescription | Finalize | Close)
+  - Opens new browser tab with A5-sized printable prescription page including hospital header, patient info, vitals, complaints, diagnosis, prescription table, advice, follow-up date, and doctor signature line
+  - All user data HTML-escaped for security; dates formatted in IST timezone
+- 2026-02-08: Follow-up Date Dropdown
+  - Replaced date picker with dropdown: 5 Days, 7 Days, 8 Days, 15 Days, 1 Month
+  - Backend calculates actual follow-up date (today + selected days) in IST and stores as DATE
+- 2026-02-08: Timezone Fix — TIMESTAMP WITH TIME ZONE
+  - All timestamp columns changed to TIMESTAMP WITH TIME ZONE; pg.Pool uses `-c timezone=Asia/Kolkata`
 
 ## External Dependencies
 - **React**: Frontend library.

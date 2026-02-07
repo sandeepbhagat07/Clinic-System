@@ -49,6 +49,7 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
   const [medicines, setMedicines] = useState('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [medicineSuggestions, setMedicineSuggestions] = useState<Record<number, string[]>>({});
+  const [metadata, setMetadata] = useState<{ hospitalName?: string; appName?: string }>({});
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -70,6 +71,10 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
   }, [patient]);
 
   useEffect(() => {
+    fetch('/metadata.json').then(r => r.json()).then(d => setMetadata(d)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const handleCtrlEnter = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'Enter' && formRef.current?.contains(document.activeElement)) {
         e.preventDefault();
@@ -79,6 +84,123 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
     window.addEventListener('keydown', handleCtrlEnter);
     return () => window.removeEventListener('keydown', handleCtrlEnter);
   }, []);
+
+  const escHtml = (str: string) => str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const formatIST = (d: Date) => d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+
+  const getFollowUpDateStr = () => {
+    if (!followUpDate) return '';
+    const days = parseInt(followUpDate, 10);
+    if (!isNaN(days)) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return formatIST(d);
+    }
+    return formatIST(new Date(followUpDate));
+  };
+
+  const handlePrintPrescription = () => {
+    if (!patient) return;
+    const cleanRx = prescription.filter(rx => rx.name.trim() !== '');
+    const todayStr = formatIST(new Date());
+    const followUpStr = getFollowUpDateStr();
+    const hospitalName = metadata.hospitalName || 'Hospital';
+
+    const vitalsHtml = [
+      bp && `<span><b>BP:</b> ${escHtml(bp)}</span>`,
+      temperature && `<span><b>Temp:</b> ${escHtml(temperature)}°F</span>`,
+      pulse && `<span><b>Pulse:</b> ${escHtml(pulse)}/min</span>`,
+      weight && `<span><b>Weight:</b> ${escHtml(weight)} kg</span>`,
+      spo2 && `<span><b>SpO2:</b> ${escHtml(spo2)}%</span>`,
+    ].filter(Boolean).join(' &nbsp;|&nbsp; ');
+
+    const rxRowsHtml = cleanRx.map((rx, i) => `
+      <tr>
+        <td style="border:1px solid #ccc;padding:5px 8px;text-align:center;">${i + 1}</td>
+        <td style="border:1px solid #ccc;padding:5px 8px;">${escHtml(rx.type)}</td>
+        <td style="border:1px solid #ccc;padding:5px 8px;font-weight:600;">${escHtml(rx.name)}</td>
+        <td style="border:1px solid #ccc;padding:5px 8px;text-align:center;">${escHtml(rx.dose)}</td>
+        <td style="border:1px solid #ccc;padding:5px 8px;text-align:center;">${escHtml(rx.days)}</td>
+        <td style="border:1px solid #ccc;padding:5px 8px;">${escHtml(rx.instructions)}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Prescription - ${escHtml(patient.name)}</title>
+<style>
+  @page { size: A5; margin: 10mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #222; padding: 8mm; max-width: 148mm; }
+  .header { text-align: center; border-bottom: 2px solid #4338ca; padding-bottom: 8px; margin-bottom: 10px; }
+  .header h1 { font-size: 18px; color: #4338ca; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+  .header p { font-size: 10px; color: #666; margin-top: 2px; }
+  .rx-symbol { font-size: 22px; font-weight: bold; color: #4338ca; font-family: serif; }
+  .patient-info { display: flex; justify-content: space-between; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; background: #f9fafb; }
+  .patient-info div { font-size: 11px; }
+  .patient-info b { color: #333; }
+  .section { margin-bottom: 8px; }
+  .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #4338ca; letter-spacing: 1px; margin-bottom: 4px; border-bottom: 1px solid #e5e7eb; padding-bottom: 2px; }
+  .vitals { font-size: 11px; color: #444; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { background: #eef2ff; color: #4338ca; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { background: #4338ca; color: white; padding: 6px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { font-size: 11px; }
+  .advice-box { background: #fffbeb; border: 1px solid #f59e0b; border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #92400e; }
+  .follow-up { background: #eef2ff; border: 1px solid #818cf8; border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #4338ca; font-weight: 700; display: inline-block; }
+  .footer { margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+  .signature { text-align: right; }
+  .signature .line { border-top: 1px solid #333; width: 160px; margin-bottom: 4px; margin-left: auto; }
+  .signature p { font-size: 10px; color: #666; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+  <div class="header">
+    <h1>${escHtml(hospitalName)}</h1>
+    <p>Prescription</p>
+  </div>
+
+  <div class="patient-info">
+    <div><b>Patient:</b> ${escHtml(patient.name)}</div>
+    <div><b>Age/Gender:</b> ${escHtml(String(patient.age || '-'))} / ${escHtml(patient.gender || '-')}</div>
+    <div><b>Queue:</b> #${escHtml(String(patient.queueId || '-'))}</div>
+    <div><b>Date:</b> ${todayStr}</div>
+  </div>
+
+  ${vitalsHtml ? `<div class="section"><div class="section-title">Vitals</div><div class="vitals">${vitalsHtml}</div></div>` : ''}
+
+  ${complaints.length > 0 ? `<div class="section"><div class="section-title">Chief Complaints</div><div class="tags">${complaints.map(c => `<span class="tag">${escHtml(c)}</span>`).join('')}</div></div>` : ''}
+
+  ${diagnosis.length > 0 ? `<div class="section"><div class="section-title">Diagnosis</div><div class="tags">${diagnosis.map(d => `<span class="tag">${escHtml(d)}</span>`).join('')}</div></div>` : ''}
+
+  ${cleanRx.length > 0 ? `<div class="section">
+    <div class="section-title"><span class="rx-symbol">&#8478;</span> Prescription</div>
+    <table>
+      <thead><tr><th>#</th><th>Type</th><th>Medicine</th><th>Dose</th><th>Days</th><th>Instructions</th></tr></thead>
+      <tbody>${rxRowsHtml}</tbody>
+    </table>
+  </div>` : ''}
+
+  ${advice ? `<div class="section"><div class="section-title">Advice / Instructions</div><div class="advice-box">${escHtml(advice)}</div></div>` : ''}
+
+  ${followUpStr ? `<div class="section"><div class="section-title">Follow-up</div><div class="follow-up">Next Visit: ${followUpStr}</div></div>` : ''}
+
+  <div class="footer">
+    <div style="font-size:10px;color:#999;">Generated by Clinic-Q</div>
+    <div class="signature">
+      <div class="line"></div>
+      <p>Doctor's Signature</p>
+    </div>
+  </div>
+</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 400);
+    }
+  };
 
   if (!patient) {
     return (
@@ -428,11 +550,28 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
 
       {/* Action Buttons */}
       <div className="flex gap-3 flex-shrink-0 pt-1">
+        <button
+          type="button"
+          onClick={handlePrintPrescription}
+          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-sm uppercase tracking-[0.15em]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          Print Prescription
+        </button>
+        <button
+          type="submit"
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-sm uppercase tracking-[0.15em]"
+        >
+          <Icons.CheckCircle />
+          Finalize (Ctrl+Ent)
+        </button>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-3.5 rounded-2xl shadow-sm transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-sm uppercase tracking-[0.2em] border-2 border-slate-200"
+            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black py-3.5 rounded-2xl shadow-sm transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-sm uppercase tracking-[0.15em] border-2 border-slate-200"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -440,13 +579,6 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
             Close
           </button>
         )}
-        <button
-          type="submit"
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition-all transform active:scale-[0.99] flex items-center justify-center gap-3 text-sm uppercase tracking-[0.2em]"
-        >
-          <Icons.CheckCircle />
-          Finalize Consultation (Ctrl+Ent)
-        </button>
       </div>
 
       {showHistoryModal && patient?.patientId && patient?.hasPreviousVisits && (
