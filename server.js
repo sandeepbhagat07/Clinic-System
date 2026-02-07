@@ -589,6 +589,18 @@ app.patch('/api/patients/:id', requireAuth, async (req, res) => {
             let val = updates[key];
             if (timestampFields.includes(key)) val = toISOSafe(val);
             if (jsonbFields.includes(key)) val = JSON.stringify(val);
+            if (key === 'followUpDate' && val) {
+                const validDayOptions = ['5', '7', '8', '15', '30'];
+                if (validDayOptions.includes(String(val))) {
+                    const days = parseInt(val, 10);
+                    const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+                    d.setDate(d.getDate() + days);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    val = `${yyyy}-${mm}-${dd}`;
+                }
+            }
             pgUpdates[pgKey] = val;
         });
 

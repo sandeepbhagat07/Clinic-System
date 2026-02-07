@@ -381,13 +381,19 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">Follow-up Date</label>
-          <input
-            type="date"
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] ml-1">Follow-up</label>
+          <select
             className="w-full bg-white border-2 border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
             value={followUpDate}
             onChange={e => setFollowUpDate(e.target.value)}
-          />
+          >
+            <option value="">-- Select --</option>
+            <option value="5">5 Days</option>
+            <option value="7">7 Days</option>
+            <option value="8">8 Days</option>
+            <option value="15">15 Days</option>
+            <option value="30">1 Month</option>
+          </select>
         </div>
       </div>
 
