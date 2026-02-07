@@ -38,6 +38,10 @@ The system is designed for daily-based patient management, where queues reset da
 - **Socket.IO**: Real-time bidirectional event-based communication.
 
 ## Recent Changes
+- 2026-02-07: Doctor Panel Keyboard & UX Improvements
+  - F2 keyboard shortcut for Doctor on Home screen: opens consultation form for the first patient in OPD queue
+  - Close button added to Doctor Consultation Form: allows doctor to exit form without finalizing
+  - Doctor can now switch between OPD patients without completing consultation first
 - 2026-02-06: API Authentication & Security
   - Token-based session authentication added to backend
   - Login returns a session token; all sensitive API endpoints require Bearer token
