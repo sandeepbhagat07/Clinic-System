@@ -1,6 +1,6 @@
-# ClinicFlow - Local Setup Guide
+# Clinic-Q - Local Setup Guide
 
-This guide provides complete step-by-step instructions to run ClinicFlow on your local machine (Windows, Mac, or Linux).
+This guide provides complete step-by-step instructions to run Clinic-Q on your local machine (Windows, Mac, or Linux).
 
 ---
 
@@ -15,7 +15,8 @@ This guide provides complete step-by-step instructions to run ClinicFlow on your
 7. [Run the Application](#run-the-application)
 8. [Accessing the Application](#accessing-the-application)
 9. [Application Features](#application-features)
-10. [Troubleshooting](#troubleshooting)
+10. [Keyboard Shortcuts](#keyboard-shortcuts)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -46,13 +47,13 @@ psql --version    # Should show psql (PostgreSQL) 14.x or higher
 ### Option A: Download as ZIP (Easiest)
 
 1. Download the ZIP file from Replit (Files panel → ⋮ menu → Download as ZIP)
-2. Extract the ZIP to a folder, e.g., `C:\Projects\ClinicFlow` (Windows) or `~/Projects/ClinicFlow` (Mac/Linux)
+2. Extract the ZIP to a folder, e.g., `C:\Projects\Clinic-Q` (Windows) or `~/Projects/Clinic-Q` (Mac/Linux)
 
 ### Option B: Clone via Git
 
 ```bash
-git clone <your-replit-git-url> ClinicFlow
-cd ClinicFlow
+git clone <your-replit-git-url> Clinic-Q
+cd Clinic-Q
 ```
 
 ---
@@ -114,9 +115,9 @@ psql -U postgres
 Enter the password you set during installation, then run:
 
 ```sql
-CREATE USER clinicflow WITH PASSWORD 'your_secure_password';
-CREATE DATABASE clinicflow_db OWNER clinicflow;
-GRANT ALL PRIVILEGES ON DATABASE clinicflow_db TO clinicflow;
+CREATE USER clinicq WITH PASSWORD 'your_secure_password';
+CREATE DATABASE clinicq_db OWNER clinicq;
+GRANT ALL PRIVILEGES ON DATABASE clinicq_db TO clinicq;
 \q
 ```
 
@@ -129,26 +130,26 @@ sudo -u postgres psql
 Then run:
 
 ```sql
-CREATE USER clinicflow WITH PASSWORD 'your_secure_password';
-CREATE DATABASE clinicflow_db OWNER clinicflow;
-GRANT ALL PRIVILEGES ON DATABASE clinicflow_db TO clinicflow;
+CREATE USER clinicq WITH PASSWORD 'your_secure_password';
+CREATE DATABASE clinicq_db OWNER clinicq;
+GRANT ALL PRIVILEGES ON DATABASE clinicq_db TO clinicq;
 \q
 ```
 
 ### Step 2: Import the Database Schema
 
-Navigate to your ClinicFlow project folder and run:
+Navigate to your Clinic-Q project folder and run:
 
 #### Windows
 
 ```cmd
-psql -U clinicflow -d clinicflow_db -f database_schema.sql
+psql -U clinicq -d clinicq_db -f database_schema.sql
 ```
 
 #### macOS / Linux
 
 ```bash
-psql -U clinicflow -d clinicflow_db -f database_schema.sql
+psql -U clinicq -d clinicq_db -f database_schema.sql
 ```
 
 Enter the password when prompted.
@@ -161,7 +162,7 @@ Enter the password when prompted.
 
 ## Database Structure
 
-ClinicFlow uses 4 main tables:
+Clinic-Q uses 5 main tables:
 
 | Table | Description |
 |-------|-------------|
@@ -169,6 +170,7 @@ ClinicFlow uses 4 main tables:
 | **visits** | Each clinic visit record with queue info, status, notes, and medicines. |
 | **messages** | Real-time chat messages between Operator and Doctor. |
 | **events** | Calendar events with reminders for Doctor and Operator. |
+| **plan_inquiries** | Pricing plan inquiry submissions from the marketing website. |
 
 ### Key Fields in visits table:
 
@@ -206,7 +208,7 @@ cp .env.example .env
 Open `.env` in a text editor and update the values:
 
 ```env
-DATABASE_URL=postgresql://clinicflow:your_secure_password@localhost:5432/clinicflow_db
+DATABASE_URL=postgresql://clinicq:your_secure_password@localhost:5432/clinicq_db
 ```
 
 Replace `your_secure_password` with the password you set in the database setup step.
@@ -275,12 +277,36 @@ Open your web browser and go to:
 http://localhost:5000
 ```
 
-### Default Login Credentials
+### Login Credentials
 
-| Role | Username | Password |
-|------|----------|----------|
-| Operator | OPERATOR | op123 |
-| Doctor | DOCTOR | doc123 |
+Login requires 3 fields: **Mobile Number**, **Username**, and **Password**.
+
+Credentials are configured in the `secretcred.json` file in the project root.
+
+| Role | Mobile | Username | Password |
+|------|--------|----------|----------|
+| Doctor | 9033338800 | SANDEEP | 123 |
+| Operator | 9033775500 | HETAL | 123 |
+
+To add or modify users, edit the `secretcred.json` file:
+```json
+{
+  "users": [
+    {
+      "username": "SANDEEP",
+      "password": "123",
+      "mobile": "9033338800",
+      "role": "DOCTOR"
+    },
+    {
+      "username": "HETAL",
+      "password": "123",
+      "mobile": "9033775500",
+      "role": "OPERATOR"
+    }
+  ]
+}
+```
 
 ### Application URLs
 
@@ -288,12 +314,13 @@ http://localhost:5000
 |-----|-------------|
 | http://localhost:5000 | Main application (login required) |
 | http://localhost:5000/display | Queue Display Screen (no login, for waiting room TV) |
+| http://localhost:5000/site/ | Marketing Website (Home, About, Pricing, Contact) |
 
 ---
 
 ## Application Features
 
-### Version 1.26 Features
+### Version 1.47 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -301,10 +328,17 @@ http://localhost:5000
 | **Patient Registration** | Register patients with mobile lookup for returning patients |
 | **Doctor Consultation** | Add notes and medicines during consultation |
 | **Real-time Chat** | Operator and Doctor can communicate about patients |
-| **Queue Display Screen** | Public TV display at /display URL for waiting room |
+| **Statistics/Info Page** | View daily and overall clinic statistics |
 | **Event Calendar** | Monthly/daily calendar with event types and reminders |
 | **Patient History** | View complete visit history for any patient |
-| **Patient Report** | Search and export patient records with date filters |
+| **Patient Reports** | Search and export patient records with date filters and CSV export |
+| **OPD Status Toggle** | Pause/resume OPD with configurable status messages |
+| **Queue Display Screen** | Public TV display at /display URL for waiting room |
+| **Login Persistence** | Token-based authentication with session persistence |
+| **Resizable Dashboard** | Adjustable column widths on the dashboard |
+| **Marketing Website** | Public website at /site/ with Home, About, Pricing, Contact pages |
+| **Token-based Auth** | Secure authentication with bearer tokens |
+| **Keyboard Shortcuts** | F2 for quick access, Ctrl+Enter for form submission |
 | **Call Operator** | Doctor can send alert to Operator with sound notification |
 | **Queue Reordering** | Up/Down buttons to reorder waiting queue |
 | **Hospital Name Marquee** | Animated hospital name on display screen (configurable in metadata.json) |
@@ -313,9 +347,20 @@ http://localhost:5000
 
 | File | Purpose |
 |------|---------|
-| `metadata.json` | Hospital name and app configuration |
+| `metadata.json` | Hospital name, app name, and configuration |
+| `secretcred.json` | Login credentials (mobile, username, password, role) |
+| `OPDSTATUS.txt` | OPD pause status messages (one per line) |
 | `.env` | Database connection string |
 | `vite.config.ts` | Frontend development server settings |
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut | Operator Role | Doctor Role |
+|----------|--------------|-------------|
+| **F2** | Focus mobile number input field | Open first OPD patient consultation |
+| **Ctrl+Enter** | Submit current form | Submit current form |
 
 ---
 
@@ -376,7 +421,7 @@ npm install
 
 **Solution:**
 ```bash
-psql -U clinicflow -d clinicflow_db -f database_schema.sql
+psql -U clinicq -d clinicq_db -f database_schema.sql
 ```
 
 ### Issue: "FATAL: password authentication failed"
@@ -386,7 +431,7 @@ psql -U clinicflow -d clinicflow_db -f database_schema.sql
 **Solution:**
 1. Reset the database user password:
    ```sql
-   ALTER USER clinicflow WITH PASSWORD 'new_password';
+   ALTER USER clinicq WITH PASSWORD 'new_password';
    ```
 2. Update `.env` with the new password
 
@@ -404,9 +449,18 @@ npm install pg
 **Cause:** No patients registered for today.
 
 **Solution:**
-1. Login as OPERATOR
+1. Login as Operator (Mobile: 9033775500, Username: HETAL, Password: 123)
 2. Register a new patient
 3. The display screen will update automatically via Socket.IO
+
+### Issue: Login fails with correct credentials
+
+**Cause:** Credentials in `secretcred.json` may not match what you're entering.
+
+**Solution:**
+1. Check `secretcred.json` for the exact mobile, username, and password
+2. Username matching is case-insensitive
+3. Mobile and password must match exactly
 
 ---
 
@@ -439,4 +493,4 @@ If you encounter issues not covered in this guide, check:
 
 ---
 
-**ClinicFlow v1.26** | Last Updated: February 2026
+**Clinic-Q v1.47** | Last Updated: February 7, 2026

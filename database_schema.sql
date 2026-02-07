@@ -1,13 +1,14 @@
--- ClinicFlow OPD Management Database Schema
+-- Clinic-Q OPD Management Database Schema
 -- PostgreSQL Database Setup Script
--- Version 1.37
--- Last Updated: February 3, 2026
+-- Version 1.47
+-- Last Updated: February 7, 2026
 
 -- Drop existing tables if they exist (for fresh setup)
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS visits CASCADE;
 DROP TABLE IF EXISTS patient CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
+DROP TABLE IF EXISTS plan_inquiries CASCADE;
 
 -- =============================================
 -- PATIENT MASTER TABLE
@@ -34,10 +35,10 @@ CREATE TABLE visits (
     queue_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     age INTEGER,
-    gender VARCHAR(20),
+    gender VARCHAR(10),
     category VARCHAR(50) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    city VARCHAR(255),
+    city VARCHAR(100),
     mobile VARCHAR(20),
     status VARCHAR(20) NOT NULL DEFAULT 'WAITING',
     created_at TIMESTAMP NOT NULL,
@@ -56,7 +57,7 @@ CREATE TABLE visits (
 -- Chat messages between operator and doctor for each patient
 CREATE TABLE messages (
     id VARCHAR(50) PRIMARY KEY,
-    patient_id VARCHAR(50) NOT NULL,
+    patient_id VARCHAR(50) NOT NULL REFERENCES visits(id) ON DELETE CASCADE,
     text TEXT NOT NULL,
     sender VARCHAR(20) NOT NULL,
     timestamp BIGINT NOT NULL
@@ -81,6 +82,23 @@ CREATE TABLE events (
 );
 
 -- =============================================
+-- PLAN INQUIRIES TABLE
+-- =============================================
+-- Stores pricing plan inquiry submissions from the marketing website
+CREATE TABLE plan_inquiries (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    hospital_name VARCHAR(255) NOT NULL,
+    address TEXT,
+    mobile VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    plan_type VARCHAR(50) NOT NULL,
+    days INTEGER DEFAULT 0,
+    amount INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT now()
+);
+
+-- =============================================
 -- INDEXES FOR PERFORMANCE
 -- =============================================
 CREATE INDEX idx_visits_status ON visits(status);
@@ -92,6 +110,8 @@ CREATE INDEX idx_patient_name ON patient(name);
 CREATE INDEX idx_events_date ON events(event_date);
 CREATE INDEX idx_events_created_by ON events(created_by);
 CREATE INDEX idx_messages_patient_id ON messages(patient_id);
+CREATE INDEX idx_plan_inquiries_email ON plan_inquiries(email);
+CREATE INDEX idx_plan_inquiries_mobile ON plan_inquiries(mobile);
 
 -- =============================================
 -- TABLE REFERENCE
@@ -113,12 +133,17 @@ CREATE INDEX idx_messages_patient_id ON messages(patient_id);
 --
 -- messages: Real-time chat
 --   - sender: OPERATOR | DOCTOR
---   - patient_id: Links to visits.id
+--   - patient_id: Links to visits.id (CASCADE delete)
 --
 -- events: Calendar
 --   - event_type: NORMAL | OPERATION | VISIT | HOSPITAL RELATED | SOCIAL
 --   - remind_me: Shows notification dot on calendar menu
 --   - created_by: OPERATOR | DOCTOR
+--
+-- plan_inquiries: Marketing website plan inquiries
+--   - plan_type: FREE TRIAL | STARTER PLAN | PROFESSIONAL PLAN | PAID SUPPORT PLAN
+--   - days: Plan duration in days
+--   - amount: Plan cost amount
 
 -- =============================================
 -- END OF SCHEMA

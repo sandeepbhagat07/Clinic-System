@@ -1,6 +1,6 @@
-# ClinicFlow OPD Management - Setup Guide
+# Clinic-Q OPD Management - Setup Guide
 
-Complete step-by-step instructions to host ClinicFlow on your local machine or any server.
+Complete step-by-step instructions to host Clinic-Q on your local machine or any server.
 
 ---
 
@@ -42,7 +42,7 @@ psql --version    # Should show psql 14.x or higher
 ```bash
 # If using git
 git clone <your-repository-url>
-cd clinicflow-opd-management
+cd clinic-q
 
 # Or extract the downloaded ZIP file
 ```
@@ -58,7 +58,7 @@ See [Database Setup](#database-setup) section below.
 ### Step 4: Configure Environment Variables
 Create a `.env` file in the project root:
 ```bash
-DATABASE_URL=postgresql://username:password@localhost:5432/clinicflow
+DATABASE_URL=postgresql://username:password@localhost:5432/clinicq
 ```
 Note: The application uses `DATABASE_URL` as the primary connection string. This single variable contains all database connection details.
 
@@ -76,6 +76,18 @@ Open your browser and go to: `http://localhost:5000`
 - Express backend runs on port 3001 (API server)
 - Vite automatically proxies `/api` and `/socket.io` requests to the backend
 
+### Step 7: Login
+Login requires 3 fields: **Mobile Number**, **Username**, and **Password**.
+
+Credentials are configured in the `secretcred.json` file.
+
+**Default Credentials:**
+
+| Role | Mobile | Username | Password |
+|------|--------|----------|----------|
+| Doctor | 9033338800 | SANDEEP | 123 |
+| Operator | 9033775500 | HETAL | 123 |
+
 ---
 
 ## Database Setup
@@ -89,33 +101,33 @@ psql -U postgres
 
 2. **Create Database**
 ```sql
-CREATE DATABASE clinicflow;
-\c clinicflow
+CREATE DATABASE clinicq;
+\c clinicq
 ```
 
 3. **Run Schema Script**
 ```bash
-psql -U postgres -d clinicflow -f database_schema.sql
+psql -U postgres -d clinicq -f database_schema.sql
 ```
 
 ### Option B: Using pgAdmin
 
 1. Open pgAdmin and connect to your PostgreSQL server
 2. Right-click on "Databases" and select "Create" > "Database"
-3. Name it `clinicflow` and click "Save"
+3. Name it `clinicq` and click "Save"
 4. Right-click on the new database > "Query Tool"
 5. Open `database_schema.sql` file and execute it
 
 ### Option C: Using Command in One Line
 ```bash
-psql -U postgres -c "CREATE DATABASE clinicflow;" && psql -U postgres -d clinicflow -f database_schema.sql
+psql -U postgres -c "CREATE DATABASE clinicq;" && psql -U postgres -d clinicq -f database_schema.sql
 ```
 
 ### Verify Database Setup
 ```bash
-psql -U postgres -d clinicflow -c "\dt"
+psql -U postgres -d clinicq -c "\dt"
 ```
-You should see 4 tables: `patient`, `visits`, `messages`, `events`
+You should see 5 tables: `patient`, `visits`, `messages`, `events`, `plan_inquiries`
 
 ---
 
@@ -125,13 +137,36 @@ You should see 4 tables: `patient`, `visits`, `messages`, `events`
 Customize your clinic name and app settings:
 ```json
 {
-  "name": "ClinicFlow OPD Management",
+  "name": "Clinic-Q OPD Management",
   "description": "OPD management system",
-  "hospitalName": "Your Hospital Name Here"
+  "hospitalName": "Your Hospital Name Here",
+  "appName": "Clinic-Q"
 }
 ```
 
-### 2. OPDSTATUS.txt
+### 2. secretcred.json
+Login credentials configuration. Each user has a mobile number, username, password, and role:
+```json
+{
+  "users": [
+    {
+      "username": "SANDEEP",
+      "password": "123",
+      "mobile": "9033338800",
+      "role": "DOCTOR"
+    },
+    {
+      "username": "HETAL",
+      "password": "123",
+      "mobile": "9033775500",
+      "role": "OPERATOR"
+    }
+  ]
+}
+```
+To add new users, add entries to the `users` array with the appropriate role (`DOCTOR` or `OPERATOR`).
+
+### 3. OPDSTATUS.txt
 Add OPD pause reasons (one per line). Supports multiple languages:
 ```
 OPD Starts from 09:30am
@@ -140,7 +175,7 @@ DOCTOR is in Operation. Please Wait
 DOCTOR is Currently Not Available
 ```
 
-### 3. vite.config.ts
+### 4. vite.config.ts
 For local development, the default config works. For production behind a proxy, you may need to adjust the server settings.
 
 ---
@@ -165,7 +200,7 @@ This creates a `dist` folder with the compiled frontend.
 
 2. **Start the production server**
 ```bash
-DATABASE_URL=postgresql://user:pass@localhost:5432/clinicflow node server.js
+DATABASE_URL=postgresql://user:pass@localhost:5432/clinicq node server.js
 ```
 Access at: http://localhost:3001 (or set PORT env var to use a different port)
 
@@ -196,22 +231,22 @@ sudo npm install -g pm2
 2. **Configure PostgreSQL**
 ```bash
 sudo -u postgres psql
-CREATE USER clinicflow_user WITH PASSWORD 'your_secure_password';
-CREATE DATABASE clinicflow OWNER clinicflow_user;
+CREATE USER clinicq_user WITH PASSWORD 'your_secure_password';
+CREATE DATABASE clinicq OWNER clinicq_user;
 \q
 ```
 
 3. **Clone and setup project**
 ```bash
-git clone <your-repo-url> /var/www/clinicflow
-cd /var/www/clinicflow
+git clone <your-repo-url> /var/www/clinicq
+cd /var/www/clinicq
 npm install
 npm run build
 ```
 
 4. **Set environment variables**
 ```bash
-export DATABASE_URL="postgresql://clinicflow_user:your_secure_password@localhost:5432/clinicflow"
+export DATABASE_URL="postgresql://clinicq_user:your_secure_password@localhost:5432/clinicq"
 export PORT=5000
 ```
 Add these to `/etc/environment` or create a `.env` file for persistence.
@@ -223,7 +258,7 @@ psql $DATABASE_URL -f database_schema.sql
 
 6. **Start with PM2**
 ```bash
-PORT=5000 pm2 start server.js --name clinicflow
+PORT=5000 pm2 start server.js --name clinicq
 pm2 save
 pm2 startup
 ```
@@ -238,7 +273,7 @@ sudo apt install nginx
 
 2. **Create Nginx config**
 ```bash
-sudo nano /etc/nginx/sites-available/clinicflow
+sudo nano /etc/nginx/sites-available/clinicq
 ```
 
 3. **Add configuration**
@@ -270,7 +305,7 @@ server {
 
 4. **Enable and restart Nginx**
 ```bash
-sudo ln -s /etc/nginx/sites-available/clinicflow /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/clinicq /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 ```
@@ -305,7 +340,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://clinicflow:password@db:5432/clinicflow
+      - DATABASE_URL=postgresql://clinicq:password@db:5432/clinicq
       - PORT=5000
     depends_on:
       - db
@@ -314,9 +349,9 @@ services:
   db:
     image: postgres:14-alpine
     environment:
-      - POSTGRES_USER=clinicflow
+      - POSTGRES_USER=clinicq
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=clinicflow
+      - POSTGRES_DB=clinicq
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
@@ -337,7 +372,7 @@ docker-compose up -d
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| DATABASE_URL | Yes | Full PostgreSQL connection string | postgresql://user:pass@localhost:5432/clinicflow |
+| DATABASE_URL | Yes | Full PostgreSQL connection string | postgresql://user:pass@localhost:5432/clinicq |
 | PORT | No | Backend server port (default: 3001) | 3001 |
 
 **Note:** The application uses only `DATABASE_URL` to connect to PostgreSQL. The connection string format is:
@@ -355,7 +390,7 @@ postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE_NAME
 sudo systemctl status postgresql
 
 # Test connection
-psql -h localhost -U your_user -d clinicflow -c "SELECT 1"
+psql -h localhost -U your_user -d clinicq -c "SELECT 1"
 ```
 
 ### Port Already in Use
@@ -370,7 +405,7 @@ kill -9 <PID>
 ### Permission Denied Errors
 ```bash
 # Fix file permissions
-sudo chown -R $USER:$USER /var/www/clinicflow
+sudo chown -R $USER:$USER /var/www/clinicq
 ```
 
 ### Frontend Not Loading
@@ -394,11 +429,44 @@ sudo chown -R $USER:$USER /var/www/clinicflow
 
 ---
 
+## Application Features (v1.47)
+
+| Feature | Description |
+|---------|-------------|
+| **Queue Management** | Waiting, OPD, and Completed queues with real-time sync |
+| **Patient Registration** | Register patients with mobile lookup for returning patients |
+| **Doctor Consultation** | Add notes and medicines during consultation |
+| **Real-time Chat** | Operator and Doctor can communicate about patients |
+| **Statistics/Info Page** | View daily and overall clinic statistics |
+| **Event Calendar** | Monthly/daily calendar with event types and reminders |
+| **Patient History** | View complete visit history for any patient |
+| **Patient Reports** | Search and export patient records with date filters and CSV export |
+| **OPD Status Toggle** | Pause/resume OPD with configurable status messages |
+| **Queue Display Screen** | Public TV display at /display URL for waiting room |
+| **Login Persistence** | Token-based authentication with session persistence |
+| **Resizable Dashboard** | Adjustable column widths on the dashboard |
+| **Marketing Website** | Public website at /site/ with Home, About, Pricing, Contact pages |
+| **Token-based Auth** | Secure authentication with bearer tokens |
+| **Keyboard Shortcuts** | F2 for quick access, Ctrl+Enter for form submission |
+| **Call Operator** | Doctor can send alert to Operator with sound notification |
+| **Queue Reordering** | Up/Down buttons to reorder waiting queue |
+| **Hospital Name Marquee** | Animated hospital name on display screen (configurable in metadata.json) |
+
+### Marketing Website
+
+The marketing website is accessible at `/site/` and includes:
+- **Home** (`/site/`) - Landing page with product overview
+- **About** (`/site/about.html`) - About the product and team
+- **Pricing** (`/site/pricing.html`) - Plans and pricing with inquiry form
+- **Contact** (`/site/contact.html`) - Contact information
+
+---
+
 ## Support
 
 For issues and questions:
 1. Check the [Troubleshooting](#troubleshooting) section
-2. Review server logs: `pm2 logs clinicflow`
+2. Review server logs: `pm2 logs clinicq`
 3. Check browser console for frontend errors
 
 ---
@@ -406,13 +474,35 @@ For issues and questions:
 ## File Structure
 
 ```
-clinicflow/
+clinic-q/
 ├── server.js              # Backend Express server
 ├── App.tsx                # Main React component
+├── index.tsx              # React entry point
+├── index.html             # HTML entry point
+├── types.ts               # TypeScript type definitions
+├── constants.tsx           # Application constants
 ├── components/            # React components
-├── database_schema.sql    # PostgreSQL schema
-├── metadata.json          # App configuration
-├── OPDSTATUS.txt          # OPD pause reasons
+│   ├── Calendar.tsx       # Event calendar
+│   ├── ChatModal.tsx      # Real-time chat modal
+│   ├── DoctorConsultationForm.tsx  # Doctor consultation form
+│   ├── Login.tsx          # Login component
+│   ├── PatientCard.tsx    # Patient card display
+│   ├── PatientForm.tsx    # Patient registration form
+│   ├── PatientHistoryModal.tsx  # Patient history viewer
+│   ├── PatientReport.tsx  # Patient reports with CSV export
+│   ├── QueueColumn.tsx    # Queue column component
+│   ├── QueueDisplay.tsx   # Waiting room display
+│   └── Statistics.tsx     # Statistics/Info page
+├── website/               # Marketing website
+│   ├── index.html         # Home page
+│   ├── about.html         # About page
+│   ├── pricing.html       # Pricing page
+│   └── contact.html       # Contact page
+├── database_schema.sql    # PostgreSQL schema (5 tables)
+├── database_backup.sql    # Database backup with data
+├── metadata.json          # App configuration (hospital name, etc.)
+├── secretcred.json        # Login credentials configuration
+├── OPDSTATUS.txt          # OPD pause status messages
 ├── package.json           # Dependencies
 ├── vite.config.ts         # Vite configuration
 ├── tsconfig.json          # TypeScript configuration
@@ -421,5 +511,5 @@ clinicflow/
 
 ---
 
-**Version:** 1.37  
-**Last Updated:** February 3, 2026
+**Version:** 1.47  
+**Last Updated:** February 7, 2026
