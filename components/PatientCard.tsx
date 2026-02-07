@@ -38,9 +38,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
   const AvatarIcon = patient.gender === 'Male' ? Icons.MaleAvatar : Icons.FemaleAvatar;
 
   const isOPD = patient.status === PatientStatus.OPD;
+  const isDoctorOPD = activeView === 'DOCTOR' && isOPD;
   const activeClasses = isActive ? 'ring-4 ring-indigo-500 ring-offset-2 scale-[1.02] shadow-xl z-30' : 'hover:shadow-md';
   
-  // Theme logic based on Category and Type
   const isVisitorCategory = patient.category === PatientCategory.VISITOR;
   const themeClasses = TYPE_THEMES[patient.type] || 'bg-slate-50 border-slate-200';
   const animationClasses = isVisitorCategory ? 'animate-radium-glow' : '';
@@ -59,6 +59,87 @@ const PatientCard: React.FC<PatientCardProps> = ({
     onOpenChat?.(patient.id);
   };
 
+  if (isDoctorOPD) {
+    return (
+      <div 
+        onClick={() => onClick?.(patient.id)}
+        className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : ''} group relative overflow-hidden flex flex-col`}
+      >
+        {isVisitorCategory && (
+          <div className="absolute top-0 right-0 bg-red-600 text-white font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10 text-[8px] shadow-sm">
+            Visitor
+          </div>
+        )}
+
+        <div className="flex items-start gap-3 p-3">
+          <div className="flex flex-col items-center gap-2 flex-shrink-0">
+            <div className="rounded-full overflow-hidden shadow-sm w-14 h-14">
+              <AvatarIcon className="w-full h-full" />
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg px-1.5 py-0.5 text-[8px] font-bold text-slate-500 uppercase tracking-widest min-w-[60px] text-center shadow-sm">
+              {patient.type}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex items-center gap-2 mb-1">
+              {!isVisitorCategory && (
+                <span className="bg-gray-200 text-gray-900 font-black px-2 py-0.5 rounded-full text-[11px] flex-shrink-0 shadow-md flex items-center gap-0.5">
+                  <span className="text-[10px] text-gray-600">#</span>
+                  <span>{patient.queueId}</span>
+                </span>
+              )}
+              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-lg font-bold">
+                {patient.name}
+              </h4>
+              <button 
+                onClick={handleChatClick} 
+                className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 flex-shrink-0 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
+                title="Discussion"
+              >
+                <Icons.Message />
+                {patient.hasUnreadAlert && (
+                  <span className="absolute top-0.5 right-0.5 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                  </span>
+                )}
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="font-semibold text-slate-600 truncate text-sm">
+                {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
+                {patient.mobile && (
+                  <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
+                )}
+              </div>
+              {patient.inTime && (
+                <div className="bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 px-2 py-0.5 text-[11px]">
+                  IN: {formatTime(patient.inTime)}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-black text-slate-900 truncate tracking-tight text-base">
+                {patient.city}
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
+                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1 hover:bg-emerald-50 rounded-lg flex-shrink-0 flex items-center gap-1 text-xs font-bold uppercase"
+                title="Mark Done"
+              >
+                <Icons.CheckCircle />
+                <span className="hidden group-hover:inline">Done</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       draggable={!onClick && activeView === 'OPERATOR'}
@@ -66,17 +147,14 @@ const PatientCard: React.FC<PatientCardProps> = ({
       onClick={() => onClick?.(patient.id)}
       className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : (activeView === 'OPERATOR' ? 'cursor-grab active:cursor-grabbing' : '')} group relative overflow-hidden flex flex-col`}
     >
-      {/* Visitor Badge - High Visibility */}
       {isVisitorCategory && (
         <div className="absolute top-0 right-0 bg-red-600 text-white font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10 text-[8px] shadow-sm">
           Visitor
         </div>
       )}
 
-      {/* Main Content */}
       <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : 'gap-3 p-4'}`}>
         
-        {/* Left Column: Avatar & Type Label */}
         <div className="flex flex-col items-center gap-3 flex-shrink-0">
           <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
             <AvatarIcon className="w-full h-full" />
@@ -86,9 +164,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
           </div>
         </div>
 
-        {/* Info Column */}
         <div className="flex-1 min-w-0 flex flex-col pt-0.5">
-          {/* Row 1: Queue ID Badge (High Visibility) and Name */}
           <div className="flex items-center gap-2 mb-1.5">
             {!isVisitorCategory && (
               <span className="bg-gray-200 text-gray-900 font-black px-3 py-1 rounded-full text-[12px] flex-shrink-0 shadow-md flex items-center gap-0.5">
@@ -101,10 +177,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </h4>
           </div>
           
-          {/* Row 2: Demographics + IN Time */}
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
-              {patient.age} yrs <span className="mx-1 text-slate-300">•</span> {patient.gender}
+              {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
             </div>
             {patient.inTime && (
               <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
@@ -113,7 +188,6 @@ const PatientCard: React.FC<PatientCardProps> = ({
             )}
           </div>
 
-          {/* Row 3: Location + OUT Time */}
           <div className="flex items-center justify-between gap-2 mt-auto">
             <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
               {patient.city}
@@ -127,7 +201,6 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       </div>
 
-      {/* Action Bar - Refined for professional UI */}
       <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
         
         <div className="flex items-center gap-1">

@@ -289,55 +289,44 @@ const DoctorConsultationForm: React.FC<DoctorConsultationFormProps> = ({ patient
 
   return (
     <form ref={formRef} onSubmit={handleSave} className="space-y-4 h-full flex flex-col overflow-auto">
-      {/* Patient Header */}
-      <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex flex-col gap-2 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              {patient.category !== PatientCategory.VISITOR && (
-                <span className="bg-indigo-900 text-white font-black px-2.5 py-1 rounded-lg text-[10px] shadow-sm tracking-widest flex items-center gap-0.5">
-                  <span className="opacity-60">#</span>
-                  <span>{patient.queueId}</span>
-                </span>
-              )}
-              <h2 className="text-2xl font-black text-indigo-900 uppercase truncate tracking-tight">
-                {patient.name}
-              </h2>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-indigo-600/70 uppercase tracking-widest">
-              <span>{patient.age} Yrs • {patient.gender} • {patient.type}</span>
-              {patient.mobile && (
-                <span className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-indigo-100 text-indigo-900 shadow-sm">
-                  <Icons.Phone /> {patient.mobile}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {patient.hasPreviousVisits && (
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(true)}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 shadow-sm transition-all"
-                title="View Patient History"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
-            )}
+      {/* Patient Header - Compact single row */}
+      <div className="bg-indigo-50/50 px-4 py-2.5 rounded-2xl border border-indigo-100 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {patient.category !== PatientCategory.VISITOR && (
+            <span className="bg-indigo-900 text-white font-black px-2.5 py-1 rounded-lg text-[10px] shadow-sm tracking-widest flex items-center gap-0.5 flex-shrink-0">
+              <span className="opacity-60">#</span>
+              <span>{patient.queueId}</span>
+            </span>
+          )}
+          <h2 className="text-xl font-black text-indigo-900 uppercase truncate tracking-tight">
+            {patient.name}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {patient.hasPreviousVisits && (
             <button
               type="button"
-              onClick={() => onOpenChat(patient.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-extrabold shadow-sm transition-all border-2 ${
-                patient.hasUnreadAlert
-                ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
-                : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
-              } text-xs uppercase tracking-widest`}
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl bg-white text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 shadow-sm transition-all"
+              title="View Patient History"
             >
-              <Icons.Message /> {patient.hasUnreadAlert ? 'URGENT ALERT' : 'CHAT'}
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenChat(patient.id)}
+            className={`flex items-center justify-center w-9 h-9 rounded-xl shadow-sm transition-all border-2 ${
+              patient.hasUnreadAlert
+              ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
+              : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+            }`}
+            title={patient.hasUnreadAlert ? 'Urgent Alert' : 'Chat'}
+          >
+            <Icons.Message />
+          </button>
         </div>
       </div>
 
