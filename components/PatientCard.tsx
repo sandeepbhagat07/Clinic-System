@@ -93,8 +93,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 {patient.name}
               </h4>
               {patient.inTime && (
-                <div className="bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 px-2 py-0.5 text-[11px]">
-                  IN: {formatTime(patient.inTime)}
+                <div className="bg-emerald-600 text-white rounded-xl font-black whitespace-nowrap shadow-md text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border-2 border-emerald-500 flex items-center gap-2">
+                  <Icons.Clock />
+                  <span>{formatTime(patient.inTime)}</span>
                 </div>
               )}
             </div>
