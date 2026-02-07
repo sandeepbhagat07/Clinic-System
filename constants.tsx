@@ -3,7 +3,7 @@ import React from 'react';
 import { PatientCategory, PatientType } from './types';
 
 export const CITIES = [
-  'New York', 'London', 'Mumbai', 'Tokyo', 'Nakhatrana - નખત્રાણા','Berlin', 
+  '--', 'New York', 'London', 'Mumbai', 'Tokyo', 'Nakhatrana - નખત્રાણા','Berlin', 
   'Paris', 'Sydney', 'Toronto', 'Dhavda - ધાવડા', 'Singapore', 'Dubai'
 ];
 
