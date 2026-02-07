@@ -41,6 +41,11 @@ The system is designed for daily-based patient management, where queues reset da
 - **TZ=Asia/Kolkata** — Server timezone is set to Indian Standard Time (IST) so queue resets and all date/time operations align with local clinic time.
 
 ## Recent Changes
+- 2026-02-08: Timezone Fix — TIMESTAMP WITH TIME ZONE
+  - All timestamp columns across all tables (visits, events, patient, plan_inquiries, tag tables) changed from TIMESTAMP WITHOUT TIME ZONE to TIMESTAMP WITH TIME ZONE
+  - PostgreSQL pool connection now sets timezone via options parameter: `-c timezone=Asia/Kolkata` (in addition to pool.on('connect') SET timezone)
+  - This ensures CURRENT_DATE and DATE(created_at) always use IST regardless of server location worldwide
+  - Previously, timestamps stored in UTC caused DATE comparisons to use UTC date, making patients added after midnight IST appear under the previous day
 - 2026-02-08: Structured Doctor Consultation Form
   - Complete redesign of DoctorConsultationForm with structured data entry
   - Vitals row: BP, Temperature, Pulse, Weight, SpO2 with labeled inputs and units

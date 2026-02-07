@@ -58,6 +58,7 @@ io.on('connection', (socket) => {
 // Move API routes BEFORE static file serving
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
+    options: "-c timezone=Asia/Kolkata",
 });
 
 pool.on('connect', (client) => {
