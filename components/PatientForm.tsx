@@ -48,7 +48,9 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
   const [lookupResults, setLookupResults] = useState<LookupPatient[]>([]);
   const [showLookup, setShowLookup] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const lookupRef = useRef<HTMLDivElement>(null);
+  const lookupListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -91,12 +93,42 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
       const patients = await response.json();
       setLookupResults(patients);
       setShowLookup(true);
+      setHighlightedIndex(patients.length > 0 ? 0 : -1);
     } catch (err) {
       console.error('Lookup error:', err);
       setLookupResults([]);
       setShowLookup(true);
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handleLookupKeyDown = (e: React.KeyboardEvent) => {
+    if (!showLookup || lookupResults.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex(prev => {
+        const next = prev < lookupResults.length - 1 ? prev + 1 : 0;
+        const el = lookupListRef.current?.children[next + 1] as HTMLElement;
+        if (el) el.scrollIntoView({ block: 'nearest' });
+        return next;
+      });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex(prev => {
+        const next = prev > 0 ? prev - 1 : lookupResults.length - 1;
+        const el = lookupListRef.current?.children[next + 1] as HTMLElement;
+        if (el) el.scrollIntoView({ block: 'nearest' });
+        return next;
+      });
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleSelectPatient(lookupResults[highlightedIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowLookup(false);
+      setHighlightedIndex(-1);
     }
   };
 
@@ -155,7 +187,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         
         {/* Row 1: Mobile | Full Name */}
-        <div className="flex flex-col gap-2 relative" ref={lookupRef}>
+        <div className="flex flex-col gap-2 relative" ref={lookupRef} onKeyDown={handleLookupKeyDown}>
           <label className={labelClasses}>Mobile (Optional)</label>
           <div className="flex gap-2">
             <input
@@ -167,7 +199,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
               placeholder="Contact number"
               value={formData.mobile}
               onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/[^0-9]/g, '') })}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleMobileLookup(); } }}
+              onKeyDown={e => { if (e.key === 'Enter' && !showLookup) { e.preventDefault(); handleMobileLookup(); } }}
             />
             <button
               tabIndex={2}
@@ -185,7 +217,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
             </button>
           </div>
           {showLookup && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+            <div ref={lookupListRef} className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-indigo-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
               {lookupResults.length === 0 ? (
                 <div className="p-4 text-center text-slate-500 text-sm">
                   No patients found with this mobile number
@@ -193,13 +225,16 @@ const PatientForm: React.FC<PatientFormProps> = ({ onSubmit, initialData, isEdit
               ) : (
                 <>
                   <div className="p-2 bg-indigo-50 text-xs font-bold text-indigo-700 uppercase tracking-wider border-b">
-                    Select Patient ({lookupResults.length} found)
+                    Select Patient ({lookupResults.length} found) — Use ↑↓ keys, Enter to select
                   </div>
-                  {lookupResults.map(patient => (
+                  {lookupResults.map((patient, index) => (
                     <div
                       key={patient.id}
                       onClick={() => handleSelectPatient(patient)}
-                      className="p-3 hover:bg-indigo-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      className={`p-3 cursor-pointer border-b last:border-b-0 transition-colors ${
+                        index === highlightedIndex ? 'bg-indigo-100 ring-2 ring-inset ring-indigo-400' : 'hover:bg-indigo-50'
+                      }`}
                     >
                       <div className="font-bold text-slate-800">{patient.name}</div>
                       <div className="text-xs text-slate-500 flex gap-3 mt-1">
