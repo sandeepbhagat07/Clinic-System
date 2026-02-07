@@ -89,7 +89,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
                   <span>{patient.queueId}</span>
                 </span>
               )}
-              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-3xl font-extrabold">
+              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-4xl font-extrabold">
                 {patient.name}
               </h4>
               {patient.inTime && (
@@ -100,7 +100,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <div className="font-semibold text-slate-600 truncate text-2xl">
+              <div className="font-semibold text-slate-600 truncate text-3xl">
                 {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
                 {patient.mobile && (
                   <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
@@ -110,11 +110,11 @@ const PatientCard: React.FC<PatientCardProps> = ({
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
-                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg flex-shrink-0 flex items-center gap-1.5 text-sm font-bold uppercase"
+                className="bg-slate-800 text-white hover:bg-slate-900 transition-all px-4 py-2 rounded-xl flex-shrink-0 flex items-center gap-2 text-sm font-black uppercase tracking-wide shadow-md border-2 border-slate-700 hover:shadow-lg"
                 title="Mark Done"
               >
                 <Icons.CheckCircle />
-                <span>Done</span>
+                <span>DONE &raquo;</span>
               </button>
             </div>
           </div>
