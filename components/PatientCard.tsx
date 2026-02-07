@@ -81,8 +81,8 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-1.5">
               {!isVisitorCategory && (
                 <span className="bg-gray-200 text-gray-900 font-black px-2 py-0.5 rounded-full text-[11px] flex-shrink-0 shadow-md flex items-center gap-0.5">
                   <span className="text-[10px] text-gray-600">#</span>
@@ -92,28 +92,6 @@ const PatientCard: React.FC<PatientCardProps> = ({
               <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-3xl font-extrabold">
                 {patient.name}
               </h4>
-              <button 
-                onClick={handleChatClick} 
-                className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 flex-shrink-0 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
-                title="Discussion"
-              >
-                <Icons.Message />
-                {patient.hasUnreadAlert && (
-                  <span className="absolute top-0.5 right-0.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-                  </span>
-                )}
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="font-semibold text-slate-600 truncate text-2xl">
-                {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
-                {patient.mobile && (
-                  <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
-                )}
-              </div>
               {patient.inTime && (
                 <div className="bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 px-2 py-0.5 text-[11px]">
                   IN: {formatTime(patient.inTime)}
@@ -122,16 +100,21 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <div className="font-black text-slate-900 truncate tracking-tight text-2xl">
-                {patient.city}
+              <div className="font-semibold text-slate-600 truncate text-2xl">
+                {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
+                {patient.mobile && (
+                  <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
+                )}
+                <span className="mx-1 text-slate-300">&bull;</span>
+                <span className="font-black text-slate-900">{patient.city}</span>
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
-                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1 hover:bg-emerald-50 rounded-lg flex-shrink-0 flex items-center gap-1 text-xs font-bold uppercase"
+                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg flex-shrink-0 flex items-center gap-1.5 text-sm font-bold uppercase"
                 title="Mark Done"
               >
                 <Icons.CheckCircle />
-                <span className="hidden group-hover:inline">Done</span>
+                <span>Done</span>
               </button>
             </div>
           </div>
