@@ -45,8 +45,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       .catch(() => {});
   }, []);
 
+  const isExpired = numberOfDays !== null && numberOfDays < 1;
+  const showWarning = numberOfDays !== null && numberOfDays >= 1 && numberOfDays <= 30;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isExpired) return;
     setError('');
     setLoading(true);
     
@@ -99,7 +103,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               inputMode="numeric"
               pattern="[0-9]*"
               required
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+              disabled={isExpired}
+              className={`w-full border-2 rounded-2xl p-4 outline-none transition-all font-bold ${isExpired ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'}`}
               placeholder="Enter Mobile Number"
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
@@ -111,7 +116,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <input
               type="text"
               required
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+              disabled={isExpired}
+              className={`w-full border-2 rounded-2xl p-4 outline-none transition-all font-bold ${isExpired ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'}`}
               placeholder="Enter Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -123,7 +129,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <input
               type="password"
               required
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+              disabled={isExpired}
+              className={`w-full border-2 rounded-2xl p-4 outline-none transition-all font-bold ${isExpired ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'}`}
               placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -132,17 +139,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-black py-4 rounded-2xl shadow-xl transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm"
+            disabled={loading || isExpired}
+            className={`w-full text-white font-black py-4 rounded-2xl shadow-xl transition-all uppercase tracking-[0.2em] text-sm ${isExpired ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 transform active:scale-[0.98]'}`}
           >
             {loading ? 'Authenticating...' : 'Authenticate'}
           </button>
 
-          {numberOfDays !== null && (
+          {isExpired && (
+            <div className="text-center mt-4 bg-rose-50 border-2 border-rose-300 rounded-2xl py-3 px-4">
+              <p className="text-rose-700 font-black text-xs uppercase tracking-wide leading-relaxed">
+                YOUR APP HAS STOPPED WORKING. CONTACT 9033338800 TO RECHARGE.
+              </p>
+            </div>
+          )}
+
+          {showWarning && (
             <div className="text-center mt-4 bg-amber-50 border-2 border-amber-200 rounded-2xl py-3 px-4">
-              <span className="text-amber-800 font-bold text-sm tracking-wide">
-                Remaining Days: <span className="text-indigo-700 font-black text-lg">{numberOfDays}</span>
-              </span>
+              <p className="text-amber-800 font-black text-xs uppercase tracking-wide leading-relaxed">
+                YOUR APP WILL STOP WORKING AFTER <span className="text-rose-600 text-base">{numberOfDays}</span> DAYS. CONTACT 9033338800 TO RECHARGE.
+              </p>
             </div>
           )}
         </form>
