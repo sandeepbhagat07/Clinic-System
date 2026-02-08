@@ -64,6 +64,7 @@ const App: React.FC = () => {
   const [opdStatus, setOpdStatus] = useState<{isPaused: boolean; pauseReason: string}>({ isPaused: false, pauseReason: '' });
   const [opdStatusOptions, setOpdStatusOptions] = useState<string[]>([]);
   const [appName, setAppName] = useState('Clinic-Q');
+  const [dataResetEnabled, setDataResetEnabled] = useState(false);
   
   // Resizable column widths (percentages)
   const defaultWidths = { left: 25, center: 50, right: 25 };
@@ -236,6 +237,7 @@ const App: React.FC = () => {
           if (metaRes.ok) {
             const meta = await metaRes.json();
             if (meta.appName) setAppName(meta.appName);
+            if (meta.data_reset) setDataResetEnabled(meta.data_reset === 'enable');
           }
         } catch (metaErr) {
           console.warn('Could not fetch metadata:', metaErr);
@@ -1303,7 +1305,7 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <span className="font-medium">{appName}</span>
-          {activeView === 'DOCTOR' && currentPage === 'REPORT' && (
+          {activeView === 'DOCTOR' && currentPage === 'REPORT' && dataResetEnabled && (
             <button
               onClick={() => setShowResetModal('confirm')}
               className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold uppercase rounded hover:bg-red-600 transition-colors"
