@@ -1207,7 +1207,7 @@ const App: React.FC = () => {
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
-        <span className="font-medium">{appName} OPD v2.0</span>
+        <span className="font-medium">{appName}</span>
       </footer>
     </div>
   );
