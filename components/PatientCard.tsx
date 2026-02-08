@@ -91,7 +91,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 )}
               </h4>
               {patient.inTime && (
-                <div className="bg-emerald-600 text-white rounded-xl font-black whitespace-nowrap shadow-md text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border-2 border-emerald-500 flex items-center gap-2">
+                <div className="bg-gray-200 text-gray-900 rounded-xl font-black whitespace-nowrap shadow-sm text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border border-gray-300 flex items-center gap-2">
                   <Icons.Clock />
                   <span>{formatTime(patient.inTime)}</span>
                 </div>
@@ -139,7 +139,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
       <div className={`flex items-start ${isOPD ? 'gap-3 p-3' : isLarge ? 'gap-4 p-8' : (patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
         
         <div className={`flex flex-col items-center flex-shrink-0 ${isOPD ? 'gap-2' : (patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) ? '' : 'gap-3'}`}>
-          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isOPD ? 'w-20 h-20' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
+          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isOPD ? 'w-20 h-20' : isLarge ? 'w-28 h-28' : patient.status === PatientStatus.COMPLETED ? 'w-12 h-12' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
             <AvatarIcon className="w-full h-full" />
           </div>
           <div className={`bg-white border border-slate-200 rounded-lg font-bold text-slate-500 uppercase tracking-widest text-center shadow-sm ${isOPD ? 'px-2.5 py-1 text-[11px] min-w-[80px]' : 'px-2 py-1 text-[9px] min-w-[75px]'}`}>
@@ -157,7 +157,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
               )}
             </h4>
             {isOPD && patient.inTime && (
-              <div className="bg-emerald-600 text-white rounded-xl font-black whitespace-nowrap shadow-md text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border-2 border-emerald-500 flex items-center gap-2">
+              <div className="bg-gray-200 text-gray-900 rounded-xl font-black whitespace-nowrap shadow-sm text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border border-gray-300 flex items-center gap-2">
                 <Icons.Clock />
                 <span>{formatTime(patient.inTime)}</span>
               </div>
@@ -206,7 +206,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
           <div className="w-[1px] h-5 bg-slate-200"></div>
           <div className="flex items-center justify-center" style={{ width: '35%' }}>
             {patient.inTime && (
-              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+              <div className="bg-gray-200 text-gray-900 px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
                 IN &nbsp;: {formatTime(patient.inTime)}
               </div>
             )}
@@ -214,7 +214,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
           <div className="w-[1px] h-5 bg-slate-200"></div>
           <div className="flex items-center justify-center" style={{ width: '35%' }}>
             {patient.outTime && (
-              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+              <div className="bg-gray-200 text-gray-900 px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
                 OUT: {formatTime(patient.outTime)}
               </div>
             )}
@@ -278,7 +278,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
           <div className="flex items-center justify-center flex-1 px-2">
             {patient.inTime && (
-              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+              <div className="bg-gray-200 text-gray-900 px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
                 IN &nbsp;: {formatTime(patient.inTime)}
               </div>
             )}
