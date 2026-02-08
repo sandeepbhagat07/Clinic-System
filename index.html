@@ -28,19 +28,23 @@
       from { transform: scale(0.85); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    @keyframes cardEntry {
-      from { transform: scale(0.9); opacity: 0; max-height: 0; }
-      to { transform: scale(1); opacity: 1; max-height: 500px; }
+    @keyframes cardFlipIn {
+      0% { transform: perspective(600px) rotateX(-90deg); opacity: 0; max-height: 0; }
+      40% { max-height: 500px; }
+      100% { transform: perspective(600px) rotateX(0deg); opacity: 1; max-height: 500px; }
     }
-    @keyframes cardExit {
-      from { transform: scale(1); opacity: 1; max-height: 500px; }
-      to { transform: scale(0.9); opacity: 0; max-height: 0; }
+    @keyframes cardFlipOut {
+      0% { transform: perspective(600px) rotateX(0deg); opacity: 1; max-height: 500px; }
+      60% { transform: perspective(600px) rotateX(90deg); opacity: 0; }
+      100% { transform: perspective(600px) rotateX(90deg); opacity: 0; max-height: 0; }
     }
     .card-enter {
-      animation: cardEntry 0.35s ease-out forwards;
+      animation: cardFlipIn 0.4s ease-out forwards;
+      transform-origin: top center;
     }
     .card-exit {
-      animation: cardExit 0.3s ease-in forwards;
+      animation: cardFlipOut 0.3s ease-in forwards;
+      transform-origin: top center;
       overflow: hidden;
     }
     /* Smooth Scrollbar */

@@ -593,7 +593,6 @@ const App: React.FC = () => {
   }, [patients, isBackendOnline]);
 
   const deletePatient = useCallback(async (id: string) => {
-    if (!confirm("Are you sure you want to remove this record?")) return;
     try {
       if (isBackendOnline) {
         await authFetch(`${API_BASE}/patients/${id}`, { method: 'DELETE' });
