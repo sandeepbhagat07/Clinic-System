@@ -704,7 +704,7 @@ const App: React.FC = () => {
   const handleReorder = useCallback(async (sourceId: string, targetId: string) => {
     if (isBackendOnline) {
       try {
-        const res = await authFetch(`${API_BASE}/api/patients/${sourceId}/move-to`, {
+        const res = await authFetch(`${API_BASE}/patients/${sourceId}/move-to`, {
           method: 'POST',
           body: JSON.stringify({ targetId })
         });
