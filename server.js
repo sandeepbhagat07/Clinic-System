@@ -1291,6 +1291,23 @@ app.post('/api/opd-status', requireAuth, (req, res) => {
     }
 });
 
+app.post('/api/reset-data', requireAuth, async (req, res) => {
+    try {
+        if (req.user.role !== 'DOCTOR') {
+            return res.status(403).json({ error: 'Only doctors can reset data' });
+        }
+        await pool.query(`
+            TRUNCATE TABLE visits, patient, messages, events, complaint_tags, diagnosis_tags
+            RESTART IDENTITY CASCADE
+        `);
+        io.emit('queue:update');
+        res.json({ success: true, message: 'All data has been reset successfully' });
+    } catch (err) {
+        console.error('Reset data error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Handle React routing, return all requests to React app (only in production)
 if (isProduction) {
     app.get('*', (req, res) => {

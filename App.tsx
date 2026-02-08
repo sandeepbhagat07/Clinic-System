@@ -1207,7 +1207,35 @@ const App: React.FC = () => {
           </strong></span>
           <span>System Time: {new Date().toLocaleTimeString()}</span>
         </div>
-        <span className="font-medium">{appName}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-medium">{appName}</span>
+          {activeView === 'DOCTOR' && currentPage === 'REPORT' && (
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to DELETE ALL DATA?\n\nThis will permanently remove all patients, visits, messages, events, complaints, and diagnosis tags.\n\nMedicine tags, plan inquiries, and app settings will be preserved.\n\nThis action cannot be undone!')) {
+                  const token = localStorage.getItem('clinicflow_authToken');
+                  fetch(`${API_BASE}/reset-data`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  })
+                    .then(r => r.json())
+                    .then(data => {
+                      if (data.success) {
+                        alert('All data has been reset successfully. The page will now reload.');
+                        window.location.reload();
+                      } else {
+                        alert('Failed to reset data: ' + (data.error || 'Unknown error'));
+                      }
+                    })
+                    .catch(() => alert('Failed to reset data. Please try again.'));
+                }
+              }}
+              className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold uppercase rounded hover:bg-red-600 transition-colors"
+            >
+              Reset Data
+            </button>
+          )}
+        </div>
       </footer>
     </div>
   );
