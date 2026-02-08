@@ -56,6 +56,8 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<PageView>('DASHBOARD');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDoctorCallAlert, setShowDoctorCallAlert] = useState(false);
+  const [showResetModal, setShowResetModal] = useState<'confirm' | 'success' | 'error' | null>(null);
+  const [resetError, setResetError] = useState('');
   const [isCallingOperator, setIsCallingOperator] = useState(false);
   const [callOperatorSuccess, setCallOperatorSuccess] = useState(false);
   const [hasEventsToday, setHasEventsToday] = useState(false);
@@ -1200,6 +1202,98 @@ const App: React.FC = () => {
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBhYqFbF1NQDI1MDQwNDY4Oj9ETFRbYWpzfYaOlp2lrbW9xc3V3ePq8fj/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBhYqFbF1NQDI1MDQwNDY4Oj9ETFRbYWpzfYaOlp2lrbW9xc3V3ePq8fj/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBhYqFbF1NQDI1MDQwNDY4Oj9ETFRbYWpzfYaOlp2lrbW9xc3V3ePq8fj/" type="audio/wav" />
       </audio>
 
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setShowResetModal(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-[420px] overflow-hidden" onClick={e => e.stopPropagation()}>
+            {showResetModal === 'confirm' && (
+              <>
+                <div className="bg-red-500 px-6 py-4">
+                  <h3 className="text-white text-lg font-bold flex items-center gap-2">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                    Delete All Data
+                  </h3>
+                </div>
+                <div className="px-6 py-5">
+                  <p className="text-gray-700 text-sm font-semibold mb-3">Are you sure you want to delete all data?</p>
+                  <p className="text-gray-600 text-xs mb-2">This will permanently remove:</p>
+                  <ul className="text-xs text-gray-600 mb-4 space-y-1 pl-4">
+                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> All Patients</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> All Visits</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> All Messages</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> All Events</li>
+                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Complaint & Diagnosis Tags</li>
+                  </ul>
+                  <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4">
+                    <p className="text-green-700 text-xs font-medium">Medicine tags, plan inquiries, and app settings will be preserved.</p>
+                  </div>
+                  <p className="text-red-600 text-xs font-bold">This action cannot be undone!</p>
+                </div>
+                <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t">
+                  <button onClick={() => setShowResetModal(null)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">Cancel</button>
+                  <button
+                    onClick={() => {
+                      const token = localStorage.getItem('clinicflow_authToken');
+                      fetch(`${API_BASE}/reset-data`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      })
+                        .then(r => r.json())
+                        .then(data => {
+                          if (data.success) {
+                            setShowResetModal('success');
+                          } else {
+                            setResetError(data.error || 'Unknown error');
+                            setShowResetModal('error');
+                          }
+                        })
+                        .catch(() => {
+                          setResetError('Network error. Please try again.');
+                          setShowResetModal('error');
+                        });
+                    }}
+                    className="px-5 py-2 text-sm font-bold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Yes, Delete All
+                  </button>
+                </div>
+              </>
+            )}
+            {showResetModal === 'success' && (
+              <>
+                <div className="bg-green-500 px-6 py-4">
+                  <h3 className="text-white text-lg font-bold flex items-center gap-2">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Data Reset Successful
+                  </h3>
+                </div>
+                <div className="px-6 py-5">
+                  <p className="text-gray-700 text-sm">All data has been cleared successfully. The page will reload now.</p>
+                </div>
+                <div className="px-6 py-4 bg-gray-50 flex justify-end border-t">
+                  <button onClick={() => window.location.reload()} className="px-5 py-2 text-sm font-bold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors">OK</button>
+                </div>
+              </>
+            )}
+            {showResetModal === 'error' && (
+              <>
+                <div className="bg-orange-500 px-6 py-4">
+                  <h3 className="text-white text-lg font-bold flex items-center gap-2">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    Reset Failed
+                  </h3>
+                </div>
+                <div className="px-6 py-5">
+                  <p className="text-gray-700 text-sm">{resetError}</p>
+                </div>
+                <div className="px-6 py-4 bg-gray-50 flex justify-end border-t">
+                  <button onClick={() => setShowResetModal(null)} className="px-5 py-2 text-sm font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors">Close</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <footer className="bg-[#f1f5f9] text-[#64748b] text-[9px] px-4 py-1 flex justify-between border-t border-[#e2e8f0] shrink-0">
         <div className="flex gap-4">
           <span>Database: <strong className={isBackendOnline ? "text-[#059669] uppercase" : "text-[#d97706] uppercase"}>
@@ -1211,25 +1305,7 @@ const App: React.FC = () => {
           <span className="font-medium">{appName}</span>
           {activeView === 'DOCTOR' && currentPage === 'REPORT' && (
             <button
-              onClick={() => {
-                if (window.confirm('Are you sure you want to DELETE ALL DATA?\n\nThis will permanently remove all patients, visits, messages, events, complaints, and diagnosis tags.\n\nMedicine tags, plan inquiries, and app settings will be preserved.\n\nThis action cannot be undone!')) {
-                  const token = localStorage.getItem('clinicflow_authToken');
-                  fetch(`${API_BASE}/reset-data`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  })
-                    .then(r => r.json())
-                    .then(data => {
-                      if (data.success) {
-                        alert('All data has been reset successfully. The page will now reload.');
-                        window.location.reload();
-                      } else {
-                        alert('Failed to reset data: ' + (data.error || 'Unknown error'));
-                      }
-                    })
-                    .catch(() => alert('Failed to reset data. Please try again.'));
-                }
-              }}
+              onClick={() => setShowResetModal('confirm')}
               className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold uppercase rounded hover:bg-red-600 transition-colors"
             >
               Reset Data
