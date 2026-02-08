@@ -115,6 +115,19 @@ app.get('/api/metadata', (req, res) => {
     }
 });
 
+app.get('/api/app-settings', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM app_sett ORDER BY id DESC LIMIT 1');
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'No settings found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error('App settings error:', err);
+        res.status(500).json({ error: 'Failed to fetch app settings' });
+    }
+});
+
 app.post('/api/plan-inquiry', async (req, res) => {
     try {
         const { name, hospital_name, address, mobile, email, plan_type, days, amount } = req.body;

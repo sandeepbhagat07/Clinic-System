@@ -14,6 +14,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [hospitalName, setHospitalName] = useState('');
   const [appName, setAppName] = useState('Clinic-Q');
+  const [numberOfDays, setNumberOfDays] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/metadata')
@@ -24,6 +25,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         }
         if (data.appName) {
           setAppName(data.appName);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/app-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.number_of_days !== undefined) {
+          setNumberOfDays(data.number_of_days);
         }
       })
       .catch(() => {});
@@ -121,6 +131,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           >
             {loading ? 'Authenticating...' : 'Authenticate'}
           </button>
+
+          {numberOfDays !== null && (
+            <div className="text-center mt-4 bg-amber-50 border-2 border-amber-200 rounded-2xl py-3 px-4">
+              <span className="text-amber-800 font-bold text-sm tracking-wide">
+                Remaining Days: <span className="text-indigo-700 font-black text-lg">{numberOfDays}</span>
+              </span>
+            </div>
+          )}
         </form>
       </div>
     </div>
