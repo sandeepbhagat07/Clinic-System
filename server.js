@@ -749,31 +749,39 @@ app.post('/api/patients/:id/reorder', requireAuth, async (req, res) => {
             return res.json({ success: false, message: 'Cannot reorder FAMILY/RELATIVE patients' });
         }
         
-        // Find adjacent patient to swap with
-        const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
-        
-        if (targetOrder < 1) {
-            return res.json({ success: false, message: 'Already at top' });
+        // Find nearest neighbor patient to swap with (sort_order may not be consecutive)
+        let adjacentRes;
+        if (direction === 'up') {
+            adjacentRes = await client.query(
+                `SELECT id, sort_order FROM visits 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order < $1
+                 ORDER BY sort_order DESC LIMIT 1`,
+                [currentOrder]
+            );
+        } else {
+            adjacentRes = await client.query(
+                `SELECT id, sort_order FROM visits 
+                 WHERE DATE(created_at) = CURRENT_DATE 
+                 AND status = 'WAITING' 
+                 AND type NOT IN ('FAMILY', 'RELATIVE')
+                 AND sort_order > $1
+                 ORDER BY sort_order ASC LIMIT 1`,
+                [currentOrder]
+            );
         }
-        
-        // Find patient with target order (non-pinned, waiting, today)
-        const adjacentRes = await client.query(
-            `SELECT id FROM visits 
-             WHERE DATE(created_at) = CURRENT_DATE 
-             AND status = 'WAITING' 
-             AND type NOT IN ('FAMILY', 'RELATIVE')
-             AND sort_order = $1`,
-            [targetOrder]
-        );
         
         if (adjacentRes.rows.length === 0) {
             return res.json({ success: false, message: 'No patient to swap with' });
         }
         
         const adjacentId = adjacentRes.rows[0].id;
+        const adjacentOrder = adjacentRes.rows[0].sort_order;
         
         // Swap sort orders
-        await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [targetOrder, id]);
+        await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [adjacentOrder, id]);
         await client.query('UPDATE visits SET sort_order = $1 WHERE id = $2', [currentOrder, adjacentId]);
         
         await client.query('COMMIT');
