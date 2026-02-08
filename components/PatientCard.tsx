@@ -196,6 +196,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
               <Icons.Stethoscope />
             </button>
           </div>
+          <div className="w-[1px] h-5 bg-slate-200"></div>
           <div className="flex items-center justify-center" style={{ width: '35%' }}>
             {patient.inTime && (
               <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
@@ -203,6 +204,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
               </div>
             )}
           </div>
+          <div className="w-[1px] h-5 bg-slate-200"></div>
           <div className="flex items-center justify-center" style={{ width: '35%' }}>
             {patient.outTime && (
               <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
@@ -210,6 +212,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
               </div>
             )}
           </div>
+          <div className="w-[1px] h-5 bg-slate-200"></div>
           <div className="flex items-center justify-center" style={{ width: '15%' }}>
             <button 
               onClick={handleChatClick} 
