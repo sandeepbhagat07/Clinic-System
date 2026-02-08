@@ -137,9 +137,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       )}
 
-      <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : patient.status === PatientStatus.WAITING ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
+      <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : (patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
         
-        <div className={`flex flex-col items-center flex-shrink-0 ${patient.status === PatientStatus.WAITING ? '' : 'gap-3'}`}>
+        <div className={`flex flex-col items-center flex-shrink-0 ${patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED ? '' : 'gap-3'}`}>
           <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
             <AvatarIcon className="w-full h-full" />
           </div>
@@ -150,14 +150,14 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
         <div className="flex-1 min-w-0 flex flex-col pt-0.5">
           <div className="flex items-center gap-2 mb-1.5">
-            {patient.status !== PatientStatus.WAITING && !isVisitorCategory && (
+            {patient.status === PatientStatus.OPD && !isVisitorCategory && (
               <span className="bg-gray-200 text-gray-900 font-black px-3 py-1 rounded-full text-[12px] flex-shrink-0 shadow-md flex items-center gap-0.5">
                 <span className="text-[11px] text-gray-600">#</span>
                 <span>{patient.queueId}</span>
               </span>
             )}
             <h4 className={`truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.5rem] font-bold'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
-              {patient.status === PatientStatus.WAITING && !isVisitorCategory ? (
+              {(patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) && !isVisitorCategory ? (
                 <><span className="text-[maroon]">[{patient.queueId}]</span> <span className="text-slate-900">{patient.name}</span></>
               ) : (
                 <span className="text-slate-900">{patient.name}</span>
@@ -172,13 +172,20 @@ const PatientCard: React.FC<PatientCardProps> = ({
               )}
               {patient.age} Years ({patient.gender})
             </div>
+          ) : patient.status === PatientStatus.COMPLETED ? (
+            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-xl'}`}>
+              {patient.city && (
+                <><span className="font-black text-slate-900">{patient.city}</span><span className="mx-1.5 text-slate-300">|</span></>
+              )}
+              {patient.age} Years ({patient.gender})
+            </div>
           ) : (
             <>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
                   {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
                 </div>
-                {patient.status !== PatientStatus.COMPLETED && patient.inTime && (
+                {patient.inTime && (
                   <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
                     IN &nbsp;:  {formatTime(patient.inTime)}
                   </div>
@@ -189,7 +196,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
                   {patient.city}
                 </div>
-                {patient.status !== PatientStatus.COMPLETED && patient.outTime && (
+                {patient.outTime && (
                   <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
                     OUT: {formatTime(patient.outTime)}
                   </div>
