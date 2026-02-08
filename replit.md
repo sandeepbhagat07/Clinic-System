@@ -29,6 +29,12 @@ Key features include:
 - Print Prescription feature: generates A5-styled printable prescription page in a new tab with auto print dialog.
 
 ## Recent Changes
+- 2026-02-08: Data Reset Feature
+  - Added "Reset Data" button in app footer (visible only for Doctor on Report page)
+  - Button uses TRUNCATE with RESTART IDENTITY CASCADE to clear visits, patient, messages, events, complaint_tags, diagnosis_tags
+  - Preserves plan_inquiries, medicine_tags, and app_sett tables
+  - Server-side role check ensures only Doctor role can execute the reset
+  - Confirmation dialog before execution; page reloads after successful reset
 - 2026-02-08: Print Prescription Feature
   - Added PRINT PRESCRIPTION button to Doctor Consultation Form (3-button layout: Print Prescription | Finalize | Close)
   - Opens new browser tab with A5-sized printable prescription page including hospital header, patient info, vitals, complaints, diagnosis, prescription table, advice, follow-up date, and doctor signature line
