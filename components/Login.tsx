@@ -103,6 +103,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               inputMode="numeric"
               pattern="[0-9]*"
               required
+              autoFocus
               disabled={isExpired}
               className={`w-full border-2 rounded-2xl p-4 outline-none transition-all font-bold ${isExpired ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'}`}
               placeholder="Enter Mobile Number"
