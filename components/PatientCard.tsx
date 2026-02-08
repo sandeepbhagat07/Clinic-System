@@ -156,32 +156,46 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.15rem] font-bold'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.3rem] font-bold'}`}>
               {patient.name}
             </h4>
           </div>
           
-          <div className="flex items-center justify-between gap-2 mb-2">
+          {patient.status === PatientStatus.WAITING ? (
             <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
-              {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
+              {patient.age} yrs ({patient.gender === 'Male' ? 'M' : 'F'})
+              {patient.city && (
+                <><span className="mx-1 text-slate-300">&bull;</span><span className="font-black text-slate-900">{patient.city}</span></>
+              )}
+              {patient.mobile && (
+                <><span className="mx-1 text-slate-300">&bull;</span>{patient.mobile}</>
+              )}
             </div>
-            {patient.status !== PatientStatus.COMPLETED && patient.inTime && (
-              <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
-                IN &nbsp;:  {formatTime(patient.inTime)}
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
+                  {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
+                </div>
+                {patient.status !== PatientStatus.COMPLETED && patient.inTime && (
+                  <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
+                    IN &nbsp;:  {formatTime(patient.inTime)}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <div className="flex items-center justify-between gap-2 mt-auto">
-            <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
-              {patient.city}
-            </div>
-            {patient.status !== PatientStatus.COMPLETED && patient.outTime && (
-              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
-                OUT: {formatTime(patient.outTime)}
+              <div className="flex items-center justify-between gap-2 mt-auto">
+                <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
+                  {patient.city}
+                </div>
+                {patient.status !== PatientStatus.COMPLETED && patient.outTime && (
+                  <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
+                    OUT: {formatTime(patient.outTime)}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -229,11 +243,10 @@ const PatientCard: React.FC<PatientCardProps> = ({
             </button>
           </div>
         </div>
-      ) : (
-        <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
-          
+      ) : patient.status === PatientStatus.WAITING ? (
+        <div className="border-t border-slate-100 bg-slate-50/50 flex items-center px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
           <div className="flex items-center gap-1">
-            {patient.status === PatientStatus.WAITING && onMove && (() => {
+            {onMove && (() => {
               const isPinned = patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE;
               const btnClass = isPinned 
                 ? "text-slate-200 cursor-not-allowed p-1.5 rounded-md" 
@@ -260,6 +273,46 @@ const PatientCard: React.FC<PatientCardProps> = ({
               );
             })()}
           </div>
+
+          <div className="w-[1px] h-5 bg-slate-200"></div>
+
+          <div className="flex items-center gap-1 px-2">
+            {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
+            {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+          </div>
+
+          <div className="w-[1px] h-5 bg-slate-200"></div>
+
+          <div className="flex items-center justify-center flex-1 px-2">
+            {patient.inTime && (
+              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+                IN &nbsp;: {formatTime(patient.inTime)}
+              </div>
+            )}
+          </div>
+
+          <div className="w-[1px] h-5 bg-slate-200"></div>
+
+          <div className="flex items-center gap-2 pl-2">
+            <button 
+              onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.OPD); }} 
+              className="text-amber-600 hover:text-amber-700 transition-colors p-1.5 hover:bg-amber-50 rounded-lg flex items-center gap-1" 
+              title="Send to OPD"
+            >
+              <Icons.Stethoscope />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
+              className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg" 
+              title="Mark Done"
+            >
+              <Icons.CheckCircle />
+            </button>
+          </div>
+        </div>
+        ) : (
+        <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
+          <div className="flex items-center gap-1"></div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
