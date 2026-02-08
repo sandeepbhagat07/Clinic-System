@@ -83,14 +83,12 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-1.5">
-              {!isVisitorCategory && (
-                <span className="bg-gray-200 text-gray-900 font-black px-2 py-0.5 rounded-full text-[11px] flex-shrink-0 shadow-md flex items-center gap-0.5">
-                  <span className="text-[10px] text-gray-600">#</span>
-                  <span>{patient.queueId}</span>
-                </span>
-              )}
-              <h4 className="text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 text-4xl font-extrabold">
-                {patient.name}
+              <h4 className="truncate uppercase tracking-tight leading-tight flex-1 text-4xl font-extrabold">
+                {!isVisitorCategory ? (
+                  <><span className="text-[maroon]">[{patient.queueId}]</span> <span className="text-slate-900">{patient.name}</span></>
+                ) : (
+                  <span className="text-slate-900">{patient.name}</span>
+                )}
               </h4>
               {patient.inTime && (
                 <div className="bg-emerald-600 text-white rounded-xl font-black whitespace-nowrap shadow-md text-center flex-shrink-0 px-4 py-2 text-sm uppercase tracking-wide border-2 border-emerald-500 flex items-center gap-2">
@@ -102,12 +100,13 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
             <div className="flex items-center justify-between gap-2">
               <div className="font-semibold text-slate-600 truncate text-3xl">
-                {patient.age} yrs ({patient.gender === 'Male' ? 'M' : 'F'})
-                {patient.mobile && (
-                  <><span className="mx-1 text-slate-300">&bull;</span> {patient.mobile}</>
+                {patient.city && (
+                  <><span className="font-black text-slate-900">{patient.city}</span><span className="mx-1.5 text-slate-300">|</span></>
                 )}
-                <span className="mx-1 text-slate-300">&bull;</span>
-                <span className="font-black text-slate-900">{patient.city}</span>
+                {patient.age} Years ({patient.gender})
+                {patient.mobile && (
+                  <><span className="mx-1.5 text-slate-300">|</span>{patient.mobile}</>
+                )}
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
