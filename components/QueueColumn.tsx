@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Patient, PatientStatus, PatientCategory, AppView } from '../types';
 import PatientCard from './PatientCard';
@@ -60,7 +60,44 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
   const [localOptions, setLocalOptions] = useState<string[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const pausedButtonRef = useRef<HTMLButtonElement>(null);
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const isInitialRef = useRef(true);
+  const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
+  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentIds = new Set(patients.map(p => p.id));
+    if (isInitialRef.current) {
+      knownIdsRef.current = currentIds;
+      isInitialRef.current = false;
+      return;
+    }
+    const newIds = new Set<string>();
+    currentIds.forEach((id: string) => {
+      if (!knownIdsRef.current.has(id)) {
+        newIds.add(id);
+      }
+    });
+    if (newIds.size > 0) {
+      setNewCardIds(newIds);
+      setTimeout(() => setNewCardIds(new Set()), 400);
+    }
+    knownIdsRef.current = currentIds;
+  }, [patients]);
   
+  const handleAnimatedDelete = useCallback((id: string) => {
+    if (!onDelete) return;
+    setExitingIds(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      setExitingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      onDelete(id);
+    }, 300);
+  }, [onDelete]);
+
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -255,7 +292,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
           patients.map(p => (
             <div 
               key={p.id} 
-              className={`transition-all duration-200 w-full rounded-xl ${dragOverCardId === p.id ? 'bg-indigo-100 ring-2 ring-indigo-400 ring-offset-2' : ''}`}
+              className={`transition-all duration-200 w-full rounded-xl ${dragOverCardId === p.id ? 'bg-indigo-100 ring-2 ring-indigo-400 ring-offset-2' : ''} ${newCardIds.has(p.id) ? 'card-enter' : ''} ${exitingIds.has(p.id) ? 'card-exit' : ''}`}
               onDragOver={(e) => {
                 onDragOver(e);
                 setDragOverCardId(p.id);
@@ -266,7 +303,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
               <PatientCard 
                 patient={p} 
                 onUpdateStatus={onUpdateStatus} 
-                onDelete={onDelete} 
+                onDelete={onDelete ? handleAnimatedDelete : undefined} 
                 onEdit={onEdit}
                 onMove={onMove}
                 onClick={onCardClick}

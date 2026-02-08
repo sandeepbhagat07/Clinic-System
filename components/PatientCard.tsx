@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Patient, PatientStatus, PatientCategory, PatientType, AppView } from '../types';
 import { Icons, TYPE_THEMES } from '../constants';
 
@@ -29,10 +29,22 @@ const PatientCard: React.FC<PatientCardProps> = ({
   activeView
 }) => {
   
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     if (onClick) return;
     e.dataTransfer.setData('patientId', patient.id);
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteConfirm(false);
+    onDelete?.(patient.id);
   };
 
   const AvatarIcon = patient.gender === 'Male' ? Icons.MaleAvatar : Icons.FemaleAvatar;
@@ -271,7 +283,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
           <div className="flex items-center gap-1 px-2">
             {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
-            {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+            {onDelete && <button onClick={handleDeleteClick} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
           </div>
 
           <div className="w-[1px] h-5 bg-slate-200"></div>
@@ -349,7 +361,42 @@ const PatientCard: React.FC<PatientCardProps> = ({
 
             <div className="flex items-center gap-1">
               {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
-              {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+              {onDelete && <button onClick={handleDeleteClick} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 animate-[scaleIn_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Delete Patient Record</h3>
+                <p className="text-sm text-slate-500">{patient.name}</p>
+              </div>
+            </div>
+            <p className="text-slate-700 text-sm mb-6 leading-relaxed">
+              Are you sure you want to delete this patient record? This action cannot be undone and the record will be <span className="font-bold text-rose-600">permanently removed</span> from the database.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleConfirmDelete(); }}
+                className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-md"
+              >
+                Yes, Delete
+              </button>
             </div>
           </div>
         </div>
