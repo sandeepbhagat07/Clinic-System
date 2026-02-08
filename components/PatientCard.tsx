@@ -131,12 +131,6 @@ const PatientCard: React.FC<PatientCardProps> = ({
       onClick={() => onClick?.(patient.id)}
       className={`${finalThemeClasses} border-2 rounded-2xl transition-all duration-300 ${activeClasses} ${onClick ? 'cursor-pointer' : (activeView === 'OPERATOR' ? 'cursor-grab active:cursor-grabbing' : '')} group relative overflow-hidden flex flex-col`}
     >
-      {patient.status === PatientStatus.WAITING && !isVisitorCategory && (
-        <div className="absolute top-0 left-0 bg-gray-200 text-gray-900 font-black px-2.5 py-1 rounded-br-xl z-10 text-[10px] shadow-sm flex items-center gap-0.5">
-          <span className="text-[9px] text-gray-600">#</span>
-          <span>{patient.queueId}</span>
-        </div>
-      )}
       {isVisitorCategory && (
         <div className="absolute top-0 right-0 bg-red-600 text-white font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10 text-[8px] shadow-sm">
           Visitor
@@ -162,13 +156,13 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.3rem] font-bold'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.5rem] font-bold'}`}>
               {patient.name}
             </h4>
           </div>
           
           {patient.status === PatientStatus.WAITING ? (
-            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
+            <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-xl'}`}>
               {patient.age} yrs ({patient.gender === 'Male' ? 'M' : 'F'})
               {patient.city && (
                 <><span className="mx-1 text-slate-300">&bull;</span><span className="font-black text-slate-900">{patient.city}</span></>
@@ -251,6 +245,15 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       ) : patient.status === PatientStatus.WAITING ? (
         <div className="border-t border-slate-100 bg-slate-50/50 flex items-center px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
+          {!isVisitorCategory && (
+            <>
+              <span className="bg-gray-200 text-gray-900 font-black px-2 py-0.5 rounded-full text-[11px] shadow-md flex items-center gap-0.5">
+                <span className="text-[10px] text-gray-600">#</span>
+                <span>{patient.queueId}</span>
+              </span>
+              <div className="w-[1px] h-5 bg-slate-200 mx-1"></div>
+            </>
+          )}
           <div className="flex items-center gap-1">
             {onMove && (() => {
               const isPinned = patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE;
