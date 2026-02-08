@@ -140,7 +140,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
       <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : patient.status === PatientStatus.WAITING ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
         
         <div className={`flex flex-col items-center flex-shrink-0 ${patient.status === PatientStatus.WAITING ? '' : 'gap-3'}`}>
-          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
+          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
             <AvatarIcon className="w-full h-full" />
           </div>
           <div className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest min-w-[75px] text-center shadow-sm">
@@ -156,19 +156,16 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 <span>{patient.queueId}</span>
               </span>
             )}
-            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.5rem] font-bold'}`}>
+            <h4 className={`text-slate-900 truncate uppercase tracking-tight leading-tight flex-1 ${isLarge && isOPD ? 'text-[2.25rem] font-extrabold' : isLarge ? 'text-5xl font-extrabold' : 'text-[1.5rem] font-bold'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
               {patient.name}
             </h4>
           </div>
           
           {patient.status === PatientStatus.WAITING ? (
             <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-xl'}`}>
-              {patient.age} yrs ({patient.gender === 'Male' ? 'M' : 'F'})
+              {patient.age} yrs <span className="mx-1.5 text-slate-300">|</span> {patient.gender}
               {patient.city && (
-                <><span className="mx-1 text-slate-300">&bull;</span><span className="font-black text-slate-900">{patient.city}</span></>
-              )}
-              {patient.mobile && (
-                <><span className="mx-1 text-slate-300">&bull;</span>{patient.mobile}</>
+                <><span className="mx-1.5 text-slate-300">|</span><span className="font-black text-slate-900">{patient.city}</span></>
               )}
             </div>
           ) : (
@@ -247,11 +244,11 @@ const PatientCard: React.FC<PatientCardProps> = ({
         <div className="border-t border-slate-100 bg-slate-50/50 flex items-center px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
           {!isVisitorCategory && (
             <>
-              <span className="bg-gray-200 text-gray-900 font-black px-2 py-0.5 rounded-full text-[11px] shadow-md flex items-center gap-0.5">
-                <span className="text-[10px] text-gray-600">#</span>
+              <span className="bg-slate-700 text-white font-black px-3 py-1 rounded-full text-[14px] shadow-md flex items-center gap-0.5">
+                <span className="text-[12px] text-slate-300">#</span>
                 <span>{patient.queueId}</span>
               </span>
-              <div className="w-[1px] h-5 bg-slate-200 mx-1"></div>
+              <div className="w-[1px] h-6 bg-slate-200 mx-1.5"></div>
             </>
           )}
           <div className="flex items-center gap-1">
