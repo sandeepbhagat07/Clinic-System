@@ -127,7 +127,7 @@ psql -U postgres -c "CREATE DATABASE clinicq;" && psql -U postgres -d clinicq -f
 ```bash
 psql -U postgres -d clinicq -c "\dt"
 ```
-You should see 5 tables: `patient`, `visits`, `messages`, `events`, `plan_inquiries`
+You should see 9 tables: `patient`, `visits`, `messages`, `events`, `plan_inquiries`, `complaint_tags`, `diagnosis_tags`, `medicine_tags`, `app_sett`
 
 ---
 
@@ -140,9 +140,11 @@ Customize your clinic name and app settings:
   "name": "Clinic-Q OPD Management",
   "description": "OPD management system",
   "hospitalName": "Your Hospital Name Here",
-  "appName": "Clinic-Q"
+  "appName": "Clinic-Q",
+  "data_reset": "enable"
 }
 ```
+`data_reset` can be set to "enable" or "disable" to control visibility of the Reset Data button (Doctor role only).
 
 ### 2. secretcred.json
 Login credentials configuration. Each user has a mobile number, username, password, and role:
@@ -429,7 +431,7 @@ sudo chown -R $USER:$USER /var/www/clinicq
 
 ---
 
-## Application Features (v1.47)
+## Application Features (v1.50)
 
 | Feature | Description |
 |---------|-------------|
@@ -451,6 +453,11 @@ sudo chown -R $USER:$USER /var/www/clinicq
 | **Call Operator** | Doctor can send alert to Operator with sound notification |
 | **Queue Reordering** | Up/Down buttons to reorder waiting queue |
 | **Hospital Name Marquee** | Animated hospital name on display screen (configurable in metadata.json) |
+| **Doctor Consultation Form** | Structured consultation with vitals, tag-based complaints/diagnosis, prescription table, advice, and follow-up date |
+| **Print Prescription** | Generate printable A5-sized prescription from consultation data |
+| **Data Reset** | Doctor can reset all patient/visit data from Report page (controlled via metadata.json) |
+| **License Management** | Login page shows subscription expiry warning based on app_sett table |
+| **Auto-complete Tags** | Complaints, diagnosis, and medicine names auto-suggest from usage history |
 
 ### Marketing Website
 
@@ -498,7 +505,7 @@ clinic-q/
 │   ├── about.html         # About page
 │   ├── pricing.html       # Pricing page
 │   └── contact.html       # Contact page
-├── database_schema.sql    # PostgreSQL schema (5 tables)
+├── database_schema.sql    # PostgreSQL schema (9 tables)
 ├── database_backup.sql    # Database backup with data
 ├── metadata.json          # App configuration (hospital name, etc.)
 ├── secretcred.json        # Login credentials configuration
@@ -511,5 +518,5 @@ clinic-q/
 
 ---
 
-**Version:** 1.47  
-**Last Updated:** February 7, 2026
+**Version:** 1.50  
+**Last Updated:** February 8, 2026

@@ -162,7 +162,7 @@ Enter the password when prompted.
 
 ## Database Structure
 
-Clinic-Q uses 5 main tables:
+Clinic-Q uses 9 main tables:
 
 | Table | Description |
 |-------|-------------|
@@ -171,6 +171,10 @@ Clinic-Q uses 5 main tables:
 | **messages** | Real-time chat messages between Operator and Doctor. |
 | **events** | Calendar events with reminders for Doctor and Operator. |
 | **plan_inquiries** | Pricing plan inquiry submissions from the marketing website. |
+| **complaint_tags** | Auto-learning complaint suggestions used in doctor consultation form. |
+| **diagnosis_tags** | Auto-learning diagnosis suggestions used in doctor consultation form. |
+| **medicine_tags** | Auto-learning medicine name suggestions for prescriptions. |
+| **app_sett** | Application license/subscription settings (start_date, end_date, recharge details). |
 
 ### Key Fields in visits table:
 
@@ -320,7 +324,7 @@ To add or modify users, edit the `secretcred.json` file:
 
 ## Application Features
 
-### Version 1.47 Features
+### Version 1.50 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -342,16 +346,33 @@ To add or modify users, edit the `secretcred.json` file:
 | **Call Operator** | Doctor can send alert to Operator with sound notification |
 | **Queue Reordering** | Up/Down buttons to reorder waiting queue |
 | **Hospital Name Marquee** | Animated hospital name on display screen (configurable in metadata.json) |
+| **Doctor Consultation Form** | Structured consultation with vitals, tag-based complaints/diagnosis, prescription table, advice, and follow-up date |
+| **Print Prescription** | Generate printable A5-sized prescription from consultation data |
+| **Data Reset** | Doctor can reset all patient/visit data from Report page (controlled via metadata.json) |
+| **License Management** | Login page shows subscription expiry warning based on app_sett table |
+| **Auto-complete Tags** | Complaints, diagnosis, and medicine names auto-suggest from usage history |
 
 ### Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `metadata.json` | Hospital name, app name, and configuration |
+| `metadata.json` | Hospital name, app name, and configuration (see below) |
 | `secretcred.json` | Login credentials (mobile, username, password, role) |
 | `OPDSTATUS.txt` | OPD pause status messages (one per line) |
 | `.env` | Database connection string |
 | `vite.config.ts` | Frontend development server settings |
+
+#### metadata.json Example
+```json
+{
+  "name": "Clinic-Q OPD Management",
+  "description": "OPD management system",
+  "hospitalName": "Your Hospital Name Here",
+  "appName": "Clinic-Q",
+  "data_reset": "enable"
+}
+```
+`data_reset` can be set to "enable" or "disable" to control visibility of the Reset Data button (Doctor role only).
 
 ---
 
@@ -493,4 +514,4 @@ If you encounter issues not covered in this guide, check:
 
 ---
 
-**Clinic-Q v1.47** | Last Updated: February 7, 2026
+**Clinic-Q v1.50** | Last Updated: February 8, 2026
