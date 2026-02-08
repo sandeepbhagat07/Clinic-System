@@ -137,9 +137,9 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       )}
 
-      <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : 'gap-3 p-4'}`}>
+      <div className={`flex items-start ${isLarge && isOPD ? 'gap-3 p-4' : isLarge ? 'gap-4 p-8' : patient.status === PatientStatus.WAITING ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
         
-        <div className="flex flex-col items-center gap-3 flex-shrink-0">
+        <div className={`flex flex-col items-center flex-shrink-0 ${patient.status === PatientStatus.WAITING ? '' : 'gap-3'}`}>
           <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isLarge && isOPD ? 'w-24 h-24' : isLarge ? 'w-28 h-28' : 'w-16 h-16'}`}>
             <AvatarIcon className="w-full h-full" />
           </div>
