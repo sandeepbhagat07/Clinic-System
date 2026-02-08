@@ -139,7 +139,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
       <div className={`flex items-start ${isOPD ? 'gap-3 p-3' : isLarge ? 'gap-4 p-8' : (patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) ? 'gap-2 p-3' : 'gap-3 p-4'}`}>
         
         <div className={`flex flex-col items-center flex-shrink-0 ${isOPD ? 'gap-2' : (patient.status === PatientStatus.WAITING || patient.status === PatientStatus.COMPLETED) ? '' : 'gap-3'}`}>
-          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isOPD ? 'w-20 h-20' : isLarge ? 'w-28 h-28' : patient.status === PatientStatus.COMPLETED ? 'w-12 h-12' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
+          <div className={`rounded-full overflow-hidden shadow-sm transition-all ${isOPD ? 'w-20 h-20' : isLarge ? 'w-28 h-28' : patient.status === PatientStatus.COMPLETED ? 'w-12 h-12' : patient.status === PatientStatus.WAITING ? 'w-14 h-14' : 'w-16 h-16'}`} title={patient.status === PatientStatus.WAITING && patient.mobile ? `Mobile: ${patient.mobile}` : undefined}>
             <AvatarIcon className="w-full h-full" />
           </div>
           <div className={`bg-white border border-slate-200 rounded-lg font-bold text-slate-500 uppercase tracking-widest text-center shadow-sm ${isOPD ? 'px-2.5 py-1 text-[11px] min-w-[80px]' : 'px-2 py-1 text-[9px] min-w-[75px]'}`}>
