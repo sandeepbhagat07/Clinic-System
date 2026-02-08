@@ -95,7 +95,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
         return next;
       });
       onDelete(id);
-    }, 300);
+    }, 550);
   }, [onDelete]);
 
   const onDragOver = (e: React.DragEvent) => {
@@ -292,7 +292,7 @@ const QueueColumn: React.FC<QueueColumnProps> = ({
           patients.map(p => (
             <div 
               key={p.id} 
-              className={`transition-all duration-200 w-full rounded-xl ${dragOverCardId === p.id ? 'bg-indigo-100 ring-2 ring-indigo-400 ring-offset-2' : ''} ${newCardIds.has(p.id) ? 'card-enter' : ''} ${exitingIds.has(p.id) ? 'card-exit' : ''}`}
+              className={`transition-all duration-200 w-full rounded-xl ${dragOverCardId === p.id ? 'bg-indigo-100 ring-2 ring-indigo-400 ring-offset-2' : ''} ${newCardIds.has(p.id) ? (status === PatientStatus.OPD ? 'card-enter-bounce' : 'card-enter') : ''} ${exitingIds.has(p.id) ? 'card-exit' : ''}`}
               onDragOver={(e) => {
                 onDragOver(e);
                 setDragOverCardId(p.id);
