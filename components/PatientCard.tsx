@@ -296,6 +296,22 @@ const PatientCard: React.FC<PatientCardProps> = ({
             )}
           </div>
 
+          <div className="flex items-center justify-center px-1">
+            <button 
+              onClick={handleChatClick} 
+              className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
+              title="Discussion"
+            >
+              <Icons.Message />
+              {patient.hasUnreadAlert && (
+                <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                </span>
+              )}
+            </button>
+          </div>
+
           <div className="w-[1px] h-5 bg-slate-200"></div>
 
           <div className="flex items-center gap-2 pl-2">
