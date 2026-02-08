@@ -32,8 +32,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     fetch('/api/app-settings')
       .then(res => res.json())
       .then(data => {
-        if (data.number_of_days !== undefined) {
-          setNumberOfDays(data.number_of_days);
+        if (data.end_date) {
+          const endDate = new Date(data.end_date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          const diffTime = endDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          setNumberOfDays(diffDays);
         }
       })
       .catch(() => {});
