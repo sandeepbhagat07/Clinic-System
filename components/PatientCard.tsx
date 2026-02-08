@@ -165,7 +165,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             <div className={`font-semibold text-slate-600 truncate ${isLarge ? 'text-2xl' : 'text-sm'}`}>
               {patient.age} yrs <span className="mx-1 text-slate-300">&bull;</span> {patient.gender}
             </div>
-            {patient.inTime && (
+            {patient.status !== PatientStatus.COMPLETED && patient.inTime && (
               <div className={`bg-emerald-500 text-white rounded-lg font-bold whitespace-nowrap shadow-sm text-center flex-shrink-0 ${isOPD ? 'px-2 py-0.5 text-[12px] min-w-[85px]' : 'px-3 py-1 text-[11px] min-w-[100px]'}`}>
                 IN &nbsp;:  {formatTime(patient.inTime)}
               </div>
@@ -176,7 +176,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
             <div className={`font-black text-slate-900 truncate tracking-tight ${isLarge ? 'text-3xl' : 'text-lg'}`}>
               {patient.city}
             </div>
-            {patient.outTime && (
+            {patient.status !== PatientStatus.COMPLETED && patient.outTime && (
               <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center flex-shrink-0">
                 OUT: {formatTime(patient.outTime)}
               </div>
@@ -185,83 +185,126 @@ const PatientCard: React.FC<PatientCardProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
-        
-        <div className="flex items-center gap-1">
-          {patient.status === PatientStatus.WAITING && onMove && (() => {
-            const isPinned = patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE;
-            const btnClass = isPinned 
-              ? "text-slate-200 cursor-not-allowed p-1.5 rounded-md" 
-              : "text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100";
-            return (
-              <>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'up'); }} 
-                  className={btnClass} 
-                  title={isPinned ? "Cannot move pinned type" : "Move Up"}
-                  disabled={isPinned}
-                >
-                  <Icons.ChevronUp />
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'down'); }} 
-                  className={btnClass} 
-                  title={isPinned ? "Cannot move pinned type" : "Move Down"}
-                  disabled={isPinned}
-                >
-                  <Icons.ChevronDown />
-                </button>
-              </>
-            );
-          })()}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {patient.status !== PatientStatus.OPD && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.OPD); }} 
-                className="text-amber-600 hover:text-amber-700 transition-colors p-1.5 hover:bg-amber-50 rounded-lg flex items-center gap-1" 
-                title="Send to OPD"
-              >
-                <Icons.Stethoscope />
-              </button>
-            )}
-            {patient.status !== PatientStatus.COMPLETED && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
-                className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg" 
-                title="Mark Done"
-              >
-                <Icons.CheckCircle />
-              </button>
+      {patient.status === PatientStatus.COMPLETED ? (
+        <div className="border-t border-slate-100 bg-slate-50/50 flex items-center px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
+          <div className="flex items-center justify-center" style={{ width: '15%' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.OPD); }} 
+              className="text-amber-600 hover:text-amber-700 transition-colors p-1.5 hover:bg-amber-50 rounded-lg flex items-center gap-1" 
+              title="Send to OPD"
+            >
+              <Icons.Stethoscope />
+            </button>
+          </div>
+          <div className="flex items-center justify-center" style={{ width: '35%' }}>
+            {patient.inTime && (
+              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+                IN &nbsp;: {formatTime(patient.inTime)}
+              </div>
             )}
           </div>
-
-          <div className="w-[1px] h-5 bg-slate-200"></div>
-
-          <button 
-            onClick={handleChatClick} 
-            className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
-            title="Discussion"
-          >
-            <Icons.Message />
-            {patient.hasUnreadAlert && (
-              <span className="absolute top-1 right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-              </span>
+          <div className="flex items-center justify-center" style={{ width: '35%' }}>
+            {patient.outTime && (
+              <div className="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap shadow-sm min-w-[100px] text-center">
+                OUT: {formatTime(patient.outTime)}
+              </div>
             )}
-          </button>
-
-          <div className="w-[1px] h-5 bg-slate-200"></div>
-
+          </div>
+          <div className="flex items-center justify-center" style={{ width: '15%' }}>
+            <button 
+              onClick={handleChatClick} 
+              className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
+              title="Discussion"
+            >
+              <Icons.Message />
+              {patient.hasUnreadAlert && (
+                <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-slate-100 bg-slate-50/50 flex items-center justify-between px-4 py-2 transition-all group-hover:bg-white min-h-[48px]">
+          
           <div className="flex items-center gap-1">
-            {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
-            {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+            {patient.status === PatientStatus.WAITING && onMove && (() => {
+              const isPinned = patient.type === PatientType.FAMILY || patient.type === PatientType.RELATIVE;
+              const btnClass = isPinned 
+                ? "text-slate-200 cursor-not-allowed p-1.5 rounded-md" 
+                : "text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-slate-100";
+              return (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'up'); }} 
+                    className={btnClass} 
+                    title={isPinned ? "Cannot move pinned type" : "Move Up"}
+                    disabled={isPinned}
+                  >
+                    <Icons.ChevronUp />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); if (!isPinned) onMove(patient.id, 'down'); }} 
+                    className={btnClass} 
+                    title={isPinned ? "Cannot move pinned type" : "Move Down"}
+                    disabled={isPinned}
+                  >
+                    <Icons.ChevronDown />
+                  </button>
+                </>
+              );
+            })()}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {patient.status !== PatientStatus.OPD && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.OPD); }} 
+                  className="text-amber-600 hover:text-amber-700 transition-colors p-1.5 hover:bg-amber-50 rounded-lg flex items-center gap-1" 
+                  title="Send to OPD"
+                >
+                  <Icons.Stethoscope />
+                </button>
+              )}
+              {patient.status !== PatientStatus.COMPLETED && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onUpdateStatus(patient.id, PatientStatus.COMPLETED); }} 
+                  className="text-emerald-600 hover:text-emerald-700 transition-colors p-1.5 hover:bg-emerald-50 rounded-lg" 
+                  title="Mark Done"
+                >
+                  <Icons.CheckCircle />
+                </button>
+              )}
+            </div>
+
+            <div className="w-[1px] h-5 bg-slate-200"></div>
+
+            <button 
+              onClick={handleChatClick} 
+              className={`transition-all relative p-1.5 rounded-lg hover:bg-indigo-50 ${patient.hasUnreadAlert ? 'text-rose-600' : 'text-indigo-600'}`} 
+              title="Discussion"
+            >
+              <Icons.Message />
+              {patient.hasUnreadAlert && (
+                <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                </span>
+              )}
+            </button>
+
+            <div className="w-[1px] h-5 bg-slate-200"></div>
+
+            <div className="flex items-center gap-1">
+              {onEdit && <button onClick={(e) => { e.stopPropagation(); onEdit(patient); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-md hover:bg-slate-100" title="Edit"><Icons.Edit /></button>}
+              {onDelete && <button onClick={(e) => { e.stopPropagation(); onDelete(patient.id); }} className="text-slate-300 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50" title="Delete"><Icons.Trash /></button>}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
