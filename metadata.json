@@ -3,6 +3,5 @@
   "description": "A responsive OPD (Outpatient Department) management system featuring a drag-and-drop workflow, patient registration, and real-time status tracking across Waiting, OPD, and Completed queues.",
   "requestFramePermissions": [],
   "hospitalName": "Lifeline Hospital",
-  "appName": "Clinic-Q",
-  "data_reset": "enable"
+  "appName": "Clinic-Q"
 }
