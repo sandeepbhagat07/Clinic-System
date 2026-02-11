@@ -17,6 +17,8 @@ This guide provides complete step-by-step instructions to run Clinic-Q on your l
 9. [Application Features](#application-features)
 10. [Keyboard Shortcuts](#keyboard-shortcuts)
 11. [Troubleshooting](#troubleshooting)
+12. [Offline Setup (No Internet Required)](#offline-setup-no-internet-required)
+13. [Production Deployment Notes](#production-deployment-notes)
 
 ---
 
@@ -482,6 +484,204 @@ npm install pg
 1. Check `secretcred.json` for the exact mobile, username, and password
 2. Username matching is case-insensitive
 3. Mobile and password must match exactly
+
+---
+
+## Offline Setup (No Internet Required)
+
+This section explains how to set up and run Clinic-Q on a computer or local network that has **no internet connection**. This is ideal for clinics in areas with unreliable or no internet.
+
+### Does Socket.IO Need Internet?
+
+**No!** Socket.IO works entirely on your local network. It communicates directly between your browser and the server using your local connection (`localhost` or local IP like `192.168.x.x`). No internet required — real-time sync between Operator and Doctor works perfectly offline.
+
+---
+
+### Step 1: Prepare Everything While You Have Internet
+
+You need internet **only once** — to download the installers and project dependencies. After that, everything runs 100% offline.
+
+**On a computer with internet, do the following:**
+
+#### 1A. Download Installers to a USB Drive
+
+Download these files and save them to a USB drive or external storage:
+
+| Software | Download From | Notes |
+|----------|--------------|-------|
+| **Node.js** (v18+) | https://nodejs.org/ | Download the LTS installer for your OS (Windows .msi / macOS .pkg / Linux .tar.xz) |
+| **PostgreSQL** (v14+) | https://www.postgresql.org/download/ | Download the installer for your OS |
+
+#### 1B. Download the Project with Dependencies
+
+```bash
+# Download/clone the Clinic-Q project
+# Then install all dependencies while you have internet
+cd Clinic-Q
+npm install
+
+# Build the frontend for production
+npm run build
+```
+
+**Important:** The `npm install` step downloads all required packages into the `node_modules` folder. This folder must be copied along with the project.
+
+#### 1C. Copy Everything to USB Drive
+
+Copy the **entire project folder** (including `node_modules` and `dist`) to your USB drive:
+
+```
+USB Drive/
+├── Installers/
+│   ├── node-v18.x.x-setup.msi      (or .pkg / .tar.xz)
+│   └── postgresql-14.x-setup.exe    (or .pkg / .tar.gz)
+└── Clinic-Q/
+    ├── node_modules/                 (MUST include this!)
+    ├── dist/                         (MUST include this!)
+    ├── server.js
+    ├── database_schema.sql
+    ├── secretcred.json
+    ├── metadata.json
+    ├── package.json
+    └── ... (all other project files)
+```
+
+---
+
+### Step 2: Install on the Offline Computer
+
+1. **Plug in the USB drive** to the offline computer
+
+2. **Install Node.js** from the USB drive
+   - Windows: Run the `.msi` installer
+   - macOS: Run the `.pkg` installer
+   - Linux: Extract the `.tar.xz` and add to PATH
+
+3. **Install PostgreSQL** from the USB drive
+   - Follow the installer steps (same as the [Install PostgreSQL](#install-postgresql) section above)
+   - Remember the password you set for the `postgres` user
+
+4. **Copy the Clinic-Q folder** from USB to the computer:
+   - Windows: Copy to `C:\Projects\Clinic-Q`
+   - macOS/Linux: Copy to `~/Projects/Clinic-Q`
+
+5. **Set up the database** (no internet needed — PostgreSQL runs locally):
+   ```bash
+   # Open PostgreSQL command line
+   psql -U postgres
+
+   # Create the database and user
+   CREATE USER clinicq WITH PASSWORD 'your_password';
+   CREATE DATABASE clinicq_db OWNER clinicq;
+   GRANT ALL PRIVILEGES ON DATABASE clinicq_db TO clinicq;
+   \q
+
+   # Import the schema
+   psql -U clinicq -d clinicq_db -f database_schema.sql
+   ```
+
+6. **Create the .env file** with your database connection:
+   ```
+   DATABASE_URL=postgresql://clinicq:your_password@localhost:5432/clinicq_db
+   ```
+
+7. **Start the server** (uses the pre-built `dist` folder, no Vite needed):
+   ```bash
+   cd Clinic-Q
+   node server.js
+   ```
+   You should see: `Server running on port 3001`
+
+---
+
+### Step 3A: Single Computer Setup
+
+If running everything on **one computer** (Operator and Doctor on the same PC):
+
+1. Start the server: `node server.js`
+2. Open **two browser windows** (or tabs):
+   - Window 1: `http://localhost:3001` → Login as **Operator**
+   - Window 2: `http://localhost:3001` → Login as **Doctor**
+3. Both windows sync in real-time via Socket.IO — no internet needed!
+4. For the Queue Display screen, open a third window: `http://localhost:3001/display`
+
+---
+
+### Step 3B: Multiple Computers on Local Network (LAN)
+
+If Operator and Doctor are on **different computers** connected to the same Wi-Fi or LAN:
+
+1. **Find the server computer's local IP address:**
+
+   Windows:
+   ```cmd
+   ipconfig
+   ```
+   Look for "IPv4 Address" (e.g., `192.168.1.100`)
+
+   macOS/Linux:
+   ```bash
+   hostname -I
+   ```
+   or
+   ```bash
+   ifconfig
+   ```
+
+2. **Start the server** on the server computer:
+   ```bash
+   node server.js
+   ```
+
+3. **Access from other computers** on the same network:
+   - Operator's computer: Open browser → `http://192.168.1.100:3001`
+   - Doctor's computer: Open browser → `http://192.168.1.100:3001`
+   - Waiting Room TV: Open browser → `http://192.168.1.100:3001/display`
+
+   Replace `192.168.1.100` with the actual IP address from step 1.
+
+4. **Windows Firewall:** If other computers can't connect, allow port 3001 through the firewall:
+   ```cmd
+   netsh advfirewall firewall add rule name="Clinic-Q" dir=in action=allow protocol=tcp localport=3001
+   ```
+
+   Linux:
+   ```bash
+   sudo ufw allow 3001/tcp
+   ```
+
+---
+
+### Offline Setup Quick Checklist
+
+| Step | Action | When |
+|------|--------|------|
+| 1 | Download Node.js + PostgreSQL installers | While online |
+| 2 | Run `npm install` and `npm run build` | While online |
+| 3 | Copy everything (with node_modules + dist) to USB | While online |
+| 4 | Install Node.js + PostgreSQL on offline PC from USB | Offline |
+| 5 | Copy project folder from USB | Offline |
+| 6 | Create database and import schema | Offline |
+| 7 | Create `.env` file | Offline |
+| 8 | Run `node server.js` | Offline |
+| 9 | Open browser at `localhost:3001` | Offline |
+
+### Offline FAQ
+
+**Q: Do I need to run `npm install` on the offline computer?**
+A: No! As long as you copied the `node_modules` folder from the online computer, everything is already installed.
+
+**Q: Do I need to run `npm run dev` (Vite) on the offline computer?**
+A: No! Since you already ran `npm run build`, the server uses the pre-built `dist` folder. Just run `node server.js` — it serves everything on port 3001.
+
+**Q: Can I use this on a tablet or phone on the same Wi-Fi?**
+A: Yes! Open the browser on your tablet/phone and go to `http://<server-ip>:3001`. Works great for a portable Operator station.
+
+**Q: What if I want to update the app later?**
+A: Connect to the internet, download the updated code, run `npm install` and `npm run build` again, then copy the updated folder back to the offline computer.
+
+**Q: Will patient data be saved when the computer restarts?**
+A: Yes! All data is stored in PostgreSQL, which saves to disk. Data survives restarts. Just make sure PostgreSQL starts automatically (it usually does after installation).
 
 ---
 
